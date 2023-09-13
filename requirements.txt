@@ -1,9 +1,9 @@
-conda
 ipydatagrid
 ipykernel
 ipympl
+ipython
+ipython-genutils
 ipywidgets
-json5
 jupyter-events
 jupyter-lsp
 jupyter_client
@@ -16,6 +16,7 @@ jupyterlab-widgets
 jupyterlab_server
 matplotlib
 matplotlib-inline
+numpy
 pandas
 plotly
 voila
