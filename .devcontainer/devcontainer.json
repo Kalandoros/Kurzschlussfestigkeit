@@ -6,7 +6,7 @@
 	"image": "mcr.microsoft.com/devcontainers/python:0-3.11",
 	"features": {
     		"ghcr.io/devcontainers-contrib/features/coverage-py:2": {}
-  	}
+  	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -38,7 +38,8 @@
 				"tushortz.python-extended-snippets",
 				"donjayamanne.python-extension-pack",
 				"KevinRose.vsc-python-indent",
-				"njqdev.vscode-python-typehint"
+				"njqdev.vscode-python-typehint",
+				"ms-vscode.remote-repositories"
 			]
 		}
 	},
