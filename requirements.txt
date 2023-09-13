@@ -1,3 +1,4 @@
+conda
 ipydatagrid
 ipykernel
 ipympl
