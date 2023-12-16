@@ -79,12 +79,12 @@ def thermisch_gleichwertiger_kurzschlussstrom(i_k3__: float, m: float, n: float,
 
 
 if __name__ == "__main__":
+    # Noch zu verifizieren
     print(stosskurzschlussstrom(5000, 1.25))
     print(stosskurzschlussstrom(31500))
 
     # Beispielrechnung gemäss SN EN 60909 - 0 Kapitel 8.1 Bild 12 → Verifiziert
     print("κ =", κ_faktor(0.6))
-
     # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 269 → Verifiziert
     print("κ =", κ_faktor_alternativ(ip=55.0, ik__=23.0))
 
