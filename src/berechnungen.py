@@ -1,12 +1,12 @@
 import math
 
 
-def κ_faktor(r_x: float, r: float, x: float) -> float:
+def κ_faktor(r_x: float, r: float = None, x: float = None) -> float:
     """
     Funktion zur Berechnung κ-Faktors zur Berechnung des Stosskurzschlussstromes (dimensionslos) nach SN EN 60909-0
     r_x: Verhältnis R/X (dimensionslos)
     """
-    κ = 1.02 + 0.98 * math.exp(r_x)
+    κ = 1.02 + 0.98 * math.exp(-3 * r_x)
     return κ
 
 
@@ -82,8 +82,11 @@ if __name__ == "__main__":
     print(stosskurzschlussstrom(5000, 1.25))
     print(stosskurzschlussstrom(31500))
 
+    # Beispielrechnung gemäss SN EN 60909 - 0 Kapitel 8.1 Bild 12 → Verifiziert
+    print("κ =", κ_faktor(0.6))
+
     # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 269 → Verifiziert
-    print(κ_faktor_alternativ(ip=55.0, ik__=23.0))
+    print("κ =", κ_faktor_alternativ(ip=55.0, ik__=23.0))
 
     # Beispielrechnung gemäss SN EN 60909 - 0 Kapitel 8.1.1 Bild 18 → Verifiziert
     print("m =", faktor_m(tk=0.3, f=50.0, κ=1.95))
