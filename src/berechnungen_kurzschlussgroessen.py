@@ -1,9 +1,12 @@
 import math
-from decimal import *
+from decimal import Decimal, getcontext
 
+# Die Funktion getcontext() kommt vom Modul Decimal und sollte die Problematik der Berechnung
+# des Faktor n beim thermisch_gleichwertiger_kurzschlussstrom lösen.
+# Wenn nicht weiter gebraucht, kann dies später gelöscht werden.
 print(getcontext())
 c = getcontext()
-c.traps[FloatOperation] = True
+#c.traps[FloatOperation] = True
 
 def κ_faktor(r_x: float) -> float:
     """
@@ -74,29 +77,36 @@ def faktor_n(ik__: float, ik: float, tk: float) -> float:
     Erläuterung zu ik__: Für die Berechnung des Joule-Integrals oder des thermisch gleichwertigen Kurzschlussstroms in
     Drehstromnetzen ist normalerweise der dreipolige Kurzschluss massgebend (SN EN 60909-0 Kapitel 14).
     """
-    ik_ik = (ik__ / ik) / (0.88 + (0.17 * (ik__ / ik)))
+    ik__ = Decimal(ik__)
+    ik = Decimal(ik)
+    tk = Decimal(tk)
+
+    ik_ik = Decimal(Decimal((ik__ / ik) / (Decimal(0.88) + ((Decimal(0.17)) * Decimal((ik__ / ik))))))
     # print(f'ik_ik:{ik_ik}')
-    td_ = (3.1 / ik_ik)
+    td_ = Decimal((Decimal(3.1) / Decimal(ik_ik)))
     # print(f'td_:{td_}')
 
     # Aufgrund der Länge der Gleichung für n wird diese zur besseren Übersichtlichkeit in Zwischenterme aufgeteilt.
-    grundwert: float = (1 / ((ik__ / ik) ** 2))
+    grundwert: Decimal = Decimal((1 / ((ik__ / ik) ** 2)))
     # print(f'Grundwert:{grundwert}')
-    n_zwischenterm_1: float = ((td_ / (20 * tk)) * (1 - (math.exp(-20 * (tk / td_))))) * (((ik__ / ik) - ik_ik) ** 2)
+    n_zwischenterm_1: Decimal = Decimal(((td_ / (20 * tk)) * Decimal((1 - (math.exp(-20 * (tk / td_)))))) * (((ik__ / ik) - ik_ik) ** 2))
     # print(f'Zwischenterm1:{n_zwischenterm_1}')
-    n_zwischenterm_2: float = ((td_ / (2 * tk)) * (1 - (math.exp(-2 * (tk / td_))))) * ((ik_ik - 1) ** 2)
+    n_zwischenterm_2: Decimal = Decimal(((td_ / (2 * tk)) * Decimal((1 - (math.exp(-2 * (tk / td_)))))) * ((ik_ik - 1) ** 2))
     # print(f'Zwischenterm2:{n_zwischenterm_2}')
-    n_zwischenterm_3: float = ((td_ / (5 * tk)) * (1 - (math.exp(-10 * (tk / td_))))) * ((ik__ / ik) - ik_ik)
-    # (f'Zwischenterm3:{n_zwischenterm_3}')
-    n_zwischenterm_4: float = (((2 * td_) / tk) * (1 - (math.exp(-1 * (tk / td_))))) * ((ik_ik - 1) ** 2)
-    # (f'Zwischenterm4:{n_zwischenterm_4}')
-    n_zwischenterm_5: float = (td_ / (5.5 * tk)) * (1 - (math.exp(-11 * (tk / td_)))) * ((ik__ / ik) - ik_ik) * (ik_ik - 1)
+    n_zwischenterm_3: Decimal = Decimal(((td_ / (5 * tk)) * Decimal((1 - (math.exp(-10 * (tk / td_)))))) * ((ik__ / ik) - ik_ik))
+    # print(f'Zwischenterm3:{n_zwischenterm_3}')
+    n_zwischenterm_4: Decimal = Decimal((((2 * td_) / tk) * Decimal((1 - (math.exp(-1 * (tk / td_)))))) * ((ik_ik - 1) ** 2))
+    # print(f'Zwischenterm4:{n_zwischenterm_4}')
+    n_zwischenterm_5: Decimal = Decimal((td_ / (Decimal(5.5) * tk)) * Decimal((1 - (math.exp(-11 * (tk / td_))))) * ((ik__ / ik) - ik_ik) * (ik_ik - 1))
     # print(f'Zwischenterm5:{n_zwischenterm_5}')
-    # print(f'Summe Zwischenterm = {1.0 + n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5}')
-    n: float = grundwert * (1 + n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5)
-    # In Ermangelung einer Lösung für die
-    #n: float = 1
+    n: Decimal = Decimal(grundwert * (Decimal(1) + n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5))
 
+    """
+    In Ermangelung einer Lösung zur Beseitigung der Abweichungen zwischen den hier berechneten Werten und den 
+    Werten im Graph der Norm wird nach Oeding, Oswald Elektrische Kraftwerke und Netze Kapitel 15.5 Seite 651 wird n = 1
+    in jedem Falle auf der sicheren Seite liegt.
+    """
+    n: float = 1
     return n
 
 
@@ -108,7 +118,7 @@ def thermisch_gleichwertiger_kurzschlussstrom(ik__: float, m: float = 1.0, n: fl
     Erläuterung zu n: Für Verteilungsnetze (generatorferne Kurzschlüsse) kann üblicherweise n = 1 verwendet werden
     (SN EN 60909-0 Kapitel 14).
     Erläuterung zu n: In vermaschten Netzen wird auch bei generatornahem Kurzschluss Ikmax = I″kmaxM gesetzt und damit
-    dann I″k/Ik = 1 und n =1. Auf diese Weise erhält man Ergebnisse für Ith/I″k, die in jedem Falle auf der sicheren
+    dann I″k/Ik = 1 und n = 1. Auf diese Weise erhält man Ergebnisse für Ith/I″k, die in jedem Falle auf der sicheren
     Seite liegen. (Oeding, Oswald Elektrische Kraftwerke und Netze Kapitel 15.5 Seite 651).
     """
     i_th = ik__ * math.sqrt((m + n))
@@ -137,7 +147,7 @@ def testrechnungen() -> None:
 
     # Beispielrechnung gemäss SN EN 60865- 2 Kapitel 11.3 → Nicht Verifiziert
     print("n =", faktor_n(ik__=24, ik=19.2, tk=0.8))
-    # Beispielrechnung gemäss SN EN 60865 - 2 Kapitel 11.3 → Nicht Verifiziert
+    # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 255 → Nicht Verifiziert
     print("n =", faktor_n(ik__=50, ik=25, tk=0.5))
 
     # Beispielrechnung gemäss SN EN 60909 - 2 Kapitel 11.3 → Verifiziert
