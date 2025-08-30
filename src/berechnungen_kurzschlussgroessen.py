@@ -5,7 +5,7 @@ from decimal import Decimal, getcontext
 # des Faktor n beim thermisch_gleichwertiger_kurzschlussstrom lösen.
 # Wenn nicht weiter gebraucht, kann dies später gelöscht werden.
 print(getcontext())
-c = getcontext()
+c = getcontext().prec = 8
 #c.traps[FloatOperation] = True
 
 def κ_faktor(r_x: float) -> float:
@@ -89,16 +89,26 @@ def faktor_n(ik__: float, ik: float, tk: float) -> float:
     # Aufgrund der Länge der Gleichung für n wird diese zur besseren Übersichtlichkeit in Zwischenterme aufgeteilt.
     grundwert: Decimal = Decimal((1 / ((ik__ / ik) ** 2)))
     # print(f'Grundwert:{grundwert}')
+
     n_zwischenterm_1: Decimal = Decimal(((td_ / (20 * tk)) * Decimal((1 - (math.exp(-20 * (tk / td_)))))) * (((ik__ / ik) - ik_ik) ** 2))
     # print(f'Zwischenterm1:{n_zwischenterm_1}')
+
     n_zwischenterm_2: Decimal = Decimal(((td_ / (2 * tk)) * Decimal((1 - (math.exp(-2 * (tk / td_)))))) * ((ik_ik - 1) ** 2))
     # print(f'Zwischenterm2:{n_zwischenterm_2}')
+    # print(f'Zwischenterm12:{n_zwischenterm_1 + n_zwischenterm_2}')
+
     n_zwischenterm_3: Decimal = Decimal(((td_ / (5 * tk)) * Decimal((1 - (math.exp(-10 * (tk / td_)))))) * ((ik__ / ik) - ik_ik))
     # print(f'Zwischenterm3:{n_zwischenterm_3}')
+    # print(f'Zwischenterm123:{n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3}')
+
     n_zwischenterm_4: Decimal = Decimal((((2 * td_) / tk) * Decimal((1 - (math.exp(-1 * (tk / td_)))))) * ((ik_ik - 1) ** 2))
     # print(f'Zwischenterm4:{n_zwischenterm_4}')
+    # print(f'Zwischenterm1234:{n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4})')
+
     n_zwischenterm_5: Decimal = Decimal((td_ / (Decimal(5.5) * tk)) * Decimal((1 - (math.exp(-11 * (tk / td_))))) * ((ik__ / ik) - ik_ik) * (ik_ik - 1))
     # print(f'Zwischenterm5:{n_zwischenterm_5}')
+    # print(f'Zwischenterm12345:{n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5})')
+    # print(f'Term:{(Decimal(1) + n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5)}')
     n: Decimal = Decimal(grundwert * (Decimal(1) + n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5))
 
     """
@@ -144,14 +154,22 @@ def testrechnungen() -> None:
     print("m =", faktor_m(tk=0.5, f=50.0, κ=1.8))
     # Beispielrechnung gemäss SN EN 60865 - 2 Kapitel 11.3 → Verifiziert
     print("m =", faktor_m(tk=0.8, f=50.0, κ=1.8))
+    # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 255 → Verifiziert
+    print("m =", faktor_m(tk=0.5, f=50.0, κ=1.8))
 
     # Beispielrechnung gemäss SN EN 60865- 2 Kapitel 11.3 → Nicht Verifiziert
+    # Die Zwischenwerte und das Endergebnis stimmten im Programm und im Taschenrechner bei dem Beispiel überein.
+    # Es scheint ein systematischer Fehler zu sein.
     print("n =", faktor_n(ik__=24, ik=19.2, tk=0.8))
     # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 255 → Nicht Verifiziert
     print("n =", faktor_n(ik__=50, ik=25, tk=0.5))
+    # Beispielrechnung gemäss AEG Rechengrössen für Hochspannungsanlagen S. 101 → Nicht Verifiziert
+    print("n =", faktor_n(ik__=25, ik=10, tk=0.1))
 
     # Beispielrechnung gemäss SN EN 60909 - 2 Kapitel 11.3 → Verifiziert
     print("Ith =", thermisch_gleichwertiger_kurzschlussstrom(ik__=24.0, m=0.056, n=0.86))
+    # Beispielrechnung gemäss AEG Rechengrössen für Hochspannungsanlagen S. 101 → Verifiziert
+    print("Ith =", thermisch_gleichwertiger_kurzschlussstrom(ik__=25.0, m=0.16, n=0.94))
 
 
 if __name__ == "__main__":
