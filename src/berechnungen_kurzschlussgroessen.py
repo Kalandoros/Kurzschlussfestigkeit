@@ -101,7 +101,7 @@ def faktor_n(ik__: float, ik: float, tk: float) -> float:
     # print(f'Zwischenterm3:{n_zwischenterm_3}')
     # print(f'Zwischenterm123:{n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3}')
 
-    n_zwischenterm_4: Decimal = Decimal((((2 * td_) / tk) * Decimal((1 - (math.exp(-1 * (tk / td_)))))) * ((ik_ik - 1) ** 2))
+    n_zwischenterm_4: Decimal = Decimal((((2 * td_) / tk) * Decimal((1 - (math.exp(-1 * (tk / td_)))))) * ((ik_ik - 1)))
     # print(f'Zwischenterm4:{n_zwischenterm_4}')
     # print(f'Zwischenterm1234:{n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4})')
 
@@ -114,9 +114,11 @@ def faktor_n(ik__: float, ik: float, tk: float) -> float:
     """
     In Ermangelung einer Lösung zur Beseitigung der Abweichungen zwischen den hier berechneten Werten und den 
     Werten im Graph der Norm wird nach Oeding, Oswald Elektrische Kraftwerke und Netze Kapitel 15.5 Seite 651 wird n = 1
-    in jedem Falle auf der sicheren Seite liegt.
+    in jedem Falle auf der sicheren Seite liegt. 
+    Hinweis: Der Zwischenterm 2 gemäss der Norm SN EN 60865-2 Anhang A zur Berechnung von n ist nicht korrekt. 
+    Im Zwischenterm 2 wird "(ik_ik - 1)" nicht quadriert.
     """
-    n: float = 1
+    # n: float = 1
     return n
 
 
@@ -156,15 +158,16 @@ def testrechnungen() -> None:
     print("m =", faktor_m(tk=0.8, f=50.0, κ=1.8))
     # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 255 → Verifiziert
     print("m =", faktor_m(tk=0.5, f=50.0, κ=1.8))
+    # Beispielrechnung gemäss Schutz bei Kurzschluss in elektrischen Anlagen - Kay → Verifiziert
+    print("m =", faktor_m(tk=0.1, f=50.0, κ=1.8))
 
-    # Beispielrechnung gemäss SN EN 60865- 2 Kapitel 11.3 → Nicht Verifiziert
-    # Die Zwischenwerte und das Endergebnis stimmten im Programm und im Taschenrechner bei dem Beispiel überein.
-    # Es scheint ein systematischer Fehler zu sein.
+    # Beispielrechnung gemäss SN EN 60865-2 Kapitel 11.3 → Verifiziert
     print("n =", faktor_n(ik__=24, ik=19.2, tk=0.8))
-    # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 255 → Nicht Verifiziert
+    # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 255 → Verifiziert
     print("n =", faktor_n(ik__=50, ik=25, tk=0.5))
-    # Beispielrechnung gemäss AEG Rechengrössen für Hochspannungsanlagen S. 101 → Nicht Verifiziert
-    print("n =", faktor_n(ik__=25, ik=10, tk=0.1))
+    # Beispielrechnung gemäss Schutz bei Kurzschluss in elektrischen Anlagen - Kay → Verifiziert
+    print("n =", faktor_n(ik__=14.94, ik=3.81, tk=0.1))
+
 
     # Beispielrechnung gemäss SN EN 60909 - 2 Kapitel 11.3 → Verifiziert
     print("Ith =", thermisch_gleichwertiger_kurzschlussstrom(ik__=24.0, m=0.056, n=0.86))
