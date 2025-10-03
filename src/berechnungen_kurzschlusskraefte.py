@@ -1,143 +1,97 @@
 import math
+import scipy
 
+# Konstanten
+μ0 = scipy.constants.mu_0 # 4 * math.pi * 1e-7 ist auch möglich
+g = scipy.constants.g # 4 * math.pi * 1e-7 ist auch möglich
 
-def κ_faktor(r_x: float) -> float:
+# Zwischengrössen
+def l_c(l: float, l_i: float) -> float:
     """
-    Funktion zur Berechnung κ-Faktors zur Berechnung des Stosskurzschlussstromes (dimensionslos) nach SN EN 60909-0.
-    r_x: Verhältnis R/X (dimensionslos)
-    Erläuterung zu κ: Der κ-Faktor liegt zwischen 1 und 2.
-    Die Berechnung des Wertes κ erfolgt nach dem kleinsten Verhältnis R/X im Netz, wobei die Impedanzen einer
-    zusammengefasst werden können. Es müssen nur die Netzzweige berücksichtigt werden, die vom Kurzschlussstrom
-    durchflossen werden. Dieses Verfahren führt zu κ-Werten, die auf der sicheren Seite liegen.
-    (SN EN 60909-0 S. 49 und VDE Kurzschlussstromberechnung S. 229)
+    Funktion zur Berechnung der Seillänge lc eines Hauptleiters im Spannfeld in m.
+    Seilanordnungen in N/m nach SN EN 60865-1:2012 Kapitel 6.2.2.
+    l_c: Seillänge eines Hauptleiters im Spannfeld m
+    l_i: Länge einer Abspann-Isolatorkette m
+    l_v: Seil(bogen)länge der Schlaufe m
+    a: Leitermittenabstand in m
+    Erläuterung zu lc:
+    Bei Feldern mit aufgelegten Seilen, die Stützisolatoren auf Biegung beanspruchen, gilt lc = l. Bei Feldern mit
+    abgespannten Seilen gilt lc = l − 2li, dabei ist li die Länge einer Abspann-Isolatorkette.
+    (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
     """
-    κ: float = 1.02 + 0.98 * math.exp(-3 * r_x)
-    return κ
+    l_c: float = l - (2 * l_i)
+    return l_c
 
-
-def κ_faktor_alternativ(ip: float, ik__: float) -> float:
+def r(F_: float, n: float, m_s: float, g: float) -> float:
     """
-    Funktion zur Berechnung κ-Faktors zur alternativen Berechnung des Stosskurzschlussstromes (dimensionslos) nach
-    Umstellung der Formel des Stosskurzschlussstromes gemäss SN EN 60909-0 oder VDE Kurzschlussstromberechnung S. 269
-    ip: Stosskurzschlussstrom (Augenblickswert) in A
-    i_k__: dreipoliger oder zweipoliger Anfangs-Kurzschlusswechselstrom (Effektivwert) in A
-    Erläuterung zu κ: Der κ-Faktor liegt zwischen 1 und 2. (VDE Kurzschlussstromberechnung S. 20)
+    Funktion zur Berechnung Verhältnisses r der elektromagnetischen Kraft auf ein Leiterseil bei Kurzschluss zur
+    Eigengewichtskraft (dimensionslos).
+    F_: Seillänge eines Hauptleiters im Spannfeld m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    m_s: Massenbelag eines Teilleiters kg/m
+    g: Normfallbeschleunigung m/s^2
     """
-    κ: float = ip / (math.sqrt(2) * ik__)
-    return κ
+    r: float = F_ / (n * m_s * g)
+    return r
 
-
-def stosskurzschlussstrom(ik__: float, κ: float = 2.0) -> float:
+def δ_1(r: float) -> float:
     """
-    Funktion zur Berechnung des Stosskurzschlussstromes ip in A nach SN EN 60909-0.
-    i_k__: dreipoliger oder zweipoliger Anfangs-Kurzschlusswechselstrom (Effektivwert) in A
-    κ: Faktor zur Berechnung des Stosskurzschlussstromes (dimensionslos)
-    Erläuterung zu κ: In Niederspannungsnetzen darf das Produkt 1,15 κ auf 1,8 und in Hochspannungsnetzen auf 2,0
-    begrenzt werden. (SN EN 60909-0 Kapitel 8.1.1 und VDE Kurzschlussstromberechnung S. 230)
-    Daher wird κ = 2.0 als Standardwert verwendet, falls kein κ angegeben wird.
+    Funktion zur Berechnung der Richtung δ1 der resultierenden Kraft in°.
+    r: Verhältnisses r der elektromagnetischen Kraft auf ein Leiterseil bei Kurzschluss zur
+    Eigengewichtskraft (dimensionslos)
     """
-    i_p: float = κ * math.sqrt(2) * ik__
-    return i_p
+    r: float = math.atan(r)
+    return r
 
-
-def faktor_m(tk: float, f: float = 50.0, κ: float = 1.95) -> float:
+# Hauptgrössen
+def F(μ0: float, i1: float, i2: float, l: float, a: float) -> float:
     """
-    Faktor für den Wärmeeffekt des Gleichstromanteils m (dimensionslos) nach SN EN 60909-0
-    ik__: dreipoliger Anfangs-Kurzschlusswechselstrom (Effektivwert) in A
-    f: Frequenz (50 Hz oder 60 Hz) in Hz
-    tk: Dauer des Kurzschlussstromes in s
-    κ: Faktor zur Berechnung des Stosskurzschlussstromes (dimensionslos)
-    Erläuterung zu f: Daher wird f = 50.0 als Standardwert verwendet, falls kein f angegeben wird.
-    Erläuterung zu κ: In Niederspannungsnetzen darf das Produkt 1,15 κ auf 1,8 und in Hochspannungsnetzen auf 2,0
-    begrenzt werden. (SN EN 60909-0 Kapitel 8.1.1)
-    Da κ = 2.0 zu unrealistisch hohen Gleichstromanteilen führt, wird κ = 1.95 als Standardwert verwendet,
-    falls kein κ angegeben wird. (SN EN 60909-0 Kapitel 8.1.1 Bild 18)
+    Funktion zur Berechnung der Kraft F zwischen zwei parallelen, langen Leitern während eines Kurzschlusses in N
+    nach SN EN 60865-1:2012 Kapitel 4.
+    μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
+    i1, i2: Augenblickswerte der Leiterströme in A
+    l: Mittenabstand der Stützpunkte in m
+    a: Leitermittenabstand in m
+    Erläuterung zu F:
+    Es werden die Kräfte zwischen parallelen Leitern angegeben. Die elektromagnetischen Kraftanteile, die durch
+    abgewinkelte und/oder sich kreuzende Leiter auftreten, können im Allgemeinen vernachlässigt werden.
+    (SN EN 60865-1:2012 Kapitel 4 Seite 11)
     """
-    m: float = (1 / (2 * f * tk * math.log(κ - 1))) * ((math.exp(4 * f * tk * math.log(κ - 1))) - 1)
-    return m
+    F: float = (μ0 / 2 * math.pi) * i1 * i2 * l * a
+    return F
 
-
-def faktor_n(ik__: float, ik: float, tk: float) -> float:
-    # TODO: Berechnung des Faktors n bringt nicht die korrekten Werte gemäss Diagramm. Formeln stimmen und wurde
-    #       wurden mehrfach geprüft. Es kommen stets zu kleine Werte heraus.
+def F_(μ0: float, ik__: float, a: float, l: float, lc: float, lv: float) -> float:
     """
-    Faktor für den Wärmeeffekt des Wechselstromanteils n (dimensionslos) nach SN EN 60909-0
-    ik__: dreipoliger Anfangs-Kurzschlusswechselstrom (Effektivwert) in A
-    ik: Dauerkurzschlussstrom (Effektivwert) in A
-    tk: Dauer des Kurzschlussstromes in s
-
-    i_k: dreipoliger Anfangs-Kurzschlusswechselstrom (Effektivwert) in A
-    Erläuterung zu ik__: Für die Berechnung des Joule-Integrals oder des thermisch gleichwertigen Kurzschlussstroms in
-    Drehstromnetzen ist normalerweise der dreipolige Kurzschluss massgebend (SN EN 60909-0 Kapitel 14).
+    Funktion zur Berechnung der Kraft F' Kraft charakteristischer elektromagnetischer Kraftbelag auf den Hauptleiter in
+    Seilanordnungen in N/m nach SN EN 60865-1:2012 Kapitel 6.2.2.
+    Bei Stromfluss über die gesamte Seillänge des Hauptleiters im Spannfeld mit und ohne Schlaufe mittel
+    μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
+    Ik′′: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
+    a: Leitermittenabstand in m
+    l: Mittenabstand der Stützpunkte in m
+    l_c: Seillänge eines Hauptleiters im Spannfeld m
+    l_v: Seil(bogen)länge der Schlaufe m
+    a: Leitermittenabstand in m
+    Erläuterung zu lc:
+    Bei Feldern mit aufgelegten Seilen, die Stützisolatoren auf Biegung beanspruchen, gilt lc = l. Bei Feldern mit
+    abgespannten Seilen gilt lc = l − 2li, dabei ist li die Länge einer Abspann-Isolatorkette.
+    (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
     """
-    ik_ik = (ik__ / ik) / (0.88 + (0.17 * (ik__ / ik)))
-    # print(f'ik_ik:{ik_ik}')
-    td_ = (3.1 / ik_ik)
-    # print(f'td_:{td_}')
-
-    # Aufgrund der Länge der Gleichung für n wird diese zur besseren Übersichtlichkeit in Zwischenterme aufgeteilt.
-    grundwert: float = (1 / ((ik__ / ik) ** 2))
-    # print(f'Grundwert:{grundwert}')
-    n_zwischenterm_1: float = ((td_ / (20 * tk)) * (1 - (math.exp(-20 * (tk / td_))))) * (((ik__ / ik) - ik_ik) ** 2)
-    # print(f'Zwischenterm1:{n_zwischenterm_1}')
-    n_zwischenterm_2: float = ((td_ / (2 * tk)) * (1 - (math.exp(-2 * (tk / td_))))) * ((ik_ik - 1) ** 2)
-    # print(f'Zwischenterm2:{n_zwischenterm_2}')
-    n_zwischenterm_3: float = ((td_ / (5 * tk)) * (1 - (math.exp(-10 * (tk / td_))))) * ((ik__ / ik) - ik_ik)
-    # (f'Zwischenterm3:{n_zwischenterm_3}')
-    n_zwischenterm_4: float = (((2 * td_) / tk) * (1 - (math.exp(-1 * (tk / td_))))) * ((ik_ik - 1) ** 2)
-    # (f'Zwischenterm4:{n_zwischenterm_4}')
-    n_zwischenterm_5: float = (td_ / (5.5 * tk)) * (1 - (math.exp(-11 * (tk / td_)))) * ((ik__ / ik) - ik_ik) * (ik_ik - 1)
-    # print(f'Zwischenterm5:{n_zwischenterm_5}')
-    # print(f'Summe Zwischenterm = {1.0 + n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5}')
-    n: float = grundwert * (1 + n_zwischenterm_1 + n_zwischenterm_2 + n_zwischenterm_3 + n_zwischenterm_4 + n_zwischenterm_5)
-    # In Ermangelung einer Lösung für die
-    n: float = 1
-
-    return n
+    F: float = (μ0 / 2 * math.pi) * 0.75 * i1 * i2 * l * a
+    return F
 
 
-def thermisch_gleichwertiger_kurzschlussstrom(ik__: float, m: float = 1.0, n: float = 1.0) -> float:
-    """
-    Funktion zur Berechnung des thermisch gleichwertigen kurzschlussstromes nach SN EN 60909-0
-    Erläuterung zu m und n: Für generatorferne Kurzschlüsse mit der Bemessungs-Kurzschlussdauer von 0,5 s oder mehr ist
-    es zulässig, m + n = 1 zu setzen (SN EN 60909-0 Kapitel 14).
-    Erläuterung zu n: Für Verteilungsnetze (generatorferne Kurzschlüsse) kann üblicherweise n = 1 verwendet werden
-    (SN EN 60909-0 Kapitel 14).
-    Erläuterung zu n: In vermaschten Netzen wird auch bei generatornahem Kurzschluss Ikmax = I″kmaxM gesetzt und damit
-    dann I″k/Ik = 1 und n =1. Auf diese Weise erhält man Ergebnisse für Ith/I″k, die in jedem Falle auf der sicheren
-    Seite liegen. (Oeding, Oswald Elektrische Kraftwerke und Netze Kapitel 15.5 Seite 651).
-    """
-    i_th = ik__ * math.sqrt((m + n))
-    return i_th
 
 
 def testrechnungen() -> None:
-    # Noch zu verifizieren
-    # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 233 → Verifiziert
-    print("i_p = ", stosskurzschlussstrom(ik__=14.56, κ=1.746))
-    print("i_p = ", stosskurzschlussstrom(ik__=14.56, κ=κ_faktor(0.1)))
-    # Beispielrechnung gemäss Siemens - Planungsleitfaden für Energieverteilungsanlagen S.56 → Verifiziert
-    print("i_p = ", (stosskurzschlussstrom(ik__=33.5)))
-
-    # Beispielrechnung gemäss SN EN 60909 - 0 Kapitel 8.1 Bild 12 → Verifiziert
-    print("κ =", κ_faktor(0.6))
-    # Beispielrechnung gemäss VDE Kurzschlussstromberechnung S. 269 → Verifiziert
-    print("κ =", κ_faktor_alternativ(ip=55.0, ik__=23.0))
-
-    # Beispielrechnung gemäss SN EN 60909 - 0 Kapitel 8.1.1 Bild 18 → Verifiziert
-    print("m =", faktor_m(tk=0.3, f=50.0, κ=1.95))
-    # Beispielrechnung gemäss Siemens - Planungsleitfaden für Energieverteilungsanlagen S.59 → Verifiziert
-    print("m =", faktor_m(tk=0.5, f=50.0, κ=1.8))
-    # Beispielrechnung gemäss SN EN 60909 - 2 Kapitel 11.3 → Verifiziert
-    print("m =", faktor_m(tk=0.8, f=50.0, κ=1.8))
-
-    # Beispielrechnung gemäss SN EN 60909 - 2 Kapitel 11.3 → Nicht Verifiziert
-    print("n =", faktor_n(ik__=24, ik=19.2, tk=0.8))
-    # Beispielrechnung gemäss SN EN 60909 - 2 Kapitel 11.3 → Nicht Verifiziert
-    print("n =", faktor_n(ik__=50, ik=25, tk=0.5))
-
-    # Beispielrechnung gemäss SN EN 60909 - 2 Kapitel 11.3 → Verifiziert
-    print("Ith =", thermisch_gleichwertiger_kurzschlussstrom(ik__=24.0, m=0.056, n=0.86))
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet→ Verifiziert
+    print("l_c = ", l_c(l=31.0, l_i=5.25))
+    # Nicht verifiziert!
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet→ Verifiziert
+    print("r = ", r(F_=39.677, n=2, m_s=1.659, g=g))
+    # Nicht verifiziert!
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet→ Verifiziert
+    print("δ_1 = ", δ_1(r(F_=39.677, n=2, m_s=1.68, g=g)))
 
 
 if __name__ == "__main__":
