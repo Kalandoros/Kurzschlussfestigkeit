@@ -146,7 +146,7 @@ def F(μ0: float, i_1: float, i_2: float, l: float, a: float) -> float:
     return F
 
 # TODO: noch offen
-def F_(μ0: float, ik__: float, a: float, l: float, lc: float, lv: float) -> float:
+def F_(μ0: float, i1: float, i2: float, l: float, a: float) -> float:
     """
     Funktion zur Berechnung der Kraft F' Kraft charakteristischer elektromagnetischer Kraftbelag auf den Hauptleiter in
     Seilanordnungen in N/m nach SN EN 60865-1:2012 Kapitel 6.2.2.
