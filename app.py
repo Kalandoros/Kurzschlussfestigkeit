@@ -21,9 +21,9 @@ def Page():
     with solara.Sidebar():
         with solara.Card(title="Menu", subtitle="Kurzschluss", margin=0, elevation=0, ):
             with solara.Column():
-                with solara.lab.Tab("Tab 1", icon_name="mdi-lightning-bolt"):
+                with solara.lab.Tab("Tab 1", icon_name="mdi-flash"):
                     solara.Markdown("Hello")
-                with solara.lab.Tab("Tab 2", icon_name="mdi-lightning-bolt-outline"):
+                with solara.lab.Tab("Tab 2", icon_name="mdi-flash-outline"):
                     solara.Markdown("World")
         with solara.Card(title="", subtitle="Erdung", margin=0, elevation=0):
             with solara.Column():
