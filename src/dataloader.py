@@ -29,19 +29,22 @@ def convert_df_to_dict(df: pd.DataFrame) -> list[dict]:
 
 if __name__ == "__main__":
     # Liefert alle Werte einer Spalte zurück
-    print(load_csv_to_df()["Bezeichnung"])
+    #print(load_csv_to_df()["Bezeichnung"])
 
-    # Liefert die Bezeichnung eines speziellen Index zurück
-    print(load_csv_to_df().at[2, "Bezeichnung"])
+    # Liefert die Bezeichnung eines speziellen Indexes zurück
+    #print(load_csv_to_df().at[2, "Bezeichnung"])
 
     # Liefert den Wert einer Spalte basierend auf dem Index zurück
-    print(load_csv_to_df().iloc[2]["Querschnitt eines Teilleiters"])
+    #print(load_csv_to_df().iloc[2]["Querschnitt eines Teilleiters"])
 
     #print(load_csv_to_df())
 
-    # list_dict_leiterseile = convert_df_to_dict(load_csv_to_df())
-    # dict_leiterseile = list_dict_leiterseile[0]
+    print(convert_df_to_dict(load_csv_to_df()))
+    list_dict_leiterseile = convert_df_to_dict(load_csv_to_df())
+    print(list_dict_leiterseile[0])
+    dict_leiterseile = list_dict_leiterseile[0]
+
     #print(list(dict_leiterseile.keys()))
     #print(list(dict_leiterseile.values()))
-    #print(dict_leiterseile.get("Bezeichnung"))
+    print(dict_leiterseile.get("Bezeichnung"))
     #print(dict_leiterseile["Bezeichnung"])

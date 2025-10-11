@@ -3,6 +3,8 @@ import plotly.express as px     # `import as` enables abbreviation
 import pandas as pd
 import solara
 
+from src import dataloader
+
 # define global variables
 df = px.data.iris()
 columns = list(df.columns)
@@ -102,24 +104,26 @@ def Page():
                 else:
                     solara.Info("Click to select a point")
         """
+        def bla(dummy):
+            print(dummy)
+
         with solara.VBox():
             leiterseilbefestigung: list[str] = ["Abgespannt", "Aufgelegt"]
             standardkurzschlussströme: list[int|float] = [10, 12.5, 16, 20, 25, 31.5, 40, 50, 63, 80]
             teilleiter: list[int] = [1, 2, 3, 4, 5, 6]
-            leiterseiltyp: list[str] = ["182-AL3", "299-AL3", "400-AL3", "626-AL3", "1000-AL3"]
+            #leiterseiltyp: list[str] = ["182-AL3", "299-AL3", "400-AL3", "626-AL3", "1000-AL3"]
             steifigkeitsnorm: list[int] = [100000, 150000, 1300000, 400000, 2000000, 600000, 3000000]
 
             solara.Select(label="Art der Leiterseilbefestigung", value=leiterseilbefestigung, values=leiterseilbefestigung)
             solara.Select(label="I''\u2096 [A] Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)", value=standardkurzschlussströme, values=standardkurzschlussströme)
-            solara.InputFloat("a [m] Leitermittenabstand")
+            solara.InputFloat("a [m] Leitermittenabstand", )
             solara.InputFloat("li [m] Länge einer Abspann-Isolatorkette")
             solara.Select(label="n (dimensionslos) Anzahl der Teilleiter eines Hauptleiters", value=teilleiter, values=teilleiter)
-            solara.Select(label="Leiterseiltyp",value=leiterseiltyp, values=leiterseiltyp)
+            solara.Select(label="Leiterseiltyp", value=dataloader.load_csv_to_df()["Bezeichnung"].to_list(), values=dataloader.load_csv_to_df()["Bezeichnung"].to_list(), on_value=bla)
             solara.InputFloat("Fst80 [N] statische Seilzugkraft in einem Hauptleiter")
             solara.InputFloat("Fst-20 [N] statische Seilzugkraft in einem Hauptleiter")
             solara.Select(label="N [1/N]Steifigkeitsnorm einer Anordnung mit Leiterseilen", value=steifigkeitsnorm, values=steifigkeitsnorm)
             solara.InputFloat("Tk [s] Kurzschlussdauer", value=1.0)
-
 
 
 
