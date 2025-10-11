@@ -32,10 +32,25 @@ leiterseiltyp_selected: None|str = None
 
 t_k: None|float = None
 a: None|float = None
+a_s: None|float = None
 F_st_20: None|float = None
 F_st_80: None|float = None
 l: None|float = None
 l_i: None|float = None
+
+def set_values(state):
+    state.leiterseilbefestigung_selected = None
+    state.standardkurzschlussströme_selected = None
+    state.t_k = None
+    state.leiterseiltyp_selected = None
+    state.l = None
+    state.l_i = None
+    state.a = None
+    state.teilleiter_selected = None
+    state.a_s = None
+    state.F_st_20 = None
+    state.F_st_80 = None
+    state.steifigkeitsnorm_selected = None
 
 def on_change_selectable(state):
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
@@ -69,7 +84,7 @@ with tgb.Page() as page:
             tgb.selector(label="n (dimensionslos) Anzahl der Teilleiter eines Hauptleiters",
                          value="{teilleiter_selected}", lov="{teilleiter_lov}",
                          dropdown=True)
-            tgb.number(label="a_s [m] wirksamer Abstand zwischen Teilleitern", value="{F_st_20}", min=0.0,
+            tgb.number(label="a_s [m] wirksamer Abstand zwischen Teilleitern", value="{a_s}", min=0.0,
                        step=0.1)
             # Mechanischer Kraftwerte
             tgb.number(label="Fst-20 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
@@ -80,7 +95,9 @@ with tgb.Page() as page:
                          value="{steifigkeitsnorm_selected}", lov="{steifigkeitsnorm_lov}",
                          dropdown=True)
             tgb.html("br")
-            tgb.button(label="Auswahl aufheben", on_action=on_clck_btn)
+            with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
+                tgb.button(label="Auswahl Leiterseiltyp aufheben", on_action=on_clck_btn)
+                tgb.button(label="Set Values", on_action=set_values)
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
         with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False):
             tgb.table("{leiterseiltyp}")
