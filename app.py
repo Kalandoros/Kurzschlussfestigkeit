@@ -38,19 +38,19 @@ F_st_80: None|float = None
 l: None|float = None
 l_i: None|float = None
 
-def set_values(state):
+def on_clck_zürücksetzen(state):
     state.leiterseilbefestigung_selected = None
-    state.standardkurzschlussströme_selected = None
+    state.standardkurzschlussströme_selected = 0.0 # muss float sein
     state.t_k = None
     state.leiterseiltyp_selected = None
     state.l = None
     state.l_i = None
     state.a = None
-    state.teilleiter_selected = None
+    state.teilleiter_selected = 0 # muss int sein
     state.a_s = None
     state.F_st_20 = None
     state.F_st_80 = None
-    state.steifigkeitsnorm_selected = None
+    state.steifigkeitsnorm_selected = 0 # muss int sein
 
 def on_change_selectable(state):
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
@@ -79,7 +79,7 @@ with tgb.Page() as page:
             tgb.selector(label="Leiterseiltyp", value="{leiterseiltyp_selected}", lov="{leiterseiltyp_lov}",
                          dropdown=True, on_change=on_change_selectable)
             tgb.number(label="l [m] Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=100.0, step=0.1)
-            tgb.number(label="li [m] Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=10.0, step=0.1)
+            tgb.number(label="l_i [m] Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=10.0, step=0.1)
             tgb.number(label="a [m] Leitermittenabstand", value="{a}", min=0.0, max=20.0, step=0.1)
             tgb.selector(label="n (dimensionslos) Anzahl der Teilleiter eines Hauptleiters",
                          value="{teilleiter_selected}", lov="{teilleiter_lov}",
@@ -97,7 +97,7 @@ with tgb.Page() as page:
             tgb.html("br")
             with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
                 tgb.button(label="Auswahl Leiterseiltyp aufheben", on_action=on_clck_btn)
-                tgb.button(label="Set Values", on_action=set_values)
+                tgb.button(label="Zürücksetzen", on_action=on_clck_zürücksetzen)
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
         with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False):
             tgb.table("{leiterseiltyp}")
