@@ -64,6 +64,7 @@ def on_clck_btn(state):
     notify(state, notification_type="info", message="Auswahl aufgehoben")
 
 with tgb.Page() as page:
+    # tgb.menu(label="Menu", lov=[("a", "Option A"), ("b", "Option B"), ("c", "Option C"), ("d", "Option D")], expanded = False)
     tgb.toggle(theme=True, class_name="h1 text-center pb2")
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
     with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
