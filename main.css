@@ -1,0 +1,50 @@
+/* --- 1. Universal Arrow Removal (SUCCESSFUL) --- */
+.input-with-unit .MuiIconButton-root {
+    display: none !important;
+}
+
+/* -------------------------------------------------------- */
+
+/* --- 2. Input Container Styling (The Wrapper) --- */
+.input-with-unit .MuiInputBase-root {
+    position: relative;
+    width: 100%;
+}
+
+/* -------------------------------------------------------- */
+
+/* --- 3. Input Element Styling (The Number Field) --- */
+.input-with-unit input[type="number"] {
+    /* 🔥 REMOVED: color: black !important; */
+    /* Allows Taipy/MUI to choose the text color based on the theme (white for dark theme) */
+
+    text-align: right !important; /* Aligns the number value to the right */
+    -moz-appearance: textfield !important;
+
+    /* Padding to ensure unit does not overlap the number */
+    padding-right: 25px !important;
+}
+
+/* -------------------------------------------------------- */
+
+/* --- 4. Pseudo-Element Unit Injection & Styling --- */
+
+/* Targets inputs with the seconds unit (tk-unit) and injects "s" */
+.tk-unit .MuiInputBase-root:after { content: "s"; }
+.m-unit .MuiInputBase-root:after { content: "m"; }
+.N-unit .MuiInputBase-root:after { content: "N"; }
+
+/* Style and position ALL injected units */
+.input-with-unit .MuiInputBase-root:after {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    /* You may want to adjust this color in dark mode too, but for now, we'll keep the gray for contrast */
+    color: #666;
+
+    font-weight: normal;
+    pointer-events: none;
+    user-select: none;
+}

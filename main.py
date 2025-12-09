@@ -20,6 +20,9 @@ teilleiter_selected: None|int = None
 steifigkeitsnorm_lov: list[int] = [100000, 150000, 1300000, 400000, 2000000, 600000, 3000000]
 steifigkeitsnorm_selected: None|int = None
 
+#unit_properties = {"unit": "N", "display_unit": True}
+unit_properties = dict(unit= "N", display_unit= True)
+
 """
 Auswahl der Leiterseiltypen: 
 1. Gesamte Leiterseildaten als Dataframe, 
@@ -75,23 +78,34 @@ with tgb.Page() as page:
             tgb.selector(label="I''k [A] Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)",
                          value="{standardkurzschlussströme_selected}", lov="{standardkurzschlussströme_lov}",
                          dropdown=True)
-            tgb.number(label="Tk [s] Kurzschlussdauer", value="{t_k}", min=0.01, max=5.0, step=0.01)
+            # 👇 Keep the original structure, just add a unique class
+            tgb.number(label="Tk [s] Kurzschlussdauer", value="{t_k}", min=0.01, max=5.0, step=0.01,
+                       class_name="input-with-unit tk-unit Mui-focused")
+
             # Leiterseilkonfiguration
             tgb.selector(label="Leiterseiltyp", value="{leiterseiltyp_selected}", lov="{leiterseiltyp_lov}",
                          dropdown=True, on_change=on_change_selectable)
-            tgb.number(label="l [m] Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=100.0, step=0.1)
-            tgb.number(label="l_i [m] Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=10.0, step=0.1)
-            tgb.number(label="a [m] Leitermittenabstand", value="{a}", min=0.0, max=20.0, step=0.1)
+
+            # 👇 Keep the original structure, use a different unique class for different unit
+            tgb.number(label="l [m] Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=100.0, step=0.1,
+                       class_name="input-with-unit m-unit Mui-focused")
+            tgb.number(label="l_i [m] Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=10.0,
+                       step=0.1, class_name="input-with-unit m-unit Mui-focused")
+            tgb.number(label="a [m] Leitermittenabstand", value="{a}", min=0.0, max=20.0, step=0.1,
+                       class_name="input-with-unit m-unit Mui-focused")
             tgb.selector(label="n (dimensionslos) Anzahl der Teilleiter eines Hauptleiters",
                          value="{teilleiter_selected}", lov="{teilleiter_lov}",
                          dropdown=True)
-            tgb.number(label="a_s [m] wirksamer Abstand zwischen Teilleitern", value="{a_s}", min=0.0,
-                       step=0.1)
+            # 👇 Keep the original structure, use a different unique class for different unit
+            tgb.number(label="a_s [m] wirksamer Abstand zwischen Teilleitern", value="{a_s}", min=0.0, step=0.1,
+                       class_name="input-with-unit m-unit Mui-focused")
+
             # Mechanischer Kraftwerte
+            # 👇 Keep the original structure, use a different unique class for different unit
             tgb.number(label="Fst-20 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
-                       step=0.1)
+                       step=0.1, class_name="input-with-unit N-unit Mui-focused")
             tgb.number(label="Fst80 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_80}", min=0.0,
-                       step=0.1)
+                       step=0.1, class_name="input-with-unit N-unit Mui-focused")
             tgb.selector(label="N [1/N]Steifigkeitsnorm einer Anordnung mit Leiterseilen",
                          value="{steifigkeitsnorm_selected}", lov="{steifigkeitsnorm_lov}",
                          dropdown=True)
@@ -104,4 +118,4 @@ with tgb.Page() as page:
             tgb.table("{leiterseiltyp}")
 
 if __name__ == "__main__":
-    Gui(page).run(use_reloader=True, title="Kurzschlussfestigkeit", watermark="© Angelo Rusvai", margin="2em", dark_mode=False, debug=True)
+    Gui(page, css_file="main.css").run(use_reloader=True, title="Kurzschlussfestigkeit", watermark="© Angelo Rusvai", margin="2em", dark_mode=False, debug=True)

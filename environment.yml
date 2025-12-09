@@ -1,9 +1,9 @@
-name: DevGround
+name: Taipy
 channels:
   - defaults
 dependencies:
   - pip
   - python=3.11.5
   - pip:
-      - solara
-prefix: /opt/conda/envs/DevGround
+      - taipy
+prefix: /opt/conda/envs/Taipy
