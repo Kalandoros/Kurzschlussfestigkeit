@@ -16,7 +16,8 @@ class Netzeinspeisung:
 
 
 def testrechnungen() -> None:
-    # print("Kurzschlussmitimpedanz = ", Netzeinspeisung.kurzschlussmitimpedanz(unq: float, ik__q: float))
+    pass
+    # print("Kurzschlussmitimpedanz" = Netzeinspeisung.kurzschlussmitimpedanz(unq: float, ik__q: float))
 
 
 if __name__ == "__main__":
