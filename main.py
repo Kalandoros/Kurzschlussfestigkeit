@@ -52,7 +52,7 @@ def on_clck_zürücksetzen(state):
     state.F_st_80 = None
     state.steifigkeitsnorm_selected = 0 # muss int sein
 
-def on_change_selectable(state):
+def on_change_selectable_leiterseiltyp(state):
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
     state.leiterseiltyp = leiterseiltyp[leiterseiltyp["Bezeichnung"] == state.leiterseiltyp_selected]
     notify(state, notification_type="info", message=f'Leiterseiltyp auf {state.leiterseiltyp["Bezeichnung"].values[0]} geändert')
@@ -90,7 +90,7 @@ with tgb.Page() as page:
             tgb.html("hr")
             with tgb.layout(columns="1 1", columns__mobile="1 1"):
                 tgb.selector(label="Leiterseiltyp", value="{leiterseiltyp_selected}", lov="{leiterseiltyp_lov}",
-                             dropdown=True, on_change=on_change_selectable)
+                             dropdown=True, on_change=on_change_selectable_leiterseiltyp)
                 tgb.selector(label="n (dimensionslos) Anzahl der Teilleiter eines Hauptleiters",
                              value="{teilleiter_selected}", lov="{teilleiter_lov}", dropdown=True)
             tgb.html("br")

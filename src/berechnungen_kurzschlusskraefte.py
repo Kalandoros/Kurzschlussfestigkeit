@@ -11,6 +11,7 @@ from rich.jupyter import display
 g = scipy.constants.g # 9.81 ist auch möglich
 σ_fin = 50 * 10**6 # σ_fin niedrigste Spannung, ab der der Elastizitätsmodul konstant wird in N/m^2 - Gleichung (27)
 
+
 # Grössen ab Kapitel 6.2.2
 def l_c(l: float, l_i: float) -> float:
     """
@@ -246,8 +247,9 @@ def ψ(φ: float, ζ: float) -> float:
             break
     return gl_Psi
 
-# Gleichung (34)
+
 # Grössen ab Kapitel 6.2.4
+# Gleichung (34)
 def ε_ela(N: float, F_td: float, F_st) -> float:
     """
     Funktion zur Berechnung des Wertes ε_ela für die elastische Seildehnung (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.4.
@@ -259,10 +261,11 @@ def ε_ela(N: float, F_td: float, F_st) -> float:
     ε_ela: float = N * (F_td - F_st)
     return ε_ela
 
-# Grössen ab Kapitel 6.2.4
+# Gleichung (35)
 def ε_th(c_th: float, I_k__: float, n: float, A_s: float, T_k1: float, T_res: float) -> float:
     """
-    Funktion zur Berechnung der Wert ε_th thermische Seildehnung (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.4.
+    Funktion zur Berechnung des Wertes der thermischen Seildehnung ε_th (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.4.
+    ε_th: thermische Seildehnung ε_th (dimensionslos)
     c_th: Materialkonstante in m4/(A2s)
     I_k__: Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert) in A
     n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
@@ -274,14 +277,15 @@ def ε_th(c_th: float, I_k__: float, n: float, A_s: float, T_k1: float, T_res: f
         ε_th: float =  c_th * (I_k__ / (n * A_s))**2 * (T_res / 4)
         return ε_th
     elif T_k1 < T_res / 4:
-        ε_th: float = c_th * (I_k__ / (n * A_s)) ** 2 * (T_k1)
+        ε_th: float = c_th * (I_k__ / (n * A_s)) **2 * (T_k1)
         return ε_th
 
-# Grössen ab Kapitel 6.2.4
+# Gleichung (36)
 def C_D(l: float, f_es: float, ε_ela: float, ε_th: float) -> float:
     """
-    Funktion zur Berechnung der Wert C_D Faktor für die Durchhangvergrößerung durch Seildehnung (dimensionslos) nach
+    Funktion zur Berechnung des Faktors für die Durchhangvergrößerung durch Seildehnung C_D (dimensionslos) nach
     SN EN 60865-1:2012 Kapitel 6.2.4.
+    C_D: Faktor für die Durchhangvergrößerung durch Seildehnung (dimensionslos)
     l: Mittenabstand der Stützpunkte in m
     f_es: statischer Ersatz-Seildurchhang in Spannfeldmitte in m
     ε_ela: elastische Seildehnung (dimensionslos)
@@ -290,29 +294,30 @@ def C_D(l: float, f_es: float, ε_ela: float, ε_th: float) -> float:
     C_D: float = math.sqrt(1 + ((3 / 8) * (l / f_es)**2 * (ε_ela + ε_th)))
     return C_D
 
-# Grössen ab Kapitel 6.2.4
+# Gleichung (37)
 def C_F(r: float) -> float:
     """
-    Funktion zur Berechnung der Wert C_F Faktor für die Durchhangvergrößerung durch Änderung der Seilkurvenform
-    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.4.
-    r: Verhältnisses r der elektromagnetischen Kraft auf ein Leiterseil bei Kurzschluss zur
-    Eigengewichtskraft (dimensionslos)
+    Funktion zur Berechnung von C_F Faktor (dimensionslos) für die Durchhangvergrößerung durch Änderung der Seilkurvenform
+    nach SN EN 60865-1:2012 Kapitel 6.2.4.
+    C_F: Faktor für die Durchhangvergrößerung durch Änderung der Seilkurvenform (dimensionslos)
+    r:  Verhältnis von elektromagnetischer Kraft auf ein Leiterseil bei Kurzschluss zur Eigengewichtskraft (dimensionslos)
     """
     if r <= 0.8:
         C_F: float = 1.05
         return C_F
     elif 0.8 < r < 1.8:
-        C_F: float = 0.97 + 0.01 * r
+        C_F: float = 0.97 + (0.1 * r)
         return C_F
     elif r >= 1.8:
         C_F: float = 1.15
         return C_F
 
-# Grössen ab Kapitel 6.2.4
+# Gleichung (38)
 def f_ed(C_D: float, C_F: float, f_es: float) -> float:
     """
-    Funktion zur Berechnung des Werts f_ed dynamischer Seildurchhang in Spannfeldmitte in m nach
+    Funktion zur Berechnung des dynamischen Seildurchhangs in Spannfeldmitte f_ed in m nach
     SN EN 60865-1:2012 Kapitel 6.2.4.
+    f_ed: dynamischer Seildurchhang in Spannfeldmitte in m
     f_es: statischer Ersatz-Seildurchhang in Spannfeldmitte in m
     C_D: Faktor für die Durchhangvergrößerung durch Seildehnung (dimensionslos)
     C_F: Faktor für die Durchhangvergrößerung durch Änderung der Seilkurvenform (dimensionslos)
@@ -321,37 +326,44 @@ def f_ed(C_D: float, C_F: float, f_es: float) -> float:
     return f_ed
 
 
-# Grössen ab Kapitel 6.2.5 (Schlaufen)
-def δ_ebene_parallel(f_es: float, f_ed: float, l_v: float, h: float, w: float) -> float:
+# Grössen ab Kapitel 6.2.5 (Schlaufen in Spannfeldmitte)
+def δ_ebene_parallel(f_es: float, f_ed: float, l_v: float, h: float, w: float) -> float | None:
     """
-    Funktion zur Berechnung des Faktors δ_ebene_parallel zur Berechnung von bei Ausschwingwinkel am Ende des in
-    Kurzschlussstrom-Flusses in ° bei Anordnung Ebene parallel nach SN EN 60865-1:2012 Kapitel 6.2.2
+    Funktion zur Berechnung des tatsächlichen maximalen Ausschwingwinkels infolge der Begrenzung der
+    Ausschwingbewegung durch die Schlaufe bei Anordnung Ebene parallel δ_ebene_parallel in °
+    nach SN EN 60865-1:2012 Kapitel 6.2.2
+    δ_ebene_parallel: tatsächlicher maximaler Ausschwingwinkel infolge der Begrenzung der
+    Ausschwingbewegung durch die Schlaufe Anordnung Ebene paralle in °
     f_es: statischer Ersatz-Seildurchhang in Spannfeldmitte in m
     f_ed: dynamischer Seildurchhang in Spannfeldmitte in m
     l_v: Seil(bogen)länge der Schlaufe in m
     h: Schlaufenhöhe in m
     w: Schlaufenbreite in m
-    Hinweis: Wenn bei paralleler Ebene oder l h f w f bei senkrechter Ebene, dann ist nach 6.2.2 zu rechnen.
     """
-
     if l_v >= math.sqrt((h + f_es + f_ed)**2 + w**2):
+        print("Es ist nach SN EN 60865-1:2012 Kapitel 6.2.2 zu rechnen.")
+        return None
+    else:
         δ_ebene_parallel: float = arccos(((h +f_es)**2 + f_ed**2 - (l_v**2 - w**2)) / (2 * f_ed * (h +f_es)))
         return δ_ebene_parallel
 
 # Grössen ab Kapitel 6.2.5 (Schlaufen)
-def δ_ebene_senkrecht(f_es: float, f_ed: float, l_v: float, h: float, w: float) -> float:
+def δ_ebene_senkrecht(f_es: float, f_ed: float, l_v: float, h: float, w: float) -> float | None:
     """
-    Funktion zur Berechnung des Faktors δ_ebene_parallel zur Berechnung von bei Ausschwingwinkel am Ende des in
-    Kurzschlussstrom-Flusses in ° bei Anordnung Ebene parallel nach SN EN 60865-1:2012 Kapitel 6.2.2
+    Funktion zur Berechnung des tatsächlichen maximalen Ausschwingwinkels infolge der Begrenzung der
+    Ausschwingbewegung durch die Schlaufe bei Anordnung senkrecht nach SN EN 60865-1:2012 Kapitel 6.2.2
+    δ_ebene_senkrecht: tatsächlicher maximaler Ausschwingwinkel infolge der Begrenzung der
+    Ausschwingbewegung durch die Schlaufe bei Anordnung senkrecht in °
     f_es: statischer Ersatz-Seildurchhang in Spannfeldmitte in m
     f_ed: dynamischer Seildurchhang in Spannfeldmitte in m
     l_v: Seil(bogen)länge der Schlaufe in m
     h: Schlaufenhöhe in m
     w: Schlaufenbreite in m
-    Hinweis: Wenn bei paralleler Ebene oder l h f w f bei senkrechter Ebene, dann ist nach 6.2.2 zu rechnen.
     """
-
     if l_v >= math.sqrt((h + f_es )**2 + w**2) + f_ed:
+        print("Es ist nach SN EN 60865-1:2012 Kapitel 6.2.2 zu rechnen.")
+        return None
+    else:
         δ_ebene_senkrecht: float = arccos(((h +f_es)**2 + f_ed**2 - (l_v**2 - w**2)) / (2 * f_ed * math.sqrt((h +f_es)**2 + w**2))) + arccos((h + f_es) / (math.sqrt((h +f_es)**2 + w**2)))
         return δ_ebene_senkrecht
 
@@ -493,6 +505,18 @@ def testrechnungen() -> None:
     # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
     print("ε_ela (-20°C) = ", ε_ela(N=1.0453520331567817e-07, F_td=23407.126*1.1 , F_st=19000)) # -20°C
     print("ε_ela (80°C) = ", ε_ela(N=1.1606610962577493e-07, F_td=13821.871*1.1 , F_st=7000)) # 80°C
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
+    print("ε_th (-20°C) = ", ε_th(c_th=2.7E-19, I_k__= 40000, n= 2, A_s= 600.38*10**-6, T_k1= 1,T_res=0.682)) # -20°C
+    print("ε_th (80°C) = ", ε_th(c_th=2.7E-19, I_k__=40000, n=2, A_s=600.38 * 10 ** -6, T_k1=1, T_res=1.123))  # 80°C
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
+    print("C_D (-20°C) = ", C_D(l=31.0 , f_es=0.206, ε_ela=0.0007053866799923814, ε_th=5.108e-05)) # -20°C
+    print("C_D (80°C) = ", C_D(l=31.0, f_es=0.558, ε_ela=0.0009522131068108268, ε_th=8.412e-05))  # 80°C
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
+    print("C_F (-20°C) = ", C_F(r=1.219)) # -20°C
+    print("C_F (80°C) = ", C_F(r=1.219))  # 80°C
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
+    print("f_ed (-20°C) = ", f_ed(C_D=2.72, C_F=1.092, f_es=0.206)) # -20°C
+    print("f_ed (80°C) = ", f_ed(C_D=1.842, C_F=1.092, f_es=0.558))  # 80°C
     print()
 
 
@@ -540,6 +564,18 @@ def testrechnungen() -> None:
     # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 7.5 → Verifiziert
     print("ε_ela (-20°C) = ", ε_ela(N=1.18764979876091e-06, F_td=2370.788 , F_st=350)) # -20°C
     print("ε_ela (60°C) = ", ε_ela(N=1.1927309524063582e-06, F_td=2060.35 , F_st=250)) # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 7.5 → Verifiziert
+    print("ε_th (-20°C) = ", ε_th(c_th=2.7E-19, I_k__=19000, n=1, A_s=243*10**-6, T_k1=0.3,T_res=0.494)) # -20°C
+    print("ε_th (60°C) = ", ε_th(c_th=2.7E-19, I_k__=19000, n=1, A_s=243*10**-6, T_k1=0.3, T_res=0.585))  # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 7.5 → Verifiziert
+    print("C_D (-20°C) = ", C_D(l=10.4 , f_es=0.254, ε_ela=0.0023999884615384616, ε_th=0.000203856881572931)) # -20°C
+    print("C_D (60°C) = ", C_D(l=10.4, f_es=0.356, ε_ela=0.0021592604796888504, ε_th=0.00024140946502057618))  # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 7.5 → Verifiziert
+    print("C_F (-20°C) = ", C_F(r=4.115)) # -20°C
+    print("C_F (60°C) = ", C_F(r=4.115))  # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 7.5 → Verifiziert
+    print("f_ed (-20°C) = ", f_ed(C_D=1.624, C_F=1.15, f_es=0.254)) # -20°C
+    print("f_ed (60°C) = ", f_ed(C_D=1.33, C_F=1.15, f_es=0.356))  # 60°C
     print()
 
 
@@ -587,6 +623,18 @@ def testrechnungen() -> None:
     # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 8.3.3 → Verifiziert
     print("ε_ela (-20°C) = ", ε_ela(N=5.764978849002121e-08, F_td=36161.59 , F_st=17800)) # -20°C
     print("ε_ela (60°C) = ", ε_ela(N=5.8531210649397374e-08, F_td=32874.457 , F_st=15400)) # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 8.3.3 → Verifiziert
+    print("ε_th (-20°C) = ", ε_th(c_th=2.7E-19, I_k__=63000, n= 2, A_s=1090*10**-6, T_k1=0.5,T_res=1.79)) # -20°C
+    print("ε_th (60°C) = ", ε_th(c_th=2.7E-19, I_k__=63000, n=2, A_s=1090*10**-6, T_k1=0.5, T_res=1.91))  # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 8.3.3 → Verifiziert
+    print("C_D (-20°C) = ", C_D(l=48 , f_es=1.346, ε_ela=0.0010585417798404883, ε_th=0.00010090784130123727)) # -20°C
+    print("C_D (60°C) = ", C_D(l=48, f_es=1.555, ε_ela=0.0010228011236508366, ε_th=0.00010767261278511908))  # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 8.3.3 → Verifiziert
+    print("C_F (-20°C) = ", C_F(r=1.12)) # -20°C
+    print("C_F (60°C) = ", C_F(r=1.12))  # 60°C
+    # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 8.3.3 → Verifiziert
+    print("f_ed (-20°C) = ", f_ed(C_D=1.246, C_F=1.082, f_es=1.346)) # -20°C
+    print("f_ed (60°C) = ", f_ed(C_D=1.185, C_F=1.082, f_es=1.555))  # 60°C
     print()
 
 
