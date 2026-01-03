@@ -1,7 +1,9 @@
+from pandas.io.clipboard import init_windows_clipboard
 from taipy.gui import notify
 import taipy.gui.builder as tgb
 import pandas as pd
 from src.utils import dataloader
+from src.calculations.engine_kurzschlusskraefte import ShortCircuitInput, ShortCircuitResult, calculate_short_circuit
 
 # Configuration for pandas
 pd.set_option('display.max_columns', None)
@@ -38,7 +40,20 @@ F_st_80: None|float = None
 l: None|float = None
 l_i: None|float = None
 
-def on_clck_zurücksetzen(state):
+
+def on_change_selectable_leiterseiltyp(state):
+    #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
+    state.leiterseiltyp = leiterseiltyp[leiterseiltyp["Bezeichnung"] == state.leiterseiltyp_selected]
+    notify(state, notification_type="info", message=f'Leiterseiltyp auf {state.leiterseiltyp["Bezeichnung"].values[0]} geändert')
+    print(state.leiterseiltyp["Dauerstrombelastbarkeit"].values[0])
+
+def on_click_leiterseiltyp_zurücksetzen(state):
+    state.leiterseiltyp = dataloader.load_csv_to_df()
+    state.leiterseiltyp_selected = None
+    #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
+    notify(state, notification_type="info", message="Auswahl aufgehoben")
+
+def on_click_zurücksetzen(state):
     state.leiterseilbefestigung_selected = None
     state.standardkurzschlussströme_selected = "0.0" # muss float sein
     state.t_k = None
@@ -52,17 +67,49 @@ def on_clck_zurücksetzen(state):
     state.F_st_80 = None
     state.steifigkeitsnorm_selected = "0" # muss int sein
 
-def on_change_selectable_leiterseiltyp(state):
-    #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
-    state.leiterseiltyp = leiterseiltyp[leiterseiltyp["Bezeichnung"] == state.leiterseiltyp_selected]
-    notify(state, notification_type="info", message=f'Leiterseiltyp auf {state.leiterseiltyp["Bezeichnung"].values[0]} geändert')
-    print(state.leiterseiltyp["Dauerstrombelastbarkeit"].values[0])
+# Für die spätere Bearbeitung
+def on_calculate(state):
+    if not state.leiterseiltyp_selected:
+        notify(state, notification_type="error", message="Bitte Leiterseiltyp auswählen!")
+        return
+    if not state.standardkurzschlussstroeme_selected:
+        notify(state, notification_type="error", message="Bitte Kurzschlussstrom auswählen!")
+        return
 
-def on_click_leiterseiltyp_zurücksetzen(state):
-    state.leiterseiltyp = dataloader.load_csv_to_df()
-    state.leiterseiltyp_selected = None
-    #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
-    notify(state, notification_type="info", message="Auswahl aufgehoben")
+    # Extraktion der Seildaten
+    row = state.leiterseiltyp[state.leiterseiltyp["Bezeichnung"] == state.leiterseiltyp_selected]
+    if row.empty:
+        return
+
+    try:
+        # Erstellung des Input-Objekts für den Mediator
+        inputs = ShortCircuitInput(
+            I_k_double_prime=float(state.standardkurzschlussstroeme_selected),
+            t_k=state.t_k,
+            n=int(state.teilleiter_selected) if state.teilleiter_selected else 1,
+            befestigung=state.leiterseilbefestigung_selected or "Aufgelegt",
+            l=state.l,
+            l_i=state.l_i,
+            a=state.a,
+            a_s=state.a_s,
+            m_s=float(row["Massenbelag eines Teilleiters"].values[0].replace(',', '.')) if isinstance(
+                row["Massenbelag eines Teilleiters"].values[0], str) else row["Massenbelag eines Teilleiters"].values[
+                0],
+            A_s=(float(row["Querschnitt eines Teilleiters"].values[0].replace(',', '.')) if isinstance(
+                row["Querschnitt eines Teilleiters"].values[0], str) else row["Querschnitt eines Teilleiters"].values[
+                0]) * 1e-6,
+            E=(float(row["Elastizitätsmodul"].values[0].replace(',', '.')) if isinstance(
+                row["Elastizitätsmodul"].values[0], str) else row["Elastizitätsmodul"].values[0]),
+            F_st=state.F_st_20,  # Beispielhaft für -20°C
+            S=float(state.steifigkeitsnorm_selected) if state.steifigkeitsnorm_selected else 100000.0
+        )
+
+        # Berechnung über den Mediator
+        state.calc_result = calculate_short_circuit(inputs)
+        notify(state, notification_type="success", message="Berechnung abgeschlossen")
+
+    except Exception as e:
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(e)}")
 
 with tgb.Page() as kurzschlusskraefte_page:
     # tgb.menu(label="Menu", lov=[("a", "Option A"), ("b", "Option B"), ("c", "Option C"), ("d", "Option D")], expanded = False)
@@ -132,7 +179,42 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.html("br")
             with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
                 tgb.button(label="Auswahl Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
-                tgb.button(label="Zürücksetzen", on_action=on_clck_zurücksetzen)
+                tgb.button(label="Zürücksetzen", on_action=on_click_zurücksetzen)
+        with tgb.part(class_name="card"):
+            tgb.text(value="Ergebnisse", class_name="h2")
+
+            tgb.html("br")
+            tgb.text(value="Maximale Seilzugkräfte bei -20 °C", class_name="h6")
+            tgb.html("hr")
+
+            tgb.html("br")
+            tgb.text(value="Maximale Seilzugkräfte bei 80 °C", class_name="h6")
+            tgb.html("hr")
+
+            tgb.html("br")
+            tgb.text(value="Massgebende Seilzugkräfte bei -20/80 °C", class_name="h6")
+            tgb.html("hr")
+
+            tgb.html("br")
+            tgb.text(value="Auslegungen der Verbindungsmittel und Unterkonstruktionen", class_name="h6")
+            tgb.html("hr")
+
+            tgb.html("br")
+            tgb.text(value="Seilauslenkung und Abstand", class_name="h6")
+            tgb.html("hr")
+
+            tgb.html("br")
+            tgb.text(value="Erweiterte Ergebnisse", class_name="h6")
+            tgb.html("hr")
+
+            with tgb.layout(columns="1", columns__mobile="1"):
+                with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
+                    with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
+                        tgb.number(label="l_s [m] statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
+                                   step=0.1, class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Fst80 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_80}", min=0.0,
+                                   step=0.1, class_name="input-with-unit N-unit Mui-focused")
+
 
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
         with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False):
