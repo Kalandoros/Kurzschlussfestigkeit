@@ -10,7 +10,7 @@ DIRECTORY_NAME = "data"
 FILE_NAME = "Leiterseildaten.csv"
 
 def get_project_root() -> Path:
-    return Path(__file__).parent.parent
+    return Path(__file__).parent.parent.parent
 
 def load_csv_to_df() -> pd.DataFrame:
     file = Path(get_project_root(), DIRECTORY_NAME, FILE_NAME)
