@@ -22,6 +22,12 @@ teilleiter_selected: None|int = None
 steifigkeitsnorm_lov: list[int] = ["100000", "150000", "1300000", "400000", "2000000", "600000", "3000000"]
 steifigkeitsnorm_selected: None|int = None
 
+schlaufe_in_spannfeldmitte_lov: list[str] = ["Ja", "Nein"]
+schlaufe_in_spannfeldmitte_selected: None|int = None
+
+höhenunterschied_befestigungspunkte_lov: list[str] = ["Ja", "Nein"]
+höhenunterschied_befestigungspunkte_selected: None|int = None
+
 """
 Auswahl der Leiterseiltypen: 
 1. Gesamte Leiterseildaten als Dataframe, 
@@ -117,12 +123,21 @@ with tgb.Page() as kurzschlusskraefte_page:
     with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
         with tgb.part(class_name="card"):
             tgb.text(value="Eingaben", class_name="h2")
-            # Rahmenwerte
             tgb.html("br")
-            tgb.text(value="Befestigungsart", class_name="h6")
+            tgb.text(value="Allgemeine Angaben", class_name="h6")
             tgb.html("hr")
-            tgb.selector(label="Art der Leiterseilbefestigung", value="{leiterseilbefestigung_selected}",
-                         lov="{leiterseilbefestigung_lov}", dropdown=True)
+            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
+                tgb.selector(label="Art der Leiterseilbefestigung", value="{leiterseilbefestigung_selected}",
+                             lov="{leiterseilbefestigung_lov}", dropdown=True)
+                tgb.selector(label="Schlaufe in Spannfeldmitte",
+                             value="{schlaufe_in_spannfeldmitte_selected}", lov="{schlaufe_in_spannfeldmitte_lov}",
+                             dropdown=True, hover_text="Ja, wenn der obere Befestigungspunkt der Schlaufe bis "
+                                                       "zu 10 % der Länge des Hauptleiters von der Mitte entfernt ist.")
+                tgb.selector(label="Höhenunterschied der Befestigungspunkte mehr als 25%",
+                             value="{höhenunterschied_befestigungspunkte_selected}",
+                             lov="{höhenunterschied_befestigungspunkte_lov}",
+                             dropdown=True, hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte"
+                                                       " mehr als 25 % der Spannfeldlänge beträgt.")
             tgb.html("br")
             tgb.text(value="Elektrische Werte", class_name="h6")
             tgb.html("hr")
@@ -169,13 +184,18 @@ with tgb.Page() as kurzschlusskraefte_page:
             with tgb.layout(columns="1", columns__mobile="1"):
                 with tgb.expandable(title="Detailangaben", expanded=False, class_name="h6"):
                     with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
-                        tgb.number(label="l_s [m] statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
-                                   step=0.1, class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Fst80 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_80}", min=0.0,
-                                   step=0.1, class_name="input-with-unit N-unit Mui-focused")
-                        tgb.selector(label="N [1/N]Steifigkeitsnorm einer Anordnung mit Leiterseilen",
-                                     value="{steifigkeitsnorm_selected}", lov="{steifigkeitsnorm_lov}",
-                                     dropdown=True, class_name="input-with-unit inv-N-unit")
+                        tgb.selector(label="Art der Leiterseilbefestigung", value="{leiterseilbefestigung_selected}",
+                                     lov="{leiterseilbefestigung_lov}", dropdown=True)
+                        tgb.selector(label="Schlaufe in Spannfeldmitte",
+                                     value="{schlaufe_in_spannfeldmitte_selected}", lov="{schlaufe_in_spannfeldmitte_lov}",
+                                     dropdown=True, hover_text="Ja, wenn der obere Befestigungspunkt der Schlaufe bis "
+                                                               "zu 10 % der Länge des Hauptleiters von der Mitte entfernt ist.")
+                        tgb.selector(label="Höhenunterschied der Befestigungspunkte mehr als 25%",
+                                     value="{schlaufe_in_spannfeldmitte_selected}",
+                                     lov="{schlaufe_in_spannfeldmitte_lov}",
+                                     dropdown=True, hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte"
+                                                               " mehr als 25 % der Spannfeldlänge beträgt.")
+                        # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
             with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
                 tgb.button(label="Auswahl Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
@@ -210,10 +230,7 @@ with tgb.Page() as kurzschlusskraefte_page:
             with tgb.layout(columns="1", columns__mobile="1"):
                 with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
                     with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
-                        tgb.number(label="l_s [m] statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
-                                   step=0.1, class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Fst80 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_80}", min=0.0,
-                                   step=0.1, class_name="input-with-unit N-unit Mui-focused")
+                        pass
 
 
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
