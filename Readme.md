@@ -1,11 +1,22 @@
 
 
+## Seilzugkraft $F_{f,d}$ nach dem Kurzschluss durch das Fallen (Fall-Seilzugkraft) 
+Nach dem Ausschalten des Kurzschlusses pendelt das Seil oder es fällt in seine Ruhelage zurück. Der 
+Höchstwert Ff,d der am Ende des Falles auftretenden Seilzugkraft ist nur zu berücksichtigen bei $r > 0,6$, 
+wenn $δmax ≥ 70°$, und mit einer Schlaufe in Spannfeldmitte, wenn $δ ≥ 60°$.
+
+[ ] Was der Satz genau bedeutet, muss nochmal genau durchdacht werden!
+
+Bei kurzen Spannfeldern vermindert die Biegesteifigkeit der Seile den Seilfall; deshalb wird die Fall-Seilzugkraft
+zu groß berechnet, wenn die Spannfeldlänge den etwa 100-fachen Durchmesser des Einzelseils 
+unterschreitet, d. h. $l < 100 d$. 
+
 ## Einzellasten
 Bei der Berechnung der Seilzugkräfte durch Ausschwingen und Fallen des Spannfeldes werden
 die Einzellasten gleichmässig auf die Seillänge verteilt, bei der Berechnung der Seilzugkraft durch
 Bündelkontraktion bleiben sie unberücksichtigt. [2]
 
-# Unterschlaufungen
+## Unterschlaufungen
 Unterschlaufungen verbinden zwei Felder mit abgespannten Leitungsseilen. 
 Versuche haben gezeigt, dass die Schlaufe als eingespannt in den Seilklemmen betrachtet werden kann, und
 der tiefste Punkt der Schlaufe sich auf einer Kreisbahn um einen Punkt unterhalb der Verbindungslinie
