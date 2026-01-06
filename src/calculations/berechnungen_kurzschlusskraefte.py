@@ -2,6 +2,7 @@ import math
 import scipy
 import sympy
 import numpy
+from mpmath import ln
 from numpy.ma.core import arccos
 from rich.jupyter import display
 
@@ -424,7 +425,130 @@ def ψ_mit_schlaufe(φ: float, ζ: float) -> float:
             break
     return gl_Psi
 
+# Grössen ab Kapitel 6.2.7 (Horizontale Seilauslenkung und minimaler Leiterabstand)
+# Gleichung (44)
+def b_h_ohne_schlaufe_spannfeldmitte_aufgelegt(f_ed: float, δ_max: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors b_h für die Berechnung der maximalen horizontalen Seilauslenkung in m
+    nach SN EN 60865-1:2012 Kapitel 6.2.7
+    b_h: maximale horizontale Seilauslenkung in m
+    f_ed: dynamischer Seildurchhang in Spannfeldmitte in m
+    δ_max: maximaler Ausschwingwinkel in °
+    l: Mittenabstand der Stützpunkte in m
+    l_c: Seillänge eines Hauptleiters im Spannfeld  in m
+    l_i: Länge einer Abspann-Isolatorkette in m
+    Hinweis: Gilt für l_c = l. Gilt für die Spannfeldmitte.
+    """
+    if δ_max >= 90:
+        b_h_1: float = f_ed
+        b_h: float = b_h_1
+        return b_h
+    elif δ_max < 90:
+        b_h_2: float = f_ed * math.sin(math.radians(δ_max))
+        b_h: float = b_h_2
+        return b_h
 
+# Gleichung (45)
+def b_h_ohne_schlaufe_spannfeldmitte_abgespannt(f_ed: float, δ_max: float, δ_1: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors b_h für die Berechnung der maximalen horizontalen Seilauslenkung in m
+    nach SN EN 60865-1:2012 Kapitel 6.2.7
+    b_h: maximale horizontale Seilauslenkung in m
+    f_ed: dynamischer Seildurchhang in Spannfeldmitte in m
+    δ_max: maximaler Ausschwingwinkel in °
+    δ_1: Richtung der resultierenden Kraft in °
+    l: Mittenabstand der Stützpunkte in m
+    l_c: Seillänge eines Hauptleiters im Spannfeld in m
+    l_i: Länge einer Abspann-Isolatorkette in m
+    Hinweis: Gilt für l_c = l - 2 * l_i. Gilt für die Spannfeldmitte.
+    """
+    if δ_max >= δ_1:
+        b_h_3: float = f_ed * math.sin(math.radians(δ_1))
+        b_h: float = b_h_3
+        return b_h
+    elif δ_max < δ_1:
+        b_h_4: float = f_ed * math.sin(math.radians(δ_max))
+        b_h: float = b_h_4
+        return b_h
+
+# Gleichung (46, 47)
+def b_h_mit_schlaufe_spannfeldmitte_abgespannt(f_ed: float, δ_max: float, δ_1: float, δ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors b_h für die Berechnung der maximalen horizontalen Seilauslenkung in m
+    nach SN EN 60865-1:2012 Kapitel 6.2.7
+    b_h: maximale horizontale Seilauslenkung in m
+    f_ed: dynamischer Seildurchhang in Spannfeldmitte in m
+    δ_max: maximaler Ausschwingwinkel in °
+    δ_1: Richtung der resultierenden Kraft in °
+    δ: tatsächlicher maximaler Ausschwingwinkel infolge der Begrenzung der Ausschwingbewegung durch die Schlaufe in °
+    l: Mittenabstand der Stützpunkte in m
+    l_c: Seillänge eines Hauptleiters im Spannfeld in m
+    l_i: Länge einer Abspann-Isolatorkette in m
+    Hinweis: Gilt für l_c = l - 2 * l_i. Gilt für die Spannfeldmitte.
+    """
+    if δ >= δ_max:
+        if δ_max >= δ_1:
+            b_h_5: float = f_ed * math.sin(math.radians(δ_1))
+            b_h: float = b_h_5
+            return b_h
+        elif δ_max < δ_1:
+            b_h_6: float = f_ed * math.sin(math.radians(δ_max))
+            b_h: float = b_h_6
+            return b_h
+    elif δ < δ_max:
+        if δ_max >= δ_1:
+            b_h_7: float = f_ed * math.sin(math.radians(δ_1))
+            b_h: float = b_h_7
+            return b_h
+        elif δ_max < δ_1:
+            b_h_8: float = f_ed * math.sin(math.radians(δ))
+            b_h: float = b_h_8
+            return b_h
+
+# Gleichung (48)
+def a_min(a: float, b_h: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors a_min für die Berechnung des minimalen Leiterabstandes in m
+    nach SN EN 60865-1:2012 Kapitel 6.2.7
+    a_min: minimale Leiterabstand in m
+    a: Leitermittenabstand in m
+    b_h: maximale horizontale Seilauslenkung in m
+    """
+    a_min: float = a - b_h
+    return a_min
+
+# Grössen ab Kapitel 6.3
+# Gleichung (50)
+def b_h_mit_verikaler_höhenunterschied_befestigungspunkte(l: float, l_v: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors b_h für die Berechnung der maximalen horizontalen Seilauslenkung in m
+    nach SN EN 60865-1:2012 Kapitel 6.3
+    b_h: maximale horizontale Seilauslenkung in m
+    l: Mittenabstand der Stützpunkte in m
+    l_v: Seil(bogen)länge der Schlaufe m
+    Hinweis: Gilt für l_v = 2 * l.
+    """
+    if l_v >= 2:
+        b_h: float = (0.6 * math.sqrt((l_v - l) -1) + (0.44 * ((l_v / l) -1)) - (0.32 * math.log(l_v / l))) * (l_v**2 / l)
+        return b_h
+
+# Grössen ab Kapitel 6.4.1
+# Gleichung (55)
+def ν_1(μ0: float, I_k: float, a_s: float, n: float, m_s: float, d: float, f: float) -> float:
+    """
+    Funktion zur Berechnung der Kurzschluss-Stromkraft zwischen den Teilleitern eines Bündels F_v in N nach
+    SN EN 60865-1:2012 Kapitel 6.4.1.
+    ν_1: Faktor zur Berechnung von F_pi_d
+    μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
+    I_k: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    m_s: Massenbelag eines Teilleiters in kg/m
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    f: Frequenz des Netzes in Hz
+    """
+    ν_1: float = f * (1 / math.sin(math.radians(180 / n))) * math.sqrt(((a_s - d) * m_s) / ((μ0 / (2 * math.pi)) * (I_k / n)**2 * ((n - 1) / a_s)))
+    return ν_1
 
 
 
@@ -435,7 +559,8 @@ def ψ_mit_schlaufe(φ: float, ζ: float) -> float:
 
 
 # Hauptformeln
-# Grössen ab Kapitel 4 - Gleichung (1)
+# Grössen ab Kapitel 4
+# Gleichung (1)
 def F(μ0: float, i_1: float, i_2: float, l: float, a: float) -> float:
     """
     Funktion zur Berechnung der Kraft F zwischen zwei parallelen, langen Leitern während eines Kurzschlusses in N
@@ -453,14 +578,15 @@ def F(μ0: float, i_1: float, i_2: float, l: float, a: float) -> float:
     F: float = (μ0 / 2 * math.pi) * i_1 * i_2 * l * a
     return F
 
-# Grössen ab Kapitel 6.2.2 - Gleichung (19a)
+# Grössen ab Kapitel 6.2.2
+# Gleichung (19a)
 def F_a(μ0: float, I_k: float, l: float, l_c: float, a: float) -> float:
     """
     Funktion zur Berechnung der Kraft F' Kraft charakteristischer elektromagnetischer Kraftbelag auf den Hauptleiter in
     Seilanordnungen in N/m nach SN EN 60865-1:2012 Kapitel 6.2.2.
     Bei Stromfluss über die gesamte Seillänge des Hauptleiters im Spannfeld mit und ohne Schlaufe.
     μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
-    Ik′′: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
+    I_k: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
     a: Leitermittenabstand in m
     l: Mittenabstand der Stützpunkte in m
     l_c: Seillänge eines Hauptleiters im Spannfeld m
@@ -473,14 +599,15 @@ def F_a(μ0: float, I_k: float, l: float, l_c: float, a: float) -> float:
     F_a: float = (μ0 / (2 * math.pi)) * 0.75 * (I_k**2 / a) * (l_c / l)
     return F_a
 
-# Grössen ab Kapitel 6.2.2 - Gleichung (19b)
+# Grössen ab Kapitel 6.2.2
+# Gleichung (19b)
 def F_b(μ0: float, I_k: float, l: float, l_c: float, l_v: float, a: float) -> float:
     """
     Funktion zur Berechnung der Kraft F' Kraft charakteristischer elektromagnetischer Kraftbelag auf den Hauptleiter in
     Seilanordnungen in N/m nach SN EN 60865-1:2012 Kapitel 6.2.2.
     Bei Stromfluss über die halbe Seillänge des Hauptleiters im Spannfeld über die Schlaufe
     μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
-    Ik′′: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
+    I_k: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
     a: Leitermittenabstand in m
     l: Mittenabstand der Stützpunkte in m
     l_c: Seillänge eines Hauptleiters im Spannfeld m
@@ -493,8 +620,9 @@ def F_b(μ0: float, I_k: float, l: float, l_c: float, l_v: float, a: float) -> f
     F_b: float = (μ0 / 2 * math.pi) * 0.75 * (I_k**2 / a) * (((l_c / 2) + (l_v / 2)) / l)
     return F_b
 
-# Grössen ab Kapitel 6.2.3 - Gleichung (33)
-def F_td_ohne_Schlaufe(F_st: float, φ: float, ψ: float) -> float:
+# Grössen ab Kapitel 6.2.3
+# Gleichung (33)
+def F_td_ohne_schlaufe_spannfeldmitte(F_st: float, φ: float, ψ: float) -> float:
     """
     Funktion zur Berechnung der Kraft F_td Kurzschluss-Seilzugkraft in einem Hauptleiter (Bemessungswert) in
     Seilanordnungen in N nach SN EN 60865-1:2012 Kapitel 6.2.3.
@@ -511,8 +639,9 @@ def F_td_ohne_Schlaufe(F_st: float, φ: float, ψ: float) -> float:
 
 # Bis hierhin verfiziert
 
-# Grössen ab Kapitel 6.2.5 - Gleichung (42)
-def F_td_mit_Schlaufe(F_st: float, φ: float, ψ: float) -> float:
+# Grössen ab Kapitel 6.2.5
+# Gleichung (42)
+def F_td_mit_schlaufe_spannfeldmitte(F_st: float, φ: float, ψ: float) -> float:
     """
     Funktion zur Berechnung der Kraft F_td Kurzschluss-Seilzugkraft in einem Hauptleiter (Bemessungswert) in
     Seilanordnungen in N nach SN EN 60865-1:2012 Kapitel 6.2.3.
@@ -527,7 +656,8 @@ def F_td_mit_Schlaufe(F_st: float, φ: float, ψ: float) -> float:
     F_td: float = F_st * (1 + (φ * ψ))
     return F_td
 
-# Grössen ab Kapitel 6.2.5 - Gleichung (43)
+# Grössen ab Kapitel 6.2.5
+# Gleichung (43)
 def F_fd(F_st: float, ζ: float, δ_max: float) -> float:
     """
     Funktion zur Berechnung der Kraft F_fd Fall-Seilzugkraft in einem Hauptleiter (Bemessungswert) in
@@ -544,6 +674,76 @@ def F_fd(F_st: float, ζ: float, δ_max: float) -> float:
     """
     F_fd: float = 1.2 * F_st * math.sqrt(1 + (8 * ζ *(δ_max / 180)))
     return F_fd
+
+# Grössen ab Kapitel 6.3
+# Gleichung (49)
+def F_td_verikaler_höhenunterschied_befestigungspunktel(μ0: float, I_k: float, l_v: float, a: float, w: float) -> float:
+    """
+    Funktion zur Berechnung der Kraft F_td Kurzschluss-Seilzugkraft in einem Hauptleiter (Bemessungswert) in
+    Seilanordnungen in N nach SN EN 60865-1:2012 Kapitel 6.3.
+    F_td: Kurzschluss-Seilzugkraft in einem Hauptleiter (Bemessungswert) in N
+    μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
+    I_k: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
+    a: Leitermittenabstand in m
+    l_v: Seil(bogen)länge der Schlaufe m
+    w: Schlaufenbreite in m
+    Erläuterung zu F_td:
+    Kraft infolge des Ausschwingens während des Kurzschlusses.
+    Anzuwenden bei vertikalen Schlaufen bei einem Höhenunterschiede der Befestigungspunkte von mehr als 25 % der
+    Spannfeldlänge betragen.
+    """
+    F_td: float = (5 / 3) * l_v * ((μ0 / 2 * math.pi)  * (I_k**2 / a) * (l_v / w))
+    return F_td
+
+# Grössen ab Kapitel 6.4.1
+# Gleichung (51)
+def F_pi_d(F_td: float, a_s: float, d: float, l_s: float) -> float:
+    """
+    Funktion zur Berechnung der Kraft F_pi_d Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert)
+    in N nach SN EN 60865-1:2012 Kapitel 6.4.1.
+    F_pi_d: Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert) in N
+    F_td: Kurzschluss-Seilzugkraft in einem Hauptleiter (Bemessungswert) in N
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
+    Erläuterung zu F_pi_d:
+    Das wirksame Zusammenschlagen der Teilleiter gilt als erfüllt, wenn sowohl der Mittenabstand as zweier benachbarter
+    Teilleiter als auch der Abstand ls zweier benachbarter Abstandhalter entweder Gleichung (52) ODER Gleichung (53)
+    erfüllen.
+    """
+    if a_s / d <= 2.0 and l_s >= 50:
+        F_pi_d_1: float = 1.1 * F_td
+        F_pi_d = F_pi_d_1
+        return F_pi_d
+    elif a_s / d <= 2.5 and l_s >= 70:
+        F_pi_d_2: float = 1.1 * F_td
+        F_pi_d = F_pi_d_2
+        return F_pi_d
+
+# Grössen ab Kapitel 6.4.1
+# Gleichung (54)
+def F_v(μ0: float, I_k: float, a_s: float, l_s: float, n: float, ν_2: float, ν_3: float) -> float:
+    """
+    Funktion zur Berechnung der Kurzschluss-Stromkraft zwischen den Teilleitern eines Bündels F_v in N nach
+    SN EN 60865-1:2012 Kapitel 6.4.1.
+    F_v: Kurzschluss-Stromkraft zwischen den Teilleitern eines Bündels in N
+    μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
+    I_k: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    ν_2: Faktor zur Berechnung von F_pi_d
+    ν_3: Faktor zur Berechnung von F_pi_d
+    Erläuterung zu F_v:
+    Das wirksame Zusammenschlagen der Teilleiter gilt als erfüllt, wenn sowohl der Mittenabstand as zweier benachbarter
+    Teilleiter als auch der Abstand ls zweier benachbarter Abstandhalter entweder Gleichung (52) ODER Gleichung (53)
+    erfüllen.
+    """
+    F_v = (n - 1) * (μ0 / 2 * math.pi)  * (I_k**2 / n) * (l_s / a_s) * (ν_2 / ν_3)
+    return F_v
+
+
+# Hilfsgleichungen l_v
 
 
 def testrechnungen() -> None:
@@ -592,8 +792,8 @@ def testrechnungen() -> None:
     print("ψ (-20°C) = ", ψ_ohne_schlaufe(φ= 1.731, ζ= 0.059)) # -20°C
     print("ψ (80°C) = ", ψ_ohne_schlaufe(φ= 1.731, ζ= 1.064)) # 80°C
     # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
-    print("F_td (-20°C) = ", F_td_ohne_Schlaufe(F_st=19000, φ=1.731, ψ=0.134)) # -20°C
-    print("F_td (80°C) = ", F_td_ohne_Schlaufe(F_st=7000, φ=1.731, ψ=0.563)) # 80°C
+    print("F_td (-20°C) = ", F_td_ohne_schlaufe_spannfeldmitte(F_st=19000, φ=1.731, ψ=0.134)) # -20°C
+    print("F_td (80°C) = ", F_td_ohne_schlaufe_spannfeldmitte(F_st=7000, φ=1.731, ψ=0.563)) # 80°C
     # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
     print("ε_ela (-20°C) = ", ε_ela(N=1.0453520331567817e-07, F_td=23407.126*1.1 , F_st=19000)) # -20°C
     print("ε_ela (80°C) = ", ε_ela(N=1.1606610962577493e-07, F_td=13821.871*1.1 , F_st=7000)) # 80°C
@@ -651,8 +851,8 @@ def testrechnungen() -> None:
     print("ψ (-20°C) = ", ψ_ohne_schlaufe(φ= 9.72, ζ= 3.84)) # -20°C
     print("ψ (60°C) = ", ψ_ohne_schlaufe(φ= 9.72, ζ= 10.5)) # 60°C
     # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 7.4 → Verifiziert
-    print("F_td (-20°C) = ", F_td_ohne_Schlaufe(F_st=350, φ=9.72, ψ=0.594)) # -20°C
-    print("F_td (60°C) = ", F_td_ohne_Schlaufe(F_st=250, φ=9.72, ψ=0.745)) # 60°C
+    print("F_td (-20°C) = ", F_td_ohne_schlaufe_spannfeldmitte(F_st=350, φ=9.72, ψ=0.594)) # -20°C
+    print("F_td (60°C) = ", F_td_ohne_schlaufe_spannfeldmitte(F_st=250, φ=9.72, ψ=0.745)) # 60°C
     # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 7.5 → Verifiziert
     print("ε_ela (-20°C) = ", ε_ela(N=1.18764979876091e-06, F_td=2370.788 , F_st=350)) # -20°C
     print("ε_ela (60°C) = ", ε_ela(N=1.1927309524063582e-06, F_td=2060.35 , F_st=250)) # 60°C
@@ -710,8 +910,8 @@ def testrechnungen() -> None:
     print("ψ (-20°C) = ", ψ_ohne_schlaufe(φ= 1.5, ζ= 2.04)) # -20°C
     print("ψ (60°C) = ", ψ_ohne_schlaufe(φ= 1.5, ζ= 3.11)) # 60°C
     # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 8.3.2 → Verifiziert
-    print("F_td (-20°C) = ", F_td_ohne_Schlaufe(F_st=17800, φ=1.495, ψ=0.69)) # -20°C
-    print("F_td (60°C) = ", F_td_ohne_Schlaufe(F_st=15400, φ=1.495, ψ=0.759)) # 60°C
+    print("F_td (-20°C) = ", F_td_ohne_schlaufe_spannfeldmitte(F_st=17800, φ=1.495, ψ=0.69)) # -20°C
+    print("F_td (60°C) = ", F_td_ohne_schlaufe_spannfeldmitte(F_st=15400, φ=1.495, ψ=0.759)) # 60°C
     # Beispielrechnung gemäss SN EN 60865-2:2017 Kapitel 8.3.3 → Verifiziert
     print("ε_ela (-20°C) = ", ε_ela(N=5.764978849002121e-08, F_td=36161.59 , F_st=17800)) # -20°C
     print("ε_ela (60°C) = ", ε_ela(N=5.8531210649397374e-08, F_td=32874.457 , F_st=15400)) # 60°C
@@ -728,6 +928,8 @@ def testrechnungen() -> None:
     print("f_ed (-20°C) = ", f_ed(C_D=1.246, C_F=1.082, f_es=1.346)) # -20°C
     print("f_ed (60°C) = ", f_ed(C_D=1.185, C_F=1.082, f_es=1.555))  # 60°C
     print()
+
+
 
 
 

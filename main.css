@@ -1,3 +1,11 @@
+/* --- 0. Unset max-width (SUCCESSFUL) --- */
+
+.input-with-unit {
+    max-width: none !important;
+}
+
+/* -------------------------------------------------------- */
+
 /* --- 1. Universal Arrow Removal (SUCCESSFUL) --- */
 .input-with-unit .MuiIconButton-root {
     display: none !important;
@@ -55,6 +63,7 @@
 .tk-unit .MuiInputBase-root:after { content: "s"; }
 .m-unit .MuiInputBase-root:after { content: "m"; }
 .N-unit .MuiInputBase-root:after { content: "N"; }
+.--unit .MuiInputBase-root:after { content: ""; }
 
 /* Unit Injection for Selector Inputs */
 .A-unit .MuiSelect-select:after { content: "kA"; }

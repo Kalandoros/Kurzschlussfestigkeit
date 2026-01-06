@@ -38,6 +38,7 @@ leiterseiltyp: pd.DataFrame = dataloader.load_csv_to_df()
 leiterseiltyp_lov: list[str] = list(leiterseiltyp["Bezeichnung"])
 leiterseiltyp_selected: None|str = None
 
+κ: None|float = None
 t_k: None|float = None
 a: None|float = None
 a_s: None|float = None
@@ -141,11 +142,13 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.html("br")
             tgb.text(value="Elektrische Werte", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1", columns__mobile="1 1"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name=""):
                 tgb.selector(label="I''k [kA] Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)",
                              value="{standardkurzschlussströme_selected}", lov="{standardkurzschlussströme_lov}",
                              dropdown=True, class_name="input-with-unit A-unit")
+                tgb.number(label="κ [-] Sossfaktor", value="{κ}", min=0.01, max=2.0, step=0.01, class_name="input-with-unit --unit")
                 tgb.number(label="Tk [s] Kurzschlussdauer", value="{t_k}", min=0.01, max=5.0, step=0.01,
+                           hover_text="Wird kein Stossfaktor angegeben wird der Wert 1.8 angenommen.",
                            class_name="input-with-unit tk-unit Mui-focused")
             tgb.html("br")
             tgb.text(value="Leiterseilkonfiguration", class_name="h6")
