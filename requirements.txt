@@ -1,3 +1,2 @@
-math
 scipy
-solara
+taipy
