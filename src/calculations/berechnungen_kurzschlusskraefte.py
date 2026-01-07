@@ -550,10 +550,129 @@ def ν_1(μ0: float, I_k: float, a_s: float, n: float, m_s: float, d: float, f: 
     ν_1: float = f * (1 / math.sin(math.radians(180 / n))) * math.sqrt(((a_s - d) * m_s) / ((μ0 / (2 * math.pi)) * (I_k / n)**2 * ((n - 1) / a_s)))
     return ν_1
 
+# Gleichung (56)
+def ε_st(F_st: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
+    """
+    Funktion zur Berechnung der Dehnungsfaktoren bei der Kontraktion eines Seilbündels ε_st (dimensionslos) nach
+    SN EN 60865-1:2012 Kapitel 6.4.1.
+    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    F_st: statische Seilzugkraft in einem Hauptleiter in N
+    l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
+    N: Steifigkeitsnorm einer Anordnung mit Leiterseilen in 1/N
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    """
+    ε_st: float = (1.5 * ((F_st * l_s**2 * N) / (a_s - d)**2) * (math.sin(math.radians(180 / n)))**2)
+    return ε_st
 
+# Gleichung (57)
+def ε_pi(F_v: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
+    """
+    Funktion zur Berechnung der Dehnungsfaktoren bei der Kontraktion eines Seilbündels ε_pi (dimensionslos) nach
+    SN EN 60865-1:2012 Kapitel 6.4.1.
+    ε_pi: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    F_v: Kurzschluss-Stromkraft zwischen den Teilleitern eines Bündels in N
+    l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
+    N: Steifigkeitsnorm einer Anordnung mit Leiterseilen in 1/N
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    """
+    ε_pi: float = (0.375 * n * ((F_v * l_s**3 * N) / (a_s - d)**3) * (math.sin(math.radians(180 / n)))**3)
+    return ε_pi
 
+# Gleichung (58)
+def j(ε_st: float, ε_pi: float) -> float:
+    """
+    Funktion zur Berechnung des Parameters, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt
+    j (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.4.1.
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    ε_pi: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    """
+    j: float = math.sqrt(ε_pi / (1 + ε_st))
+    return j
 
+# Gleichung (60, 63)
+def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_s: float, d: float, ν_2: float, ν_4: float, ζ: float = None, η: float = None) -> float:
+    """
+    Funktion zur Berechnung des Faktors ν_e zur Berechnung von F_pi_d (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.4.1.
+    ν_e: Faktor zur Berechnung von F_pi_d
+    μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    I_k: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    N: Steifigkeitsnorm einer Anordnung mit Leiterseilen in 1/N
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    ν_2: Faktor zur Berechnung von F_pi_d
+    ν_4: Faktor zur Berechnung von F_pi_d
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    η: Faktor zur Berechnung von Fpi,d bei nicht zusammenschlagenden Bündelleitern (dimensionslos)
+    """
+    if j >= 1:
+        ν_e_1: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / ζ**3) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
+        ν_e = ν_e_1
+        return ν_e
+    elif j < 1:
+        ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
+        ν_e = ν_e_2
+        return ν_e
 
+# Gleichung (61, 64)
+def ν_4(j: float, a_s: float, d: float, η: float = None) -> float:
+    """
+    Funktion zur Berechnung des Faktors ν_4 zur Berechnung von F_pi_d (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.4.1.
+    ν_4: Faktor zur Berechnung von F_pi_d
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    η: Faktor zur Berechnung von Fpi,d bei nicht zusammenschlagenden Bündelleitern (dimensionslos)
+    """
+    if j >= 1:
+        ν_4_1: float = (a_s - d) / d
+        ν_4 = ν_4_1
+        return ν_4
+    elif j < 1:
+        ν_4_2: float = η * ( (a_s - d) / (a_s - (η * (a_s - d))))
+        ν_4 = ν_4_2
+        return ν_4
+
+# Gleichung (A.8 Bild 10)
+def ν_3(a_s: float, d: float, n: float = None) -> float:
+    """
+    Funktion zur Berechnung des Faktors ν_3 zur Berechnung von F_pi_d (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
+    ν_4: Faktor zur Berechnung von F_pi_d
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    """
+    ν_3: float = ((d / a_s) / math.sin(math.radians(180 / n))) * ((math.sqrt((a_s / d) - 1)) / math.atan(math.sqrt((a_s / d) - 1)))
+    return ν_3
+
+# Gleichung (A.9 Bild 11)
+def ζ_pi(j: float, ε_st: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ζ zur Berechnung des Beanspruchungsfaktors des Hauptleiters in Seilanordnungen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
+    """
+    ζ = sympy.symbols(names='ζ', real=True)
+    polynom = (ζ**3) + (ε_st * ζ**2) - ((j**2)*(1 + ε_st))
+    gl_Zeta = sympy.solve(polynom, ζ)
+
+    list_sol: [list] = []
+    for i in gl_Zeta:
+        if  j**(2/3) <= i <= j:
+            list_sol = list_sol.append(i)
+        else:
+            break
+    return gl_Zeta
 
 
 
@@ -697,28 +816,28 @@ def F_td_verikaler_höhenunterschied_befestigungspunktel(μ0: float, I_k: float,
 
 # Grössen ab Kapitel 6.4.1
 # Gleichung (51)
-def F_pi_d(F_td: float, a_s: float, d: float, l_s: float) -> float:
+def F_pi_d_ohne_j(F_td: float, a_s: float, d: float, l_s: float) -> float:
     """
     Funktion zur Berechnung der Kraft F_pi_d Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert)
     in N nach SN EN 60865-1:2012 Kapitel 6.4.1.
-    F_pi_d: Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert) in N
+    F_pi_d_ohne_j: Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert) in N
     F_td: Kurzschluss-Seilzugkraft in einem Hauptleiter (Bemessungswert) in N
     a_s: wirksamer Abstand zwischen Teilleitern in m
     d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
     l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
-    Erläuterung zu F_pi_d:
+    Erläuterung zu F_pi_d_ohne_j:
     Das wirksame Zusammenschlagen der Teilleiter gilt als erfüllt, wenn sowohl der Mittenabstand as zweier benachbarter
     Teilleiter als auch der Abstand ls zweier benachbarter Abstandhalter entweder Gleichung (52) ODER Gleichung (53)
     erfüllen.
     """
     if a_s / d <= 2.0 and l_s >= 50:
-        F_pi_d_1: float = 1.1 * F_td
-        F_pi_d = F_pi_d_1
-        return F_pi_d
+        F_pi_d_ohne_j_1: float = 1.1 * F_td
+        F_pi_d_ohne_j = F_pi_d_ohne_j_1
+        return F_pi_d_ohne_j
     elif a_s / d <= 2.5 and l_s >= 70:
-        F_pi_d_2: float = 1.1 * F_td
-        F_pi_d = F_pi_d_2
-        return F_pi_d
+        F_pi_d_ohne_j_2: float = 1.1 * F_td
+        F_pi_d_ohne_j = F_pi_d_ohne_j_2
+        return F_pi_d_ohne_j
 
 # Grössen ab Kapitel 6.4.1
 # Gleichung (54)
@@ -741,6 +860,31 @@ def F_v(μ0: float, I_k: float, a_s: float, l_s: float, n: float, ν_2: float, �
     """
     F_v = (n - 1) * (μ0 / 2 * math.pi)  * (I_k**2 / n) * (l_s / a_s) * (ν_2 / ν_3)
     return F_v
+
+# Grössen ab Kapitel 6.4.2
+# Gleichung (59, 62)
+def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ζ: float = None, η: float = None) -> float:
+    """
+    Funktion zur Berechnung der Kraft F_pi_d Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert)
+    in N nach SN EN 60865-1:2012 Kapitel 6.4.2.
+    F_pi_d_mit_j: Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert) in N
+    F_st: statische Seilzugkraft in einem Hauptleiter in N
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ν_e: Faktor zur Berechnung von F_pi_d
+    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    η: Faktor zur Berechnung von Fpi,d bei nicht zusammenschlagenden Bündelleitern (dimensionslos)
+    """
+    if j >= 1:
+        F_pi_d_mit_j_1: float = F_st * (1 + ((ν_e / ε_st) * ζ))
+        F_pi_d_mit_j = F_pi_d_mit_j_1
+        return F_pi_d_mit_j
+    elif j < 1:
+        F_pi_d_mit_j_2: float = F_st * (1 + ((ν_e / ε_st) * η**2))
+        F_pi_d_mit_j = F_pi_d_mit_j_2
+        return F_pi_d_mit_j
+
+
 
 
 # Hilfsgleichungen l_v
