@@ -1,10 +1,10 @@
 import math
 import scipy
 import sympy
-import numpy
-from mpmath import ln
+from scipy.optimize import fsolve
 from numpy.ma.core import arccos
-from rich.jupyter import display
+import numpy as np
+
 
 
 # Konstanten
@@ -640,6 +640,81 @@ def ν_4(j: float, a_s: float, d: float, η: float = None) -> float:
         ν_4 = ν_4_2
         return ν_4
 
+# Gleichung (A.7 Bild 9)
+def τ(f: float, κ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors τ zur Berechnung der Netzzeitkonstante (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.7
+    τ: Netzzeitkonstante (dimensionslos)
+    f: Frequenz des Netzes in Hz
+    κ: Faktor zur Berechnung des Stoßkurzschlussstroms (dimensionslos)
+    """
+    if κ < 1.1:
+        κ = 1.1
+    τ: float = abs(1 / (((2 * math.pi * f) / 3) * math.log((κ - 1.02) / 0.98)))
+    return τ
+
+# Gleichung (A.7 Bild 9)
+def γ(f: float, τ: float):
+    """
+    Funktion zur Berechnung des Faktors γ zur Berechnung des Faktors für die Bestimmung der maßgeblichen Eigenfrequenz
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.7
+    γ: Faktor für die Bestimmung der maßgeblichen Eigenfrequenz (dimensionslos)
+    f: Frequenz des Netzes in Hz
+    τ: Netzzeitkonstante (dimensionslos)
+    """
+    γ: float = math.atan(2 * math.pi * f * τ)
+    return γ
+
+# Gleichung (A.7 Bild 9)
+def T_pi_and_ν_2(ν_1, f, τ, γ):
+    """
+    Funktion zur Berechnung des Faktors T_pi zur Berechnung der Zeit vom Kurzschlussbeginn bis zum Erreichen von F_pi
+    in s nach SN EN 60865-1:2012 Kapitel A.7
+    T_pi: Zeit vom Kurzschlussbeginn bis zum Erreichen von F_pi in s
+    ν_2: Faktor zur Berechnung von F_pi_d
+    f: Frequenz des Netzes in Hz
+    τ: Netzzeitkonstante (dimensionslos)
+    γ: Faktor für die Bestimmung der maßgeblichen Eigenfrequenz (dimensionslos)
+    Hinweis:
+    Definition: $$\chi = f \cdot T_{pi}$$
+    Kern der Gleichung ist dabei: $$\nu_1 = \chi \cdot \sqrt{\nu_2(\chi)}$$
+    Zerlegung der Gleichung in einzelne Teile:
+    $$f(\chi) = \chi \cdot \sqrt{1 - A(\chi) + B(\chi) + C(\chi)} - \nu_1 = 0$$
+    Diese Nullstelle wird im Programm mittels des Newton-Verfahrens (über scipy.optimize.fsolve) bestimmt.
+    Der resultierende Wert $\chi$ liefert direkt die reale Kontraktionszeit:$$T_{pi} = \frac{\chi}{f}$$
+    """
+    y: float = f * τ
+
+    # np anstelle von math, um Vektoren/Arrays direkt zu verarbeiten
+    def equation(x):
+        # fsolve übergibt ein Array. Falls x ≤ 0, geben wir ein Array zurück.
+        if np.any(x <= 0):
+            return np.array([-ν_1])
+
+        # A, B und C mit np-Funktionen berechnet (keine Warnungen mehr!)
+        A: float = (np.sin(4 * np.pi * x - 2 * γ) + np.sin(2 * γ)) / (4 * np.pi * x)
+        B: float  = (y / x) * (1 - np.exp(-2 * x / y)) * (np.sin(γ) ** 2)
+
+        P: float  = 2 * np.pi * np.cos(2 * np.pi * x - γ) / (2 * np.pi * x)
+        Q: float  = np.sin(2 * np.pi * x - γ) / (2 * np.pi * x)
+        R: float  = (np.sin(γ) - 2 * np.pi * y * np.cos(γ)) / (2 * np.pi * x)
+        M: float  = (P + Q) * np.exp(-x / y) + R
+        C: float  = 8 * np.pi * y * np.sin(γ) / (1 + (2 * np.pi * y) ** 2) * M
+
+        sqrt_ν_2: float  = np.sqrt(np.abs(1 - A + B + C))
+
+        # Rückgabe als Array (wie von fsolve erwartet)
+        return x * sqrt_ν_2 - ν_1
+
+    # Startwert x0 als Array übergeben
+    x_solution_array = fsolve(equation, x0=np.array([ν_1]))
+    x_solution = x_solution_array[0]
+
+    t_pi = x_solution / f
+    ν_2 = (ν_1 / x_solution) ** 2
+
+    return t_pi, ν_2
+
 # Gleichung (A.8 Bild 10)
 def ν_3(a_s: float, d: float, n: float = None) -> float:
     """
@@ -673,6 +748,35 @@ def ζ_pi(j: float, ε_st: float) -> float:
         else:
             break
     return gl_Zeta
+
+# Gleichung (A.10 Bild 12)
+def η(ε_st: float, j: float, fη: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors η zur Berechnung von F_pi bei nicht zusammenschlagenden
+    Bündelleitern (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
+    η: Faktor zur Berechnung von Fpi bei nicht zusammenschlagenden Bündelleitern  (dimensionslos)
+    ε_st: ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    j: j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    fη: Faktor zur Beschreibung der Teilleiter-Annäherung im Seilbündel
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
+    η = sympy.symbols(names='η', real=True)
+    polynom = (η**3) + (ε_st * η) - ((j**2)*(1+ε_st)*fη)
+    gl_Psi = sympy.solve(polynom, η)
+
+    list_sol: [list] = []
+    for i in gl_Psi:
+        if  0 <= i <= 1:
+            list_sol = list_sol.append(i)
+        else:
+            break
+    return gl_Psi
+
+
+
+
+
+
 
 
 
@@ -887,6 +991,9 @@ def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ζ: float = N
 
 
 
+
+
+
 # Hilfsgleichungen l_v
 
 
@@ -953,6 +1060,10 @@ def testrechnungen() -> None:
     # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
     print("f_ed (-20°C) = ", f_ed(C_D=2.72, C_F=1.092, f_es=0.206)) # -20°C
     print("f_ed (80°C) = ", f_ed(C_D=1.842, C_F=1.092, f_es=0.558))  # 80°C
+
+    # Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet → Verifiziert
+    print("T_pi/Nu2 (-20°C) = ", T_pi_and_ν_2(ν_1=2.764, f=50, τ=τ(f=50, κ=1.8), γ=γ(f=50, τ=τ(f=50, κ=1.8))))
+    print("T_pi/Nu2 (80°C) = ", T_pi_and_ν_2(ν_1=2.764, f=50, τ=τ(f=50, κ=1.8), γ=γ(f=50, τ=τ(f=50, κ=1.8))))
     print()
 
 

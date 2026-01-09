@@ -39,3 +39,14 @@ höheren Wert, der nur aus der Steiﬁgkeit der Gerüste folgt. [1] $\frac{1}{S}
 Leitungsseilen mit Schlaufen im Spannfeld, 2002 - FAU, Meyer
 
 [2] PC-Programm für die Bemessung von Starkstromanlagen auf mechanische und thermische Kurzschlußfestigkeitnach, Bedienungsanleitung, 2006 - FAU
+
+Formel zur Berechnung von $T_{pi}$, diese nicht in der Norm erwähnt ist.
+
+$$T_{pi} = 1,15 \cdot \sqrt{\frac{m_s \cdot (a_s - d_s)}{F'_{pi}}}$$
+
+Weitere Tipps:
+Vorsicht bei math.radians()Du erwähntest math.sin(math.radians()). Das ist absolut korrekt für statische Winkel wie $180^\circ$ oder $90^\circ$.Aber Achtung: Die Terme in der Norm, die $\pi$ enthalten (z. B. $2\pi f T_{pi}$), sind bereits im Bogenmaß. Diese darfst du nicht noch einmal durch math.radians() jagen, sonst rechnet Python mit winzigen Werten weiter.
+
+Richtig: $math.sin(math.pi / n)$ 
+
+Falsch: $math.sin(math.radians(math.pi / n)$
