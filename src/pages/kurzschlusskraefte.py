@@ -10,23 +10,32 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.precision', 3)
 
-leiterseilbefestigung_lov: list[str] = ["Abgespannt", "Aufgelegt"]
+leiterseilbefestigung_lov: list[str] = ["Abgespannt", "Aufgelegt", "Unterschlaufung", "Schlaufe am Spannfeldende"]
 leiterseilbefestigung_selected: None|str = None
-
-standardkurzschlussströme_lov: list[int|float] = ["10", "12.5", "16", "20", "25", "31.5", "40", "50", "63", "80"]
-standardkurzschlussströme_selected: None|int|float = None
-
-teilleiter_lov: list[int] = ["1", "2", "3", "4", "5", "6"]
-teilleiter_selected: None|int = None
-
-steifigkeitsnorm_lov: list[int] = ["100000", "150000", "1300000", "400000", "2000000", "600000", "3000000"]
-steifigkeitsnorm_selected: None|int = None
 
 schlaufe_in_spannfeldmitte_lov: list[str] = ["Ja", "Nein"]
 schlaufe_in_spannfeldmitte_selected: None|int = None
 
-höhenunterschied_befestigungspunkte_lov: list[str] = ["Ja", "Nein"]
-höhenunterschied_befestigungspunkte_selected: None|int = None
+standardkurzschlussstroeme_lov: list[int | float] = ["10", "12.5", "16", "20", "25", "31.5", "40", "50", "63", "80"]
+standardkurzschlussstroeme_selected: None | int | float = None
+
+hoehenunterschied_befestigungspunkte_lov: list[str] = ["Ja", "Nein"]
+hoehenunterschied_befestigungspunkte_selected: None|int = None
+
+schlaufenebene_parallel_senkrecht_lov: list[str] = ["Ebene senkrecht", "Ebene parallel"]
+schlaufenebene_parallel_senkrecht_selected: None|int = None
+
+temperatur_niedrig_lov: list[int | float] = ["-20", "-30", "-40", "-50"]
+temperatur_niedrig_selected: None | int | float = None
+
+temperatur_hoch_lov: list[int | float] = ["60", "70", "80", "90", "100"]
+temperatur_hoch_selected: None | int | float = None
+
+teilleiter_lov: list[int] = ["1", "2", "3", "4", "5", "6"]
+teilleiter_selected: None|int = None
+
+federkoeffizient_lov: list[int] = ["100000", "150000", "1300000", "400000", "2000000", "600000", "3000000"]
+federkoeffizient_selected: None|int = None
 
 """
 Auswahl der Leiterseiltypen: 
@@ -40,12 +49,23 @@ leiterseiltyp_selected: None|str = None
 
 κ: None|float = None
 t_k: None|float = None
+m_c: None|float = None
+l: None|float = None
+l_i: None|float = None
 a: None|float = None
 a_s: None|float = None
 F_st_20: None|float = None
 F_st_80: None|float = None
-l: None|float = None
-l_i: None|float = None
+l_s_1: None|float = None
+l_s_2: None|float = None
+l_s_3: None|float = None
+l_s_4: None|float = None
+l_s_5: None|float = None
+l_s_6: None|float = None
+l_s_7: None|float = None
+l_s_8: None|float = None
+l_s_9: None|float = None
+l_s_10: None|float = None
 
 
 def on_change_selectable_leiterseiltyp(state):
@@ -62,7 +82,9 @@ def on_click_leiterseiltyp_zurücksetzen(state):
 
 def on_click_zurücksetzen(state):
     state.leiterseilbefestigung_selected = None
-    state.standardkurzschlussströme_selected = "0.0" # muss float sein
+    state.schlaufe_in_spannfeldmitte_selected = None
+    state.hoehenunterschied_befestigungspunkte_selected = None
+    state.standardkurzschlussstroeme_selected = "0.0" # muss float sein
     state.t_k = None
     state.leiterseiltyp_selected = None
     state.l = None
@@ -72,7 +94,21 @@ def on_click_zurücksetzen(state):
     state.a_s = None
     state.F_st_20 = None
     state.F_st_80 = None
-    state.steifigkeitsnorm_selected = "0" # muss int sein
+    state.federkoeffizient_selected = "0" # muss int sein
+    state.schlaufenebene_parallel_senkrecht_selected = None
+    state.temperatur_niedrig_selected = None
+    state.temperatur_hoch_selected = None
+    state.m_c = None
+    state.l_s_1 = None
+    state.l_s_2 = None
+    state.l_s_3 = None
+    state.l_s_4 = None
+    state.l_s_5 = None
+    state.l_s_6 = None
+    state.l_s_7 = None
+    state.l_s_8 = None
+    state.l_s_9 = None
+    state.l_s_10 = None
 
 # Für die spätere Bearbeitung
 def on_calculate(state):
@@ -135,74 +171,116 @@ with tgb.Page() as kurzschlusskraefte_page:
                              dropdown=True, hover_text="Ja, wenn der obere Befestigungspunkt der Schlaufe bis "
                                                        "zu 10 % der Länge des Hauptleiters von der Mitte entfernt ist.")
                 tgb.selector(label="Höhenunterschied der Befestigungspunkte mehr als 25%",
-                             value="{höhenunterschied_befestigungspunkte_selected}",
-                             lov="{höhenunterschied_befestigungspunkte_lov}",
+                             value="{hoehenunterschied_befestigungspunkte_selected}",
+                             lov="{hoehenunterschied_befestigungspunkte_lov}",
                              dropdown=True, hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte"
                                                        " mehr als 25 % der Spannfeldlänge beträgt.")
+                tgb.selector(label="Schlaufebene bei Schlaufen in Spannfeldmitte",
+                             value="{schlaufenebene_parallel_senkrecht_selected}",
+                             lov="{schlaufenebene_parallel_senkrecht_lov}",
+                             dropdown=True,
+                             hover_text="Angabe nur notwendig, wenn Schlaufen in Spannfeldmitte verwendet werden.\n"
+                                        "Parallel: Schlaufe verläuft hauptsächlich horizontal "
+                                        "(Winkel zwischen oberem und unterem Anschlusspunkt < 45° ).\n"
+                                        "Senkrecht: Schlaufe verläuft hauptsächlich vertikal "
+                                        "(Winkel zwischen oberem und unterem Anschlusspunkt > 45°).\n"
+                                        "Hinweis: Die Schlaufenebene wird nur bei Schlaufen in Spannfeldmitte berücksichtigt.")
+                tgb.selector(label="ϑ_l Niedrigste Temperatur",
+                             value="{temperatur_niedrig_selected}",
+                             lov="{temperatur_niedrig_lov}",
+                             dropdown=True, hover_text="Örtliche Tiefsttemperatur",
+                             class_name="input-with-unit Grad-Celsius-unit")
+                tgb.selector(label="ϑ_h Höchste Temperatur",
+                             value="{temperatur_hoch_selected}",
+                             lov="{temperatur_hoch_lov}",
+                             dropdown=True, hover_text="Höchste Betriebstemperatur der Leiter",
+                             class_name="input-with-unit Grad-Celsius-unit")
             tgb.html("br")
             tgb.text(value="Elektrische Werte", class_name="h6")
             tgb.html("hr")
             with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name=""):
-                tgb.selector(label="I''k [kA] Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)",
-                             value="{standardkurzschlussströme_selected}", lov="{standardkurzschlussströme_lov}",
+                tgb.selector(label="I''k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)",
+                             value="{standardkurzschlussstroeme_selected}", lov="{standardkurzschlussstroeme_lov}",
                              dropdown=True, class_name="input-with-unit A-unit")
-                tgb.number(label="κ [-] Sossfaktor", value="{κ}", min=0.01, max=2.0, step=0.01, class_name="input-with-unit --unit")
-                tgb.number(label="Tk [s] Kurzschlussdauer", value="{t_k}", min=0.01, max=5.0, step=0.01,
+                tgb.number(label="κ Sossfaktor", value="{κ}", min=0.01, max=2.0, step=0.01, class_name="input-with-unit --unit")
+                tgb.number(label="Tk Kurzschlussdauer", value="{t_k}", min=0.01, max=5.0, step=0.01,
                            hover_text="Wird kein Stossfaktor angegeben wird der Wert 1.8 angenommen.",
                            class_name="input-with-unit tk-unit Mui-focused")
             tgb.html("br")
             tgb.text(value="Leiterseilkonfiguration", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1", columns__mobile="1 1"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
                 tgb.selector(label="Leiterseiltyp", value="{leiterseiltyp_selected}", lov="{leiterseiltyp_lov}",
                              dropdown=True, on_change=on_change_selectable_leiterseiltyp)
-                tgb.selector(label="n (dimensionslos) Anzahl der Teilleiter eines Hauptleiters",
+                tgb.selector(label="n Anzahl der Teilleiter eines Hauptleiters",
                              value="{teilleiter_selected}", lov="{teilleiter_lov}", dropdown=True)
+                tgb.number(label="m_c Summe konzentrischer Massen im Spannfeld", value = "{m_c}", min = 0.0, max = 10.0,
+                           step = 0.1, hover_text="z. B. durch Klemmen, Schlaufen oder Gegenkontakte.",
+                           class_name = "input-with-unit kg-unit Mui-focused")
             tgb.html("br")
             tgb.text(value="Abstände", class_name="h6")
             tgb.html("hr")
             with tgb.layout(columns="1 1 1 1", columns__mobile="1 1 1 1"):
-                tgb.number(label="l [m] Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=100.0, step=0.1,
+                tgb.number(label="l Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=100.0, step=0.1,
                            class_name="input-with-unit m-unit Mui-focused")
-                tgb.number(label="l_i [m] Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=10.0,
+                tgb.number(label="l_i Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=10.0,
                            step=0.1, class_name="input-with-unit m-unit Mui-focused")
-                tgb.number(label="a [m] Leitermittenabstand", value="{a}", min=0.0, max=20.0, step=0.1,
+                tgb.number(label="a Leitermittenabstand", value="{a}", min=0.0, max=20.0, step=0.1,
                            class_name="input-with-unit m-unit Mui-focused")
-                tgb.number(label="a_s [m] wirksamer Abstand zwischen Teilleitern", value="{a_s}", min=0.0, step=0.1,
+                tgb.number(label="a_s wirksamer Abstand zwischen Teilleitern", value="{a_s}", min=0.0, step=0.1,
                            class_name="input-with-unit m-unit Mui-focused")
             tgb.html("br")
             tgb.text(value="Mechanische Kraftwerte", class_name="h6")
             tgb.html("hr")
             with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
-                tgb.number(label="Fst-20 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
-                           step=0.1, class_name="input-with-unit N-unit Mui-focused")
-                tgb.number(label="Fst80 [N] statische Seilzugkraft in einem Hauptleiter", value="{F_st_80}", min=0.0,
-                           step=0.1, class_name="input-with-unit N-unit Mui-focused")
-                tgb.selector(label="N [1/N]Steifigkeitsnorm einer Anordnung mit Leiterseilen",
-                             value="{steifigkeitsnorm_selected}", lov="{steifigkeitsnorm_lov}",
-                             dropdown=True, class_name="input-with-unit inv-N-unit")
+                tgb.number(label="Fst-20 statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
+                           step=0.1,
+                           hover_text="Bei der Ermittlung der statischen Seilzugkraft Fst sollte der Beitrag \n"
+                                      "konzentrierter Massen im Spannfeld, z. B. durch Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt \n"
+                                      "werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden.",
+                           class_name="input-with-unit N-unit Mui-focused")
+                tgb.number(label="Fst80 statische Seilzugkraft in einem Hauptleiter", value="{F_st_80}", min=0.0,
+                           step=0.1,
+                           hover_text="Bei der Ermittlung der statischen Seilzugkraft Fst sollte der Beitrag \n" 
+                                      "konzentrierter Massen im Spannfeld, z. B. durch Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt \n"
+                                      "werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden.",
+                           class_name="input-with-unit N-unit Mui-focused")
+                tgb.selector(label="S resultierender Federkoeffizient beider Stützpunkte im Spannfeld",
+                             value="{federkoeffizient_selected}", lov="{federkoeffizient_lov}",
+                             dropdown=True, class_name="input-with-unit inv-N_m-unit")
             tgb.html("br")
             tgb.text(value="Erweiterte Eingaben", class_name="h6")
             tgb.html("hr")
             with tgb.layout(columns="1", columns__mobile="1"):
-                with tgb.expandable(title="Detailangaben", expanded=False, class_name="h6"):
-                    with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
-                        tgb.selector(label="Art der Leiterseilbefestigung", value="{leiterseilbefestigung_selected}",
-                                     lov="{leiterseilbefestigung_lov}", dropdown=True)
-                        tgb.selector(label="Schlaufe in Spannfeldmitte",
-                                     value="{schlaufe_in_spannfeldmitte_selected}", lov="{schlaufe_in_spannfeldmitte_lov}",
-                                     dropdown=True, hover_text="Ja, wenn der obere Befestigungspunkt der Schlaufe bis "
-                                                               "zu 10 % der Länge des Hauptleiters von der Mitte entfernt ist.")
-                        tgb.selector(label="Höhenunterschied der Befestigungspunkte mehr als 25%",
-                                     value="{schlaufe_in_spannfeldmitte_selected}",
-                                     lov="{schlaufe_in_spannfeldmitte_lov}",
-                                     dropdown=True, hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte"
-                                                               " mehr als 25 % der Spannfeldlänge beträgt.")
+                with tgb.expandable(title="Abstände Phasenabstandshalter", expanded=False, class_name="h6",
+                                    hover_text="Abstände beginnend von links vom Ende der Isolatorkette oder dem Anschlusspunkt bei aufgelegten Leiterseilen. \n"
+                                               "Abstände zwischen Phasenabstandshaltern, Gegenkontakte von Trennern zählen ebenfalls als Phasenabstandshalter."):
+                    with tgb.layout(columns="1 1 1 1 1", columns__mobile="1 1 1 1 1"):
+                        tgb.number(label="Abstand Phasenabstandshalter 1", value = "{l_s_1}", min = 0.0, step = 0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 2", value="{l_s_2}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 3", value="{l_s_3}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 4", value="{l_s_4}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 5", value="{l_s_5}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 6", value="{l_s_6}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 7", value="{l_s_7}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 8", value="{l_s_8}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 9", value="{l_s_9}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="Abstand Phasenabstandshalter 10", value="{l_s_10}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
-            with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
+            with tgb.layout(columns="1 1 1", class_name="p1", columns__mobile="1 1 1"):
                 tgb.button(label="Auswahl Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
-                tgb.button(label="Zürücksetzen", on_action=on_click_zurücksetzen)
+                tgb.button(label="Zurücksetzen", on_action=on_click_zurücksetzen)
         with tgb.part(class_name="card"):
             tgb.text(value="Ergebnisse", class_name="h2")
 

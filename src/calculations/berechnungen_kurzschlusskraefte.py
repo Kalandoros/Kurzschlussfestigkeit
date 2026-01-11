@@ -667,7 +667,7 @@ def γ(f: float, τ: float):
 
 # Gleichung (A.7 Bild 9)
 def T_pi_and_ν_2(ν_1, f, τ, γ):
-    """
+    r"""
     Funktion zur Berechnung des Faktors T_pi zur Berechnung der Zeit vom Kurzschlussbeginn bis zum Erreichen von F_pi
     in s nach SN EN 60865-1:2012 Kapitel A.7
     T_pi: Zeit vom Kurzschlussbeginn bis zum Erreichen von F_pi in s
@@ -750,7 +750,7 @@ def ζ_pi(j: float, ε_st: float) -> float:
     return gl_Zeta
 
 # Gleichung (A.10 Bild 12)
-def η(ε_st: float, j: float, fη: float) -> float:
+def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> float:
     """
     Funktion zur Berechnung des Faktors η zur Berechnung von F_pi bei nicht zusammenschlagenden
     Bündelleitern (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
@@ -760,23 +760,95 @@ def η(ε_st: float, j: float, fη: float) -> float:
     fη: Faktor zur Beschreibung der Teilleiter-Annäherung im Seilbündel
     Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
     """
-    η = sympy.symbols(names='η', real=True)
-    polynom = (η**3) + (ε_st * η) - ((j**2)*(1+ε_st)*fη)
-    gl_Psi = sympy.solve(polynom, η)
+    """
+        Löst das mathematische Problem des Zirkelschlusses für η.
+        Da fη von η abhängt, wird der Wert iterativ bestimmt, um dem 
+        Bild 12 der Norm zu entsprechen.
+        """
 
-    list_sol: [list] = []
-    for i in gl_Psi:
-        if  0 <= i <= 1:
-            list_sol = list_sol.append(i)
-        else:
-            break
-    return gl_Psi
+    def zielfunktion(η_test):
+        # Ssicherstellen, dass η_test ein Skalar ist
+        η_val = float(np.atleast_1d(η_test)[0])
 
+        # Falls η_val außerhalb der Grenzen 0..1 gerät, wird korrigiert für den Solver
+        η_val = max(1e-6, min(0.9999, η_val))
 
+        # Funktionen für die Berechnung der Abhängigkeiten
+        val_2ya = two_ya_as(η_val, a_s, d)
+        val_asw = asw_as(val_2ya, n)
+        val_fη = fη(v_3, val_asw)
 
+        # Funktion zur Bestimmung des effektiven j. Nur im Bedarfsfall einsetzen.
+        # j__ = math.sqrt((η**3 + (ε_st * η)) / ((1 + ε_st) * fη))
 
+        # Das kubische Polynom der Norm, wo der Punkt gesucht wird, an dem dieses Polynom Null ergibt.
+        # Dies ist das Polynom nach A.10 Bild 12: η³ + ε_st * η - j² * (1 + ε_st) * fη = 0
 
+        # Wichtig: (η_val ** 3) + (ε_st * η_val) - ((j ** 2) * val_fη) ist die Formel, die in den Diagrammen der Bilder 12a, 12b und 12c verwendet wird.
+        # Bei den Bildern 12a-c wird der Term (1 + ε_st) zur Vereinfachung also nicht verwendet.
 
+        # Da j laut Gleichung (58) bereits den Faktor 1/sqrt(1 + ε_st) enthält,
+        # kürzt sich die Dehnung ε_st in der exakten Berechnung mathematisch heraus.
+        # Die Diagramme in der Norm behalten ε_st künstlich bei, um verschiedene Kurven
+        # zeichnen zu können. Dieses Programm bleibt bei der exakten analytischen Lösung.
+        return (η_val ** 3) + (ε_st * η_val) - ((j ** 2) * (1 + ε_st) * val_fη)
+
+    # 1. Vorprüfung:
+    # Wir fangen den Fall ab, dass keine Lösung im Bereich 0..1 existiert
+    # Wenn die Zielfunktion bei η=1 immer noch negativ ist, schlagen die Leiter zusammen
+    if zielfunktion(0.9999) < 0:
+        return 1.0
+
+    # 2. Numerische Lösung:
+    try:
+        # Suche nach der Nullstelle mit Startwert 0.5
+        η_sol = scipy.optimize.fsolve(zielfunktion, x0=0.5)[0]
+        # Das Ergebnis auf den physikalisch sinnvollen Bereich [0, 1] begrenzen
+        return max(0.0, min(1.0, float(η_sol)))
+    except (ValueError, RuntimeError) as e:
+        print(f"Solver-Fehler für Berechnung von η: {e}")
+        return 0.0
+
+# Gleichung (A.10 Bild 12)
+def fη(v_3: float, asw_as: float):
+    """
+    Funktion zur Berechnung des Faktors fη der Teilleiter-Annäherung im Seilbündel
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
+    fη: Faktor zur Beschreibung der Teilleiter-Annäherung im Seilbündel
+    y_a: Mittenabstand der nicht zusammenschlagenden Bündelleiter während des Kurzschlusses inm
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    """
+    fη: float = v_3 / asw_as
+    return fη
+
+# Gleichung (A.10 Bild 12)
+def asw_as(two_ya_as: float, n: float):
+    """
+    Funktion zur Berechnung des Faktors asw_as zur Beschreibung von fη der Teilleiter-Annäherung im Seilbündel
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
+    fη: Faktor zur Beschreibung der Teilleiter-Annäherung im Seilbündel
+    a_sw: wirksamer Abstand zwischen den Teilleitern eines Bündels in m
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    """
+    #asw_as = (two_ya_as / math.sin(180 / n)) * (math.sqrt((1 - two_ya_as) / two_ya_as) / math.atan(math.sqrt((1 - two_ya_as) / two_ya_as)))
+    asw_as = (two_ya_as / math.sin(math.radians(180 / n))) * ((math.sqrt((1 - two_ya_as) / two_ya_as)) / math.atan(math.sqrt((1 - two_ya_as) / two_ya_as)))
+    return asw_as
+
+# Gleichung (A.10 Bild 12)
+def two_ya_as(η: float, a_s: float, d: float):
+    """
+    Funktion zur Berechnung des Faktors two_ya_as zur Beschreibung von fη der Teilleiter-Annäherung im Seilbündel
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
+    fη: Faktor zur Beschreibung der Teilleiter-Annäherung im Seilbündel
+    η: Faktor zur Berechnung von F_pi bei nicht zusammenschlagenden Bündelleitern (dimensionslos)
+    y_a: Mittenabstand der nicht zusammenschlagenden Bündelleiter während des Kurzschlusses in m
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    """
+    two_ya_as: float = 1 - (η * (1 - (d / a_s)))
+    return two_ya_as
 
 
 
@@ -992,9 +1064,8 @@ def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ζ: float = N
 
 
 
-
-
 # Hilfsgleichungen l_v
+# Hilfsgleichungen m_c
 
 
 def testrechnungen() -> None:
