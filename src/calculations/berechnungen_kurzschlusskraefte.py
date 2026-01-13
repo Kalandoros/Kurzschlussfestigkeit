@@ -654,7 +654,7 @@ def τ(f: float, κ: float) -> float:
     return τ
 
 # Gleichung (A.7 Bild 9)
-def γ(f: float, τ: float):
+def γ(f: float, τ: float) -> float:
     """
     Funktion zur Berechnung des Faktors γ zur Berechnung des Faktors für die Bestimmung der maßgeblichen Eigenfrequenz
     (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.7
@@ -666,7 +666,7 @@ def γ(f: float, τ: float):
     return γ
 
 # Gleichung (A.7 Bild 9)
-def T_pi_and_ν_2(ν_1, f, τ, γ):
+def T_pi_and_ν_2(ν_1, f, τ, γ) -> float:
     r"""
     Funktion zur Berechnung des Faktors T_pi zur Berechnung der Zeit vom Kurzschlussbeginn bis zum Erreichen von F_pi
     in s nach SN EN 60865-1:2012 Kapitel A.7
@@ -810,7 +810,7 @@ def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> fl
         return 0.0
 
 # Gleichung (A.10 Bild 12)
-def fη(v_3: float, asw_as: float):
+def fη(v_3: float, asw_as: float) -> float:
     """
     Funktion zur Berechnung des Faktors fη der Teilleiter-Annäherung im Seilbündel
     (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
@@ -823,7 +823,7 @@ def fη(v_3: float, asw_as: float):
     return fη
 
 # Gleichung (A.10 Bild 12)
-def asw_as(two_ya_as: float, n: float):
+def asw_as(two_ya_as: float, n: float) -> float:
     """
     Funktion zur Berechnung des Faktors asw_as zur Beschreibung von fη der Teilleiter-Annäherung im Seilbündel
     (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
@@ -833,7 +833,7 @@ def asw_as(two_ya_as: float, n: float):
     n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
     """
     #asw_as = (two_ya_as / math.sin(180 / n)) * (math.sqrt((1 - two_ya_as) / two_ya_as) / math.atan(math.sqrt((1 - two_ya_as) / two_ya_as)))
-    asw_as = (two_ya_as / math.sin(math.radians(180 / n))) * ((math.sqrt((1 - two_ya_as) / two_ya_as)) / math.atan(math.sqrt((1 - two_ya_as) / two_ya_as)))
+    asw_as: float = (two_ya_as / math.sin(math.radians(180 / n))) * ((math.sqrt((1 - two_ya_as) / two_ya_as)) / math.atan(math.sqrt((1 - two_ya_as) / two_ya_as)))
     return asw_as
 
 # Gleichung (A.10 Bild 12)
@@ -1034,7 +1034,7 @@ def F_v(μ0: float, I_k: float, a_s: float, l_s: float, n: float, ν_2: float, �
     Teilleiter als auch der Abstand ls zweier benachbarter Abstandhalter entweder Gleichung (52) ODER Gleichung (53)
     erfüllen.
     """
-    F_v = (n - 1) * (μ0 / 2 * math.pi)  * (I_k**2 / n) * (l_s / a_s) * (ν_2 / ν_3)
+    F_v: float = (n - 1) * (μ0 / 2 * math.pi)  * (I_k**2 / n) * (l_s / a_s) * (ν_2 / ν_3)
     return F_v
 
 # Grössen ab Kapitel 6.4.2
