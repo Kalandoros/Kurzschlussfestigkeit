@@ -17,6 +17,7 @@
 .input-with-unit .MuiInputBase-root {
     position: relative;
     width: 100%;
+    pointer-events: auto; /* Enable hover events for tooltips */
 }
 
 /* -------------------------------------------------------- */
@@ -30,6 +31,9 @@
 
     /* Padding to ensure unit does not overlap the number */
     padding-right: 25px !important;
+
+    /* Enable hover events for tooltips */
+    pointer-events: auto !important;
 }
 
 /* -------------------------------------------------------- */
@@ -127,4 +131,27 @@
 /* Transition komplett deaktivieren */
 .input-with-unit .MuiInputLabel-root.MuiInputLabel-shrink {
     transition: none !important;
+}
+
+/* -------------------------------------------------------- */
+
+/* --- 7. Tooltip/Hover Support --- */
+/* Ensure tooltips are visible and have proper z-index */
+.MuiTooltip-popper {
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+}
+
+.MuiTooltip-tooltip {
+    pointer-events: auto !important;
+}
+
+/* Ensure all form controls can trigger hover events */
+.input-with-unit .MuiFormControl-root {
+    pointer-events: auto !important;
+}
+
+/* Ensure the wrapper div around inputs allows hover */
+.input-with-unit > div {
+    pointer-events: auto !important;
 }

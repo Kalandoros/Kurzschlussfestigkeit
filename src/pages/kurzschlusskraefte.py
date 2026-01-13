@@ -3,7 +3,7 @@ from taipy.gui import notify
 import taipy.gui.builder as tgb
 import pandas as pd
 from src.utils import dataloader
-from src.calculations.engine_kurzschlusskraefte import ShortCircuitInput, ShortCircuitResult, calculate_short_circuit
+from src.calculations.engine_kurzschlusskraefte import ShortCircuitInput, ShortCircuitResult, calculate_short_circuit, Kurschlusskräfte_Input
 
 # Configuration for pandas
 pd.set_option('display.max_columns', None)
@@ -16,7 +16,7 @@ leiterseilbefestigung_selected: None|str = None
 schlaufe_in_spannfeldmitte_lov: list[str] = ["Ja", "Nein"]
 schlaufe_in_spannfeldmitte_selected: None|int = None
 
-standardkurzschlussstroeme_lov: list[int | float] = ["10", "12.5", "16", "20", "25", "31.5", "40", "50", "63", "80"]
+standardkurzschlussstroeme_lov: list[str] = ["10", "12.5", "16", "20", "25", "31.5", "40", "50", "63", "80"]
 standardkurzschlussstroeme_selected: None | int | float = None
 
 hoehenunterschied_befestigungspunkte_lov: list[str] = ["Ja", "Nein"]
@@ -25,16 +25,16 @@ hoehenunterschied_befestigungspunkte_selected: None|int = None
 schlaufenebene_parallel_senkrecht_lov: list[str] = ["Ebene senkrecht", "Ebene parallel"]
 schlaufenebene_parallel_senkrecht_selected: None|int = None
 
-temperatur_niedrig_lov: list[int | float] = ["-20", "-30", "-40", "-50"]
+temperatur_niedrig_lov: list[str] = ["-20", "-30", "-40", "-50"]
 temperatur_niedrig_selected: None | int | float = None
 
-temperatur_hoch_lov: list[int | float] = ["60", "70", "80", "90", "100"]
+temperatur_hoch_lov: list[str] = ["60", "70", "80", "90", "100"]
 temperatur_hoch_selected: None | int | float = None
 
-teilleiter_lov: list[int] = ["1", "2", "3", "4", "5", "6"]
+teilleiter_lov: list[str] = ["1", "2", "3", "4", "5", "6"]
 teilleiter_selected: None|int = None
 
-federkoeffizient_lov: list[int] = ["100000", "150000", "1300000", "400000", "2000000", "600000", "3000000"]
+federkoeffizient_lov: list[str] = ["100000", "150000", "1300000", "400000", "2000000", "600000", "3000000"]
 federkoeffizient_selected: None|int = None
 
 """
@@ -47,7 +47,7 @@ leiterseiltyp: pd.DataFrame = dataloader.load_csv_to_df()
 leiterseiltyp_lov: list[str] = list(leiterseiltyp["Bezeichnung"])
 leiterseiltyp_selected: None|str = None
 
-κ: None|float = None
+kappa: None|float = None
 t_k: None|float = None
 m_c: None|float = None
 l: None|float = None
@@ -85,6 +85,7 @@ def on_click_zurücksetzen(state):
     state.schlaufe_in_spannfeldmitte_selected = None
     state.hoehenunterschied_befestigungspunkte_selected = None
     state.standardkurzschlussstroeme_selected = "0.0" # muss float sein
+    state.kappa = None
     state.t_k = None
     state.leiterseiltyp_selected = None
     state.l = None
@@ -154,6 +155,87 @@ def on_calculate(state):
     except Exception as e:
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(e)}")
 
+def on_click_test(state):
+    required_fields = [
+        # Allgemeine Angaben
+        ('leiterseilbefestigung_selected', 'Art der Leiterseilbefestigung'),
+        ('schlaufe_in_spannfeldmitte_selected', 'Schlaufe in Spannfeldmitte'),
+        ('hoehenunterschied_befestigungspunkte_selected', 'Höhenunterschied der Befestigungspunkte'),
+        ('schlaufenebene_parallel_senkrecht_selected', 'Schlaufebene'),
+        ('temperatur_niedrig_selected', 'Niedrigste Temperatur'),
+        ('temperatur_hoch_selected', 'Höchste Temperatur'),
+        # Elektrische Werte
+        ('standardkurzschlussstroeme_selected', 'Kurzschlussstrom'),
+        ('kappa', 'Stossfaktor'),
+        ('t_k', 'Kurzschlussdauer'),
+        # Leiterseilkonfiguration
+        ('leiterseiltyp_selected', 'Leiterseiltyp'),
+        ('teilleiter_selected', 'Anzahl Teilleiter'),
+        # Abstände
+        ('l', 'Mittenabstand der Stützpunkte'),
+        ('a', 'Leitermittenabstand'),
+        # Mechanische Kraftwerte
+        ('F_st_20', 'Statische Seilzugkraft bei -20°C'),
+        ('F_st_80', 'Statische Seilzugkraft bei 80°C'),
+        ('federkoeffizient_selected', 'Federkoeffizient'),
+    ]
+
+    # Prüfe alle Pflichtfelder
+    missing = []
+    for field, label in required_fields:
+        value = getattr(state, field, None)
+        if value is None or value == '' or (isinstance(value, (int, float, str)) and str(value) == '0'):
+            missing.append(label)
+
+    if missing:
+        notify(state, notification_type="error",
+               message=f"Bitte folgende Pflichtfelder ausfüllen: {', '.join(missing)}", duration=100000)
+        return
+
+    try:
+        # Erstellung des Input-Objekts für den Mediator
+        inputs = Kurschlusskräfte_Input(
+            leiterseilbefestigung=str(state.leiterseilbefestigung_selected),
+            schlaufe_in_spannfeldmitte=str(state.schlaufe_in_spannfeldmitte_selected),
+            hoehenunterschied_befestigungspunkte=str(state.hoehenunterschied_befestigungspunkte_selected),
+            schlaufenebene_parallel_senkrecht=str(state.schlaufenebene_parallel_senkrecht_selected),
+            temperatur_niedrig=int(state.temperatur_niedrig_selected),
+            temperatur_hoch=int(state.temperatur_hoch_selected),
+            standardkurzschlussstroeme=float(state.standardkurzschlussstroeme_selected),
+            κ=float(state.kappa),
+            t_k=float(state.t_k),
+            leiterseiltyp=str(state.leiterseiltyp_selected) if state.leiterseiltyp_selected else None,
+            n=int(state.teilleiter_selected),
+            m_c=float(state.m_c) if state.m_c is not None else None,
+            l=float(state.l),
+            l_i=float(state.l_i) if state.l_i is not None else None,
+            a=float(state.a),
+            a_s=float(state.a_s) if state.a_s is not None else None,
+            F_st_20=float(state.F_st_20),
+            F_st_80=float(state.F_st_80),
+            federkoeffizient=int(state.federkoeffizient_selected) if state.federkoeffizient_selected else None,
+            l_s_1=float(state.l_s_1) if state.l_s_1 is not None else None,
+            l_s_2=float(state.l_s_2) if state.l_s_2 is not None else None,
+            l_s_3=float(state.l_s_3) if state.l_s_3 is not None else None,
+            l_s_4=float(state.l_s_4) if state.l_s_4 is not None else None,
+            l_s_5=float(state.l_s_5) if state.l_s_5 is not None else None,
+            l_s_6=float(state.l_s_6) if state.l_s_6 is not None else None,
+            l_s_7=float(state.l_s_7) if state.l_s_7 is not None else None,
+            l_s_8=float(state.l_s_8) if state.l_s_8 is not None else None,
+            l_s_9=float(state.l_s_9) if state.l_s_9 is not None else None,
+            l_s_10=float(state.l_s_10) if state.l_s_10 is not None else None
+        )
+
+        # Berechnung über den Mediator
+        print(inputs)
+        notify(state, notification_type="success", message="Berechnung abgeschlossen")
+
+
+    except ValueError as ve:
+        notify(state, notification_type="error", message=f"Ungültiger Zahlenwert: {str(ve)}")
+    except Exception as e:
+        notify(state, notification_type="error", message=f"Fehler: {str(e)}")
+
 with tgb.Page() as kurzschlusskraefte_page:
     # tgb.menu(label="Menu", lov=[("a", "Option A"), ("b", "Option B"), ("c", "Option C"), ("d", "Option D")], expanded = False)
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
@@ -202,7 +284,7 @@ with tgb.Page() as kurzschlusskraefte_page:
                 tgb.selector(label="I''k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)",
                              value="{standardkurzschlussstroeme_selected}", lov="{standardkurzschlussstroeme_lov}",
                              dropdown=True, class_name="input-with-unit A-unit")
-                tgb.number(label="κ Sossfaktor", value="{κ}", min=0.01, max=2.0, step=0.01, class_name="input-with-unit --unit")
+                tgb.number(label="κ Sossfaktor", value="{kappa}", min=0.01, max=2.0, step=0.01, class_name="input-with-unit --unit")
                 tgb.number(label="Tk Kurzschlussdauer", value="{t_k}", min=0.01, max=5.0, step=0.01,
                            hover_text="Wird kein Stossfaktor angegeben wird der Wert 1.8 angenommen.",
                            class_name="input-with-unit tk-unit Mui-focused")
@@ -279,6 +361,7 @@ with tgb.Page() as kurzschlusskraefte_page:
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
             with tgb.layout(columns="1 1 1", class_name="p1", columns__mobile="1 1 1"):
+                tgb.button(label="Berechnen", on_action=on_click_test)
                 tgb.button(label="Auswahl Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
                 tgb.button(label="Zurücksetzen", on_action=on_click_zurücksetzen)
         with tgb.part(class_name="card"):

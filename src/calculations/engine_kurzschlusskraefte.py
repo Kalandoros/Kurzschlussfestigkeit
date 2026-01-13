@@ -4,6 +4,51 @@ import math
 import scipy.constants
 from . import berechnungen_kurzschlusskraefte as bkk
 
+
+@dataclass
+class Kurschlusskräfte_Input:
+    # Allgemeine Angaben
+    leiterseilbefestigung: str
+    schlaufe_in_spannfeldmitte: str
+    hoehenunterschied_befestigungspunkte: str
+    schlaufenebene_parallel_senkrecht: str
+    temperatur_niedrig: int
+    temperatur_hoch: int
+
+    # Elektrische Werte
+    standardkurzschlussstroeme: float
+    κ: float
+    t_k: float
+
+    # Leiterseilkonfiguration
+    leiterseiltyp: str
+    n: int
+    m_c: Optional[float]
+
+    # Abstände
+    l: float
+    l_i: Optional[float]
+    a: float
+    a_s: Optional[float]
+
+    # Mechanische Kraftwerte
+    F_st_20: float
+    F_st_80: float
+    federkoeffizient: int
+
+    # Erweiterte Eingaben - Abstände Phasenabstandshalter
+    l_s_1: Optional[float]
+    l_s_2: Optional[float]
+    l_s_3: Optional[float]
+    l_s_4: Optional[float]
+    l_s_5: Optional[float]
+    l_s_6: Optional[float]
+    l_s_7: Optional[float]
+    l_s_8: Optional[float]
+    l_s_9: Optional[float]
+    l_s_10: Optional[float]
+
+
 @dataclass
 class ShortCircuitInput:
     # Elektrische Werte
