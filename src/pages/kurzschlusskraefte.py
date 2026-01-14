@@ -67,6 +67,11 @@ l_s_8: None|float = None
 l_s_9: None|float = None
 l_s_10: None|float = None
 
+content_vorlage: None = None
+vorlage_backup: None|dict = None
+content_export: None = None
+
+
 
 def on_change_selectable_leiterseiltyp(state):
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
@@ -236,6 +241,158 @@ def on_click_test(state):
     except Exception as e:
         notify(state, notification_type="error", message=f"Fehler: {str(e)}")
 
+def on_click_load_vorlage(state):
+    """
+    Callback-Funktion die aufgerufen wird, wenn der "Vorlage laden" Button geklickt wird.
+    Lädt die Eingabedaten aus der hochgeladenen Datei und setzt die GUI Widgets entsprechend.
+    """
+    # Check if file_selector has content (it can be a string path or empty)
+    file_path = state.content_vorlage
+
+    # Check if file path exists and is valid
+    if not file_path or file_path == '' or file_path is None:
+        notify(state, notification_type="warning", message="Bitte erst eine Datei auswählen")
+        return
+
+    # Additional check: verify the file path is a string (not during upload transition)
+    if not isinstance(file_path, str):
+        notify(state, notification_type="warning", message="Ungültiger Dateipfad. Bitte Datei erneut auswählen.")
+        return
+
+    try:
+        # Lade die Excel-Datei über dataloader
+        df = dataloader.load_excel_to_df(file_path)
+
+        if df.empty:
+            notify(state, notification_type="error", message="Datei konnte nicht geladen werden oder ist leer")
+            return
+
+        # Konvertiere DataFrame zu Dictionary mit den State-Variablen
+        input_dict, loaded_fields, skipped_fields = dataloader.convert_excel_to_input_dict(df)
+
+        if not input_dict:
+            notify(state, notification_type="error", message="Keine gültigen Eingabedaten in der Datei gefunden")
+            return
+
+        # Speichere aktuellen Zustand für Undo
+        state.vorlage_backup = {}
+        for key in input_dict.keys():
+            state.vorlage_backup[key] = getattr(state, key, None)
+
+        # Setze alle State-Variablen aus dem Dictionary
+        for key, value_from_dict in input_dict.items():
+            setattr(state, key, value_from_dict)
+
+        # Erstelle Feedback-Nachricht
+        message = f"✓ {len(loaded_fields)} Felder geladen"
+        if skipped_fields:
+            # Nur optionale Felder anzeigen, wenn sie übersprungen wurden
+            optional_keywords = ['Phasenabstandshalter', 'Summe konzentrischer Massen', 'Länge einer Abspann-Isolatorkette', 'wirksamer Abstand']
+            optional_skipped = [f for f in skipped_fields if any(kw in f for kw in optional_keywords)]
+            required_skipped = [f for f in skipped_fields if f not in optional_skipped]
+
+            if required_skipped:
+                message += f"\n⚠ {len(required_skipped)} Pflichtfelder fehlen"
+
+        notify(state, notification_type="success", message=message, duration=5000)
+
+    except Exception as e:
+        notify(state, notification_type="error", message=f"Fehler beim Laden der Datei: {str(e)}")
+
+def on_click_undo_vorlage(state):
+    """
+    Stellt den vorherigen Zustand vor dem Laden der Vorlage wieder her.
+    """
+    if state.vorlage_backup is None:
+        notify(state, notification_type="warning", message="Keine vorherige Version zum Wiederherstellen vorhanden")
+        return
+
+    try:
+        # Stelle alle gespeicherten Werte wieder her
+        for key, value in state.vorlage_backup.items():
+            setattr(state, key, value)
+
+        # Lösche das Backup nach dem Wiederherstellen
+        state.vorlage_backup = None
+
+        notify(state, notification_type="info", message="Vorherige Werte wiederhergestellt")
+
+    except Exception as e:
+        notify(state, notification_type="error", message=f"Fehler beim Wiederherstellen: {str(e)}")
+
+
+def on_click_export_vorlage(state):
+    """
+    Exportiert die aktuellen GUI-Werte in eine Excel-Datei.
+    Verwendet die hochgeladene Vorlage als Basis oder die Standard-Vorlage.
+    """
+    try:
+        from pathlib import Path
+        from datetime import datetime
+
+        # Bestimme die Vorlage: Entweder die hochgeladene Datei oder die Standard-Vorlage
+        template_path = None
+        if state.content_vorlage and state.content_vorlage != '':
+            template_path = Path(state.content_vorlage)
+        else:
+            # Verwende Standard-Vorlage
+            template_path = Path(dataloader.get_project_root()) / "data" / "Export Vorlage.xlsx"
+
+        if not template_path.exists():
+            notify(state, notification_type="error", message="Keine Vorlage gefunden. Bitte erst eine Datei auswählen.")
+            return
+
+        # Sammle alle aktuellen State-Werte
+        export_dict = {
+            'leiterseilbefestigung_selected': state.leiterseilbefestigung_selected,
+            'schlaufe_in_spannfeldmitte_selected': state.schlaufe_in_spannfeldmitte_selected,
+            'hoehenunterschied_befestigungspunkte_selected': state.hoehenunterschied_befestigungspunkte_selected,
+            'schlaufenebene_parallel_senkrecht_selected': state.schlaufenebene_parallel_senkrecht_selected,
+            'temperatur_niedrig_selected': state.temperatur_niedrig_selected,
+            'temperatur_hoch_selected': state.temperatur_hoch_selected,
+            'standardkurzschlussstroeme_selected': state.standardkurzschlussstroeme_selected,
+            'kappa': state.kappa,
+            't_k': state.t_k,
+            'leiterseiltyp_selected': state.leiterseiltyp_selected,
+            'teilleiter_selected': state.teilleiter_selected,
+            'm_c': state.m_c,
+            'l': state.l,
+            'l_i': state.l_i,
+            'a': state.a,
+            'a_s': state.a_s,
+            'F_st_20': state.F_st_20,
+            'F_st_80': state.F_st_80,
+            'federkoeffizient_selected': state.federkoeffizient_selected,
+            'l_s_1': state.l_s_1,
+            'l_s_2': state.l_s_2,
+            'l_s_3': state.l_s_3,
+            'l_s_4': state.l_s_4,
+            'l_s_5': state.l_s_5,
+            'l_s_6': state.l_s_6,
+            'l_s_7': state.l_s_7,
+            'l_s_8': state.l_s_8,
+            'l_s_9': state.l_s_9,
+            'l_s_10': state.l_s_10,
+        }
+
+        # Erstelle Dateinamen mit Timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"Kurzschlussfestigkeit_Export_{timestamp}.xlsx"
+        output_path = Path(dataloader.get_project_root()) / "data" / filename
+
+        # Exportiere zu Excel mit Vorlage
+        success = dataloader.export_input_dict_to_excel(export_dict, template_path, output_path)
+
+        if success:
+            # Setze den Pfad für file_download
+            state.content_export = str(output_path)
+            notify(state, notification_type="success", message=f"Datei erfolgreich erstellt: {filename}")
+        else:
+            notify(state, notification_type="error", message="Fehler beim Erstellen der Excel-Datei")
+
+    except Exception as e:
+        notify(state, notification_type="error", message=f"Fehler beim Export: {str(e)}")
+
 with tgb.Page() as kurzschlusskraefte_page:
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
     with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
@@ -359,13 +516,20 @@ with tgb.Page() as kurzschlusskraefte_page:
                                    class_name="input-with-unit m-unit Mui-focused")
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
-            with tgb.layout(columns="1 1 1 1 1", columns__mobile="1 1 1 1 1", class_name="p1"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p1"):
                 tgb.button(label="Berechnen", on_action=on_click_test)
-                tgb.file_selector(content="{content}", label="Datei auswählen", extensions=".csv,.xlsx",
-                                  drop_message="Drop Message")
-                tgb.file_download(content="{content}", label="Datei speichern", name="filename")
+                tgb.button(label="Alles zurücksetzen", on_action=on_click_zurücksetzen)
                 tgb.button(label="Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
-                tgb.button(label="Zurücksetzen", on_action=on_click_zurücksetzen)
+            tgb.html("br")
+            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p1"):
+                tgb.file_selector(content="{content_vorlage}", label="Vorlage Datei auswählen", extensions=".csv,.xlsx",
+                                  drop_message="Drop Message")
+                tgb.button(label="Vorlage laden", on_action=on_click_load_vorlage)
+                tgb.button(label="Laden Rückgängig", on_action=on_click_undo_vorlage)
+            tgb.html("br")
+            with tgb.layout(columns="1 1", columns__mobile="1 1", class_name="p1"):
+                tgb.button(label="Export erstellen", on_action=on_click_export_vorlage)
+                tgb.file_download(content="{content_export}", label="Export herunterladen", name="Eingaben_Export.xlsx")
         with tgb.part(class_name="card"):
             tgb.text(value="Ergebnisse", class_name="h2")
 
