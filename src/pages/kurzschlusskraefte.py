@@ -206,24 +206,24 @@ def on_click_test(state):
             t_k=float(state.t_k),
             leiterseiltyp=str(state.leiterseiltyp_selected) if state.leiterseiltyp_selected else None,
             n=int(state.teilleiter_selected),
-            m_c=float(state.m_c) if state.m_c is not None else None,
+            m_c=float(state.m_c) if state.m_c not in (None, 0.0) else None,
             l=float(state.l),
-            l_i=float(state.l_i) if state.l_i is not None else None,
+            l_i=float(state.l_i) if state.l_i not in (None, 0.0)  else None,
             a=float(state.a),
-            a_s=float(state.a_s) if state.a_s is not None else None,
+            a_s=float(state.a_s) if state.a_s not in (None, 0.0) else None,
             F_st_20=float(state.F_st_20),
             F_st_80=float(state.F_st_80),
-            federkoeffizient=int(state.federkoeffizient_selected) if state.federkoeffizient_selected else None,
-            l_s_1=float(state.l_s_1) if state.l_s_1 is not None else None,
-            l_s_2=float(state.l_s_2) if state.l_s_2 is not None else None,
-            l_s_3=float(state.l_s_3) if state.l_s_3 is not None else None,
-            l_s_4=float(state.l_s_4) if state.l_s_4 is not None else None,
-            l_s_5=float(state.l_s_5) if state.l_s_5 is not None else None,
-            l_s_6=float(state.l_s_6) if state.l_s_6 is not None else None,
-            l_s_7=float(state.l_s_7) if state.l_s_7 is not None else None,
-            l_s_8=float(state.l_s_8) if state.l_s_8 is not None else None,
-            l_s_9=float(state.l_s_9) if state.l_s_9 is not None else None,
-            l_s_10=float(state.l_s_10) if state.l_s_10 is not None else None
+            federkoeffizient=int(state.federkoeffizient_selected),
+            l_s_1=float(state.l_s_1) if state.l_s_1 not in (None, 0.0) else None,
+            l_s_2=float(state.l_s_2) if state.l_s_2 not in (None, 0.0) else None,
+            l_s_3=float(state.l_s_3) if state.l_s_3 not in (None, 0.0) else None,
+            l_s_4=float(state.l_s_4) if state.l_s_4 not in (None, 0.0) else None,
+            l_s_5=float(state.l_s_5) if state.l_s_5 not in (None, 0.0) else None,
+            l_s_6=float(state.l_s_6) if state.l_s_6 not in (None, 0.0) else None,
+            l_s_7=float(state.l_s_7) if state.l_s_7 not in (None, 0.0) else None,
+            l_s_8=float(state.l_s_8) if state.l_s_8 not in (None, 0.0) else None,
+            l_s_9=float(state.l_s_9) if state.l_s_9 not in (None, 0.0) else None,
+            l_s_10=float(state.l_s_10) if state.l_s_10 not in (None, 0.0) else None
         )
 
         # Berechnung über den Mediator
@@ -237,7 +237,6 @@ def on_click_test(state):
         notify(state, notification_type="error", message=f"Fehler: {str(e)}")
 
 with tgb.Page() as kurzschlusskraefte_page:
-    # tgb.menu(label="Menu", lov=[("a", "Option A"), ("b", "Option B"), ("c", "Option C"), ("d", "Option D")], expanded = False)
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
     with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
         with tgb.part(class_name="card"):
@@ -338,7 +337,7 @@ with tgb.Page() as kurzschlusskraefte_page:
                                     hover_text="Abstände beginnend von links vom Ende der Isolatorkette oder dem Anschlusspunkt bei aufgelegten Leiterseilen. \n"
                                                "Abstände zwischen Phasenabstandshaltern, Gegenkontakte von Trennern zählen ebenfalls als Phasenabstandshalter."):
                     with tgb.layout(columns="1 1 1 1 1", columns__mobile="1 1 1 1 1"):
-                        tgb.number(label="Abstand Phasenabstandshalter 1", value = "{l_s_1}", min = 0.0, step = 0.1,
+                        tgb.number(label="Abstand Phasenabstandshalter 1", value="{l_s_1}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
                         tgb.number(label="Abstand Phasenabstandshalter 2", value="{l_s_2}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
@@ -360,9 +359,12 @@ with tgb.Page() as kurzschlusskraefte_page:
                                    class_name="input-with-unit m-unit Mui-focused")
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
-            with tgb.layout(columns="1 1 1", class_name="p1", columns__mobile="1 1 1"):
+            with tgb.layout(columns="1 1 1 1 1", columns__mobile="1 1 1 1 1", class_name="p1"):
                 tgb.button(label="Berechnen", on_action=on_click_test)
-                tgb.button(label="Auswahl Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
+                tgb.file_selector(content="{content}", label="Datei auswählen", extensions=".csv,.xlsx",
+                                  drop_message="Drop Message")
+                tgb.file_download(content="{content}", label="Datei speichern", name="filename")
+                tgb.button(label="Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
                 tgb.button(label="Zurücksetzen", on_action=on_click_zurücksetzen)
         with tgb.part(class_name="card"):
             tgb.text(value="Ergebnisse", class_name="h2")
