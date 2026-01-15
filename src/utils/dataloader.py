@@ -1,6 +1,9 @@
 from collections import defaultdict
 from pathlib import Path
 import pandas as pd
+from openpyxl import load_workbook
+import shutil
+import warnings
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -52,8 +55,17 @@ def load_excel_to_df(file_path: str | Path = None) -> pd.DataFrame:
             raw_data = pd.read_excel(file_path, header=None, na_filter=False)
             df = pd.DataFrame(raw_data)
             return df
+        except FileNotFoundError as e:
+            print(f"Excel-Datei nicht gefunden: {e}")
+            return pd.DataFrame()
+        except PermissionError as e:
+            print(f"Keine Leseberechtigung für Excel-Datei: {e}")
+            return pd.DataFrame()
+        except ValueError as e:
+            print(f"Ungültiges Excel-Format oder fehlerhafte Daten: {e}")
+            return pd.DataFrame()
         except Exception as e:
-            print(f"Fehler beim Laden der Excel-Datei {file_path}: {e}")
+            print(f"Unerwarteter Fehler beim Laden der Excel-Datei {file_path}: {e}")
             return pd.DataFrame()
     else:
         print(f"Datei {file_path} konnte nicht gefunden werden!")
@@ -138,6 +150,38 @@ def convert_excel_to_input_dict(df: pd.DataFrame) -> tuple[dict, list[str], list
 
     return input_dict, loaded_fields, skipped_fields
 
+def _convert_value(value):
+    """
+    Konvertiert einen Wert in den passenden Typ für Excel-Export.
+
+    Args:
+        value: Zu konvertierender Wert
+
+    Returns:
+        Konvertierter Wert (str, int, float oder '')
+    """
+    # Prüfe auf leere Werte
+    if value is None or value in ('0', 0):
+        return ''
+
+    # Wenn bereits eine Zahl, direkt zurückgeben
+    if isinstance(value, (int, float)):
+        return value
+
+    # String-Konvertierung versuchen
+    if isinstance(value, str):
+        try:
+            # Float wenn Dezimaltrennzeichen vorhanden
+            if '.' in value or ',' in value:
+                return float(value.replace(',', '.'))
+            # Ansonsten Integer
+            return int(value)
+        except (ValueError, AttributeError):
+            # Bei Fehler String beibehalten
+            return value
+
+    return value
+
 def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, output_path: str | Path) -> bool:
     """
     Exportiert ein Dictionary mit Eingabewerten in eine Excel-Datei.
@@ -152,111 +196,101 @@ def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, outp
     Returns:
         True bei Erfolg, False bei Fehler
     """
+    # Unterdrücke ResourceWarning von openpyxl (bekanntes internes Problem)
+    warnings.filterwarnings("ignore", category=ResourceWarning, message=".*unclosed file.*")
+
+    # Lade die Vorlage
+    template_path = Path(template_path)
+    if not template_path.exists():
+        print(f"Vorlage nicht gefunden: {template_path}")
+        return False
+
+    # Reverse Mapping: State-Variablennamen zu Excel-Zeilennamen
+    reverse_field_mapping = {
+        'leiterseilbefestigung_selected': 'Art der Leiterseilbefestigung',
+        'schlaufe_in_spannfeldmitte_selected': 'Schlaufe in Spannfeldmitte',
+        'hoehenunterschied_befestigungspunkte_selected': 'Höhenunterschied der Befestigungspunkte mehr als 25%',
+        'schlaufenebene_parallel_senkrecht_selected': 'Schlaufebene bei Schlaufen in Spannfeldmitte',
+        'temperatur_niedrig_selected': 'ϑ_l Niedrigste Temperatur',
+        'temperatur_hoch_selected': 'ϑ_h Höchste Temperatur',
+        'standardkurzschlussstroeme_selected': 'I\'\'k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)',
+        'kappa': 'κ Sossfaktor',
+        't_k': 'Tk Kurzschlussdauer',
+        'leiterseiltyp_selected': 'Leiterseiltyp',
+        'teilleiter_selected': 'n Anzahl der Teilleiter eines Hauptleiters',
+        'm_c': 'm_c Summe konzentrischer Massen im Spannfeld',
+        'l': 'l Mittenabstand der Stützpunkte',
+        'l_i': 'l_i Länge einer Abspann-Isolatorkette',
+        'a': 'a Leitermittenabstand',
+        'a_s': 'a_s wirksamer Abstand zwischen Teilleitern',
+        'F_st_20': 'Fst-20 statische Seilzugkraft in einem Hauptleiter',
+        'F_st_80': 'Fst80 statische Seilzugkraft in einem Hauptleiter',
+        'federkoeffizient_selected': 'S resultierender Federkoeffizient beider Stützpunkte im Spannfeld',
+        'l_s_1': 'Abstand Phasenabstandshalter 1',
+        'l_s_2': 'Abstand Phasenabstandshalter 2',
+        'l_s_3': 'Abstand Phasenabstandshalter 3',
+        'l_s_4': 'Abstand Phasenabstandshalter 4',
+        'l_s_5': 'Abstand Phasenabstandshalter 5',
+        'l_s_6': 'Abstand Phasenabstandshalter 6',
+        'l_s_7': 'Abstand Phasenabstandshalter 7',
+        'l_s_8': 'Abstand Phasenabstandshalter 8',
+        'l_s_9': 'Abstand Phasenabstandshalter 9',
+        'l_s_10': 'Abstand Phasenabstandshalter 10',
+    }
+
+    # Kopiere die Vorlage zur Ausgabedatei (um Formatierung zu erhalten)
+    shutil.copy(template_path, output_path)
+
+    # Öffne die kopierte Datei mit openpyxl (behält Formatierung)
+    wb = None
     try:
-        from openpyxl import load_workbook
-        import shutil
-        import warnings
+        wb = load_workbook(output_path, keep_vba=False, data_only=False)
+        ws = wb.active
 
-        # Unterdrücke ResourceWarning von openpyxl (bekanntes internes Problem)
-        warnings.filterwarnings("ignore", category=ResourceWarning, message=".*unclosed file.*")
+        # Durchlaufe alle Zeilen in der Excel-Datei
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
+            # Spalte A (Index 0) enthält die Labels
+            if row[0].value:
+                excel_label = str(row[0].value).strip()
 
-        # Lade die Vorlage
-        template_path = Path(template_path)
-        if not template_path.exists():
-            print(f"Vorlage nicht gefunden: {template_path}")
-            return False
+                # Suche nach dem passenden State-Variablennamen
+                for state_var, mapped_label in reverse_field_mapping.items():
+                    if excel_label == mapped_label:
+                        # Hole den Wert aus dem input_dict
+                        value = input_dict.get(state_var, '')
 
-        # Kopiere die Vorlage zur Ausgabedatei (um Formatierung zu erhalten)
-        shutil.copy(template_path, output_path)
+                        # Konvertiere den Wert in den richtigen Typ
+                        if value is None or value == '0' or value == 0:
+                            value = ''
+                        elif isinstance(value, str):
+                            # Versuche String in Zahl zu konvertieren wenn möglich
+                            try:
+                                # Versuche zuerst Float
+                                if '.' in value or ',' in value:
+                                    value = float(value.replace(',', '.'))
+                                else:
+                                    # Versuche Int
+                                    value = int(value)
+                            except (ValueError, AttributeError):
+                                # Wenn nicht konvertierbar, behalte String
+                                pass
 
-        # Reverse Mapping: State-Variablennamen zu Excel-Zeilennamen
-        reverse_field_mapping = {
-            'leiterseilbefestigung_selected': 'Art der Leiterseilbefestigung',
-            'schlaufe_in_spannfeldmitte_selected': 'Schlaufe in Spannfeldmitte',
-            'hoehenunterschied_befestigungspunkte_selected': 'Höhenunterschied der Befestigungspunkte mehr als 25%',
-            'schlaufenebene_parallel_senkrecht_selected': 'Schlaufebene bei Schlaufen in Spannfeldmitte',
-            'temperatur_niedrig_selected': 'ϑ_l Niedrigste Temperatur',
-            'temperatur_hoch_selected': 'ϑ_h Höchste Temperatur',
-            'standardkurzschlussstroeme_selected': 'I\'\'k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)',
-            'kappa': 'κ Sossfaktor',
-            't_k': 'Tk Kurzschlussdauer',
-            'leiterseiltyp_selected': 'Leiterseiltyp',
-            'teilleiter_selected': 'n Anzahl der Teilleiter eines Hauptleiters',
-            'm_c': 'm_c Summe konzentrischer Massen im Spannfeld',
-            'l': 'l Mittenabstand der Stützpunkte',
-            'l_i': 'l_i Länge einer Abspann-Isolatorkette',
-            'a': 'a Leitermittenabstand',
-            'a_s': 'a_s wirksamer Abstand zwischen Teilleitern',
-            'F_st_20': 'Fst-20 statische Seilzugkraft in einem Hauptleiter',
-            'F_st_80': 'Fst80 statische Seilzugkraft in einem Hauptleiter',
-            'federkoeffizient_selected': 'S resultierender Federkoeffizient beider Stützpunkte im Spannfeld',
-            'l_s_1': 'Abstand Phasenabstandshalter 1',
-            'l_s_2': 'Abstand Phasenabstandshalter 2',
-            'l_s_3': 'Abstand Phasenabstandshalter 3',
-            'l_s_4': 'Abstand Phasenabstandshalter 4',
-            'l_s_5': 'Abstand Phasenabstandshalter 5',
-            'l_s_6': 'Abstand Phasenabstandshalter 6',
-            'l_s_7': 'Abstand Phasenabstandshalter 7',
-            'l_s_8': 'Abstand Phasenabstandshalter 8',
-            'l_s_9': 'Abstand Phasenabstandshalter 9',
-            'l_s_10': 'Abstand Phasenabstandshalter 10',
-        }
+                        # Setze den Wert in Spalte B (Index 1)
+                        row[1].value = value
+                        break
 
-        # Öffne die kopierte Datei mit openpyxl (behält Formatierung)
-        # keep_vba=False und data_only=False um Warnungen zu vermeiden
-        wb = None
-        try:
-            wb = load_workbook(output_path, keep_vba=False, data_only=False)
-            ws = wb.active
-
-            # Durchlaufe alle Zeilen in der Excel-Datei
-            for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
-                # Spalte A (Index 0) enthält die Labels
-                if row[0].value:
-                    excel_label = str(row[0].value).strip()
-
-                    # Suche nach dem passenden State-Variablennamen
-                    for state_var, mapped_label in reverse_field_mapping.items():
-                        if excel_label == mapped_label:
-                            # Hole den Wert aus dem input_dict
-                            value = input_dict.get(state_var, '')
-
-                            # Konvertiere den Wert in den richtigen Typ
-                            if value is None or value == '0' or value == 0:
-                                value = ''
-                            elif isinstance(value, str):
-                                # Versuche String in Zahl zu konvertieren wenn möglich
-                                try:
-                                    # Versuche zuerst Float
-                                    if '.' in value or ',' in value:
-                                        value = float(value.replace(',', '.'))
-                                    else:
-                                        # Versuche Int
-                                        value = int(value)
-                                except (ValueError, AttributeError):
-                                    # Wenn nicht konvertierbar, behalte String
-                                    pass
-                            # value ist bereits int oder float - direkt übernehmen
-
-                            # Setze den Wert in Spalte B (Index 1)
-                            # openpyxl behandelt int/float automatisch als Zahl
-                            row[1].value = value
-                            break
-
-            # Speichere die Datei (Formatierung bleibt erhalten)
-            wb.save(output_path)
-        finally:
-            # Stelle sicher, dass die Datei geschlossen wird, auch bei Fehler
-            if wb is not None:
-                wb.close()
-
+        # Speichere die Datei (Formatierung bleibt erhalten)
+        wb.save(output_path)
         return True
-
     except Exception as e:
         print(f"Fehler beim Exportieren der Excel-Datei: {e}")
         import traceback
         traceback.print_exc()
         return False
+    finally:
+        # Stelle sicher, dass die Datei geschlossen wird, auch bei Fehler
+        if wb is not None:
+            wb.close()
 
 if __name__ == "__main__":
     # Liefert alle Werte einer Spalte zurück

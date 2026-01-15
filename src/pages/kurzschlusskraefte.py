@@ -1,9 +1,13 @@
 from pandas.io.clipboard import init_windows_clipboard
-from taipy.gui import notify
+from taipy.gui import notify, download
 import taipy.gui.builder as tgb
 import pandas as pd
+from pathlib import Path
+from datetime import datetime
+import tempfile
+import traceback
 from src.utils import dataloader
-from src.calculations.engine_kurzschlusskraefte import ShortCircuitInput, ShortCircuitResult, calculate_short_circuit, Kurschlusskräfte_Input
+from src.calculations.engine_kurzschlusskraefte import Kurschlusskräfte_Input, ShortCircuitResult, calculate_short_circuit
 
 # Configuration for pandas
 pd.set_option('display.max_columns', None)
@@ -47,6 +51,7 @@ leiterseiltyp: pd.DataFrame = dataloader.load_csv_to_df()
 leiterseiltyp_lov: list[str] = list(leiterseiltyp["Bezeichnung"])
 leiterseiltyp_selected: None|str = None
 
+name_der_verbindung: None|str = ""
 kappa: None|float = None
 t_k: None|float = None
 m_c: None|float = None
@@ -69,8 +74,14 @@ l_s_10: None|float = None
 
 content_vorlage: None = None
 vorlage_backup: None|dict = None
-content_export: None = None
 
+F_td_temp_niedrig: None|float|str = ""
+F_fd_temp_niedrig: None|float|str = ""
+F_pid_temp_niedrig: None|float|str = ""
+
+F_td_temp_hoch: None|float|str = ""
+F_fd_temp_hoch: None|float|str = ""
+F_pid_temp_hoch: None|float|str = ""
 
 
 def on_change_selectable_leiterseiltyp(state):
@@ -86,6 +97,7 @@ def on_click_leiterseiltyp_zurücksetzen(state):
     notify(state, notification_type="info", message="Auswahl aufgehoben")
 
 def on_click_zurücksetzen(state):
+    state.name_der_verbindung = ""
     state.leiterseilbefestigung_selected = None
     state.schlaufe_in_spannfeldmitte_selected = None
     state.hoehenunterschied_befestigungspunkte_selected = None
@@ -132,7 +144,7 @@ def on_calculate(state):
 
     try:
         # Erstellung des Input-Objekts für den Mediator
-        inputs = ShortCircuitInput(
+        inputs = Kurschlusskräfte_Input(
             I_k_double_prime=float(state.standardkurzschlussstroeme_selected),
             t_k=state.t_k,
             n=int(state.teilleiter_selected) if state.teilleiter_selected else 1,
@@ -189,7 +201,10 @@ def on_click_test(state):
     missing = []
     for field, label in required_fields:
         value = getattr(state, field, None)
-        if value is None or value == '' or (isinstance(value, (int, float, str)) and str(value) == '0'):
+        if (value is None or value == '' or
+                (isinstance(value, (int, float, str)) and str(value) == '0.0') or
+                (isinstance(value, (int, float, str)) and str(value) == '0') or
+                (isinstance(value, (int, float, str)) and str(value) == '')):
             missing.append(label)
 
     if missing:
@@ -206,10 +221,15 @@ def on_click_test(state):
             schlaufenebene_parallel_senkrecht=str(state.schlaufenebene_parallel_senkrecht_selected),
             temperatur_niedrig=int(state.temperatur_niedrig_selected),
             temperatur_hoch=int(state.temperatur_hoch_selected),
-            standardkurzschlussstroeme=float(state.standardkurzschlussstroeme_selected),
+            standardkurzschlussstroeme=float(state.standardkurzschlussstroeme_selected)*10**3,
             κ=float(state.kappa),
             t_k=float(state.t_k),
             leiterseiltyp=str(state.leiterseiltyp_selected) if state.leiterseiltyp_selected else None,
+            d=float(state.leiterseiltyp["Aussendurchmesser"].values[0])*10**-3,
+            A_s=float(state.leiterseiltyp["Querschnitt eines Teilleiters"].values[0])*10**-6,
+            m_s=float(state.leiterseiltyp["Massenbelag eines Teilleiters"].values[0]),
+            E=float(state.leiterseiltyp["Elastizitätsmodul"].values[0])*10**6,
+            c_th=float(state.leiterseiltyp["Kurzzeitstromdichte"].values[0]),
             n=int(state.teilleiter_selected),
             m_c=float(state.m_c) if state.m_c not in (None, 0.0) else None,
             l=float(state.l),
@@ -320,16 +340,12 @@ def on_click_undo_vorlage(state):
     except Exception as e:
         notify(state, notification_type="error", message=f"Fehler beim Wiederherstellen: {str(e)}")
 
-
 def on_click_export_vorlage(state):
     """
     Exportiert die aktuellen GUI-Werte in eine Excel-Datei.
     Verwendet die hochgeladene Vorlage als Basis oder die Standard-Vorlage.
     """
     try:
-        from pathlib import Path
-        from datetime import datetime
-
         # Bestimme die Vorlage: Entweder die hochgeladene Datei oder die Standard-Vorlage
         template_path = None
         if state.content_vorlage and state.content_vorlage != '':
@@ -375,32 +391,52 @@ def on_click_export_vorlage(state):
             'l_s_10': state.l_s_10,
         }
 
-        # Erstelle Dateinamen mit Timestamp
+        # Erstelle Dateinamen mit name_der_verbindung und Timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"Kurzschlussfestigkeit_Export_{timestamp}.xlsx"
-        output_path = Path(dataloader.get_project_root()) / "data" / filename
+        connection_name = state.name_der_verbindung if state.name_der_verbindung else "Unbenannt"
+        # Entferne ungültige Zeichen für Dateinamen
+        connection_name = "".join(c for c in connection_name if c.isalnum() or c in (' ', '_', '-')).strip()
+        if not connection_name:
+            connection_name = "Unbenannt"
+        filename = f"{connection_name}_{timestamp}.xlsx"
+
+        # Erstelle temporäre Datei mit richtigem Namen im Temp-Verzeichnis
+        # Wichtig: Datei muss mit dem gewünschten Namen existieren, damit Browser ihn übernimmt
+        temp_dir = tempfile.gettempdir()
+        output_path = Path(temp_dir) / filename
 
         # Exportiere zu Excel mit Vorlage
         success = dataloader.export_input_dict_to_excel(export_dict, template_path, output_path)
 
         if success:
-            # Setze den Pfad für file_download
-            state.content_export = str(output_path)
-            notify(state, notification_type="success", message=f"Datei erfolgreich erstellt: {filename}")
+            # Lese die erstellte Datei und trigger Download mit richtigem Namen
+            with open(output_path, 'rb') as f:
+                file_content = f.read()
+
+            # Nutze download() Funktion für korrekten Dateinamen
+            download(state, content=file_content, name=filename)
+            notify(state, notification_type="success", message=f"Download gestartet: {filename}")
         else:
-            notify(state, notification_type="error", message="Fehler beim Erstellen der Excel-Datei")
+            notify(state, notification_type="error", message="Fehler beim Erstellen der Excel-Datei. Prüfe die Konsole für Details.")
 
     except Exception as e:
+        print(f"Detaillierter Fehler beim Export:")
+        traceback.print_exc()
         notify(state, notification_type="error", message=f"Fehler beim Export: {str(e)}")
 
 with tgb.Page() as kurzschlusskraefte_page:
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
+    tgb.html("br")
     with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
         with tgb.part(class_name="card"):
             tgb.text(value="Eingaben", class_name="h2")
             tgb.html("br")
             tgb.text(value="Allgemeine Angaben", class_name="h6")
             tgb.html("hr")
+            with tgb.layout(columns="1", columns__mobile="1"):
+                tgb.input(label="Name der Leiterseilverbindung", value="{name_der_verbindung}",
+                      hover_text="Angabe des Projekts, Feldes und der Verbindung.",
+                      class_name="input-with-unit --unit; mb1")
             with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
                 tgb.selector(label="Art der Leiterseilbefestigung", value="{leiterseilbefestigung_selected}",
                              lov="{leiterseilbefestigung_lov}", dropdown=True)
@@ -516,33 +552,35 @@ with tgb.Page() as kurzschlusskraefte_page:
                                    class_name="input-with-unit m-unit Mui-focused")
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p1"):
-                tgb.button(label="Berechnen", on_action=on_click_test)
-                tgb.button(label="Alles zurücksetzen", on_action=on_click_zurücksetzen)
-                tgb.button(label="Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen)
+            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p0"):
+                tgb.button(label="Berechnen", on_action=on_click_test, class_name="fullwidth")
+                tgb.button(label="Alles zurücksetzen", on_action=on_click_zurücksetzen, class_name="fullwidth")
+                tgb.button(label="Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen, class_name="fullwidth")
             tgb.html("br")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p1"):
-                tgb.file_selector(content="{content_vorlage}", label="Vorlage Datei auswählen", extensions=".csv,.xlsx",
-                                  drop_message="Drop Message")
-                tgb.button(label="Vorlage laden", on_action=on_click_load_vorlage)
-                tgb.button(label="Laden Rückgängig", on_action=on_click_undo_vorlage)
+            with tgb.layout(columns="1 1 1 1", columns__mobile="1 1 1 1", class_name="p0"):
+                tgb.file_selector(content="{content_vorlage}", label="Vorlage auswählen", extensions=".csv,.xlsx",
+                                  drop_message="Drop Message", class_name="fullwidth")
+                tgb.button(label="Vorlage laden", on_action=on_click_load_vorlage, class_name="fullwidth")
+                tgb.button(label="Laden Rückgängig", on_action=on_click_undo_vorlage, class_name="fullwidth")
+                tgb.button(label="Excel Export herunterladen", on_action=on_click_export_vorlage, class_name="fullwidth")
             tgb.html("br")
-            with tgb.layout(columns="1 1", columns__mobile="1 1", class_name="p1"):
-                tgb.button(label="Export erstellen", on_action=on_click_export_vorlage)
-                tgb.file_download(content="{content_export}", label="Export herunterladen", name="Eingaben_Export.xlsx")
         with tgb.part(class_name="card"):
             tgb.text(value="Ergebnisse", class_name="h2")
 
             tgb.html("br")
-            tgb.text(value="Maximale Seilzugkräfte bei -20 °C", class_name="h6")
+            tgb.text(value="Maximale Seilzugkräfte bei {temperatur_niedrig_selected} °C", class_name="h6")
             tgb.html("hr")
-
+            tgb.text(value="Ft,d bei {temperatur_niedrig_selected} °C: {F_td_temp_niedrig} kN")
+            tgb.text(value="Ff,d bei {temperatur_niedrig_selected} °C: {F_fd_temp_niedrig} kN")
+            tgb.text(value="Fpi,d bei {temperatur_niedrig_selected} °C: {F_pid_temp_niedrig} kN")
             tgb.html("br")
-            tgb.text(value="Maximale Seilzugkräfte bei 80 °C", class_name="h6")
+            tgb.text(value="Maximale Seilzugkräfte bei {temperatur_hoch_selected} °C", class_name="h6")
             tgb.html("hr")
-
+            tgb.text(value="Ft,d bei {temperatur_hoch_selected} °C: {F_td_temp_hoch} kN")
+            tgb.text(value="Ff,d bei {temperatur_hoch_selected} °C: {F_fd_temp_hoch} kN")
+            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pid_temp_hoch} kN")
             tgb.html("br")
-            tgb.text(value="Massgebende Seilzugkräfte bei -20/80 °C", class_name="h6")
+            tgb.text(value="Massgebende Seilzugkräfte bei {temperatur_niedrig_selected}/{temperatur_hoch_selected} °C", class_name="h6")
             tgb.html("hr")
 
             tgb.html("br")

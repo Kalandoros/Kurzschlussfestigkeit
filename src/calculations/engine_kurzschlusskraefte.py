@@ -22,6 +22,11 @@ class Kurschlusskräfte_Input:
 
     # Leiterseilkonfiguration
     leiterseiltyp: str
+    d: float
+    A_s: float
+    m_s: float
+    E: float
+    c_th: float
     n: int
     m_c: Optional[float]
 
@@ -48,32 +53,6 @@ class Kurschlusskräfte_Input:
     l_s_9: Optional[float]
     l_s_10: Optional[float]
 
-
-@dataclass
-class ShortCircuitInput:
-    # Elektrische Werte
-    I_k_double_prime: float  # Anfangs-Kurzschlusswechselstrom in kA
-    t_k: float               # Kurzschlussdauer in s
-    
-    # Konfiguration
-    n: int                   # Anzahl Teilleiter
-    befestigung: str         # "Abgespannt" oder "Aufgelegt"
-    
-    # Geometrie
-    l: float                 # Mittenabstand der Stützpunkte in m
-    l_i: float               # Länge der Isolatorkette in m
-    a: float                 # Leitermittenabstand in m
-    a_s: float               # Abstand Teilleiter in m
-    
-    # Seileigenschaften (aus Datenbank/Dataloader)
-    m_s: float               # Massenbelag eines Teilleiters in kg/m
-    A_s: float               # Querschnitt eines Teilleiters in m^2
-    E: float                 # Elastizitätsmodul in N/m^2
-    
-    # Mechanik
-    F_st: float              # Statische Seilzugkraft in N (abhängig von Temperatur)
-    S: float                 # Federkoeffizient der Stützpunkte in N/m (UI: Steifigkeitsnorm)
-
 @dataclass
 class ShortCircuitResult:
     l_c: Optional[float] = None
@@ -90,7 +69,7 @@ class ShortCircuitResult:
     f_ed: Optional[float] = None
 
 class ShortCircuitMediator:
-    def __init__(self, inputs: ShortCircuitInput):
+    def __init__(self, inputs: Kurschlusskräfte_Input):
         self.inputs = inputs
         self.results = ShortCircuitResult()
         self.mu0 = scipy.constants.mu_0
@@ -138,6 +117,6 @@ class ShortCircuitMediator:
         
         return self.results
 
-def calculate_short_circuit(inputs: ShortCircuitInput) -> ShortCircuitResult:
+def calculate_short_circuit(inputs: Kurschlusskräfte_Input) -> ShortCircuitResult:
     mediator = ShortCircuitMediator(inputs)
     return mediator.run_calculation()

@@ -721,7 +721,7 @@ def ν_3(a_s: float, d: float, n: float = None) -> float:
     Funktion zur Berechnung des Faktors ν_3 zur Berechnung von F_pi_d (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
     ν_4: Faktor zur Berechnung von F_pi_d
     a_s: wirksamer Abstand zwischen Teilleitern in m
-    d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
+    d: Aussendurchmesser von Rohrleitern oder Seildurchmesser in m
     n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
     """
     ν_3: float = ((d / a_s) / math.sin(math.radians(180 / n))) * ((math.sqrt((a_s / d) - 1)) / math.atan(math.sqrt((a_s / d) - 1)))
@@ -754,9 +754,12 @@ def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> fl
     """
     Funktion zur Berechnung des Faktors η zur Berechnung von F_pi bei nicht zusammenschlagenden
     Bündelleitern (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
-    η: Faktor zur Berechnung von Fpi bei nicht zusammenschlagenden Bündelleitern  (dimensionslos)
     ε_st: ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
     j: j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ν_3: Faktor zur Berechnung von F_pi_d
+    η: Faktor zur Berechnung von Fpi bei nicht zusammenschlagenden Bündelleitern  (dimensionslos)
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    d: Aussendurchmesser von Rohrleitern oder Seildurchmesser in m
     fη: Faktor zur Beschreibung der Teilleiter-Annäherung im Seilbündel
     Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
     """
