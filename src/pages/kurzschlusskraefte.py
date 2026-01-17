@@ -79,17 +79,27 @@ vorlage_backup: None|dict = None
 
 F_td_temp_niedrig: None|float|str = ""
 F_fd_temp_niedrig: None|float|str = ""
-F_pid_temp_niedrig: None|float|str = ""
+F_pi_d_temp_niedrig: None|float|str = ""
 
 F_td_temp_hoch: None|float|str = ""
 F_fd_temp_hoch: None|float|str = ""
-F_pid_temp_hoch: None|float|str = ""
+F_pi_d_temp_hoch: None|float|str = ""
 
 F_td_massg: None|float|str = ""
 F_fd_massg: None|float|str = ""
-F_pid_massg: None|float|str = ""
+F_pi_d_massg: None|float|str = ""
 
+F_td_fd_pi_d_massg_1: None|float|str = ""
+F_td_fd_pi_d_massg_2: None|float|str = ""
 
+b_h_temp_niedrig: None|float|str = ""
+b_h_temp_hoch: None|float|str = ""
+b_h_max: None|float|str = ""
+temp_b_h: None|float|str = ""
+
+a_min_temp_niedrig: None|float|str = ""
+a_min_temp_hoch: None|float|str = ""
+a_min_min: None|float|str = ""
 
 calc_result: None|ShortCircuitResult = None
 calc_result_formatted: None|str = None
@@ -278,18 +288,31 @@ def on_click_berechnen(state):
         state.F_td_temp_hoch = state.calc_result['F_st_80'].F_td
         state.F_fd_temp_niedrig = state.calc_result['F_st_20'].F_fd
         state.F_fd_temp_hoch = state.calc_result['F_st_80'].F_fd
-        # TODO: Wenn F_fd und F_pid implementiert sind, auch diese hinzufügen:
-        # state.F_pid_temp_niedrig = state.calc_result['F_st_20'].F_pid
-        # state.F_pid_temp_hoch = state.calc_result['F_st_80'].F_pid
+        state.F_pi_d_temp_niedrig = state.calc_result['F_st_20'].F_pi_d
+        state.F_pi_d_temp_hoch = state.calc_result['F_st_80'].F_pi_d
+        state.b_h_temp_niedrig = state.calc_result['F_st_20'].b_h
+        state.b_h_temp_hoch = state.calc_result['F_st_80'].b_h
+        state.a_min_temp_niedrig = state.calc_result['F_st_20'].a_min
+        state.a_min_temp_hoch = state.calc_result['F_st_80'].a_min
 
-        # Bestimme maximale (maßgebende) Werte
-        def get_max_value(val1, val2):
-            values = [v for v in [val1, val2] if v not in (None, "")]
+        # Bestimme maximale (massgebende) Werte
+        def get_max_value(val1, val2, val3=None):
+            values = [v for v in [val1, val2, val3] if v not in (None, "")]
             return max(values) if values else ""
+
+        # Bestimme minimale (massgebende) Werte
+        def get_min_value(val1, val2):
+            values = [v for v in [val1, val2] if v not in (None, "")]
+            return min(values) if values else ""
 
         state.F_td_massg = get_max_value(state.F_td_temp_niedrig, state.F_td_temp_hoch)
         state.F_fd_massg = get_max_value(state.F_fd_temp_niedrig, state.F_fd_temp_hoch)
-        #state.F_pid_massg = get_max_value(state.F_pid_temp_niedrig, state.F_pid_temp_hoch)
+        state.F_pi_d_massg = get_max_value(state.F_pi_d_temp_niedrig, state.F_pi_d_temp_hoch)
+        state.F_td_fd_pi_d_massg_1 = get_max_value(state.F_td_massg*1.5, state.F_fd_massg, state.F_pi_d_massg)
+        state.F_td_fd_pi_d_massg_2 = get_max_value(state.F_td_massg, state.F_fd_massg, state.F_pi_d_massg)
+        state.b_h_max = get_max_value(state.b_h_temp_niedrig, state.b_h_temp_hoch)
+        state.temp_b_h = state.temperatur_hoch_selected if state.b_h_temp_niedrig < state.b_h_temp_hoch else state.temperatur_niedrig_selected
+        state.a_min_min = get_min_value(state.a_min_temp_niedrig, state.a_min_temp_hoch)
 
         notify(state, notification_type="success", message="Berechnung abgeschlossen")
 
@@ -577,7 +600,8 @@ with tgb.Page() as kurzschlusskraefte_page:
             with tgb.layout(columns="1", columns__mobile="1"):
                 with tgb.expandable(title="Abstände Phasenabstandshalter", expanded=False, class_name="h6",
                                     hover_text="Abstände beginnend von links vom Ende der Isolatorkette oder dem Anschlusspunkt bei aufgelegten Leiterseilen. \n"
-                                               "Abstände zwischen Phasenabstandshaltern, Gegenkontakte von Trennern zählen ebenfalls als Phasenabstandshalter."):
+                                               "Abstände zwischen Phasenabstandshaltern, Gegenkontakte von Trennern zählen ebenfalls als Phasenabstandshalter. \n"
+                                               "Die gesamte Seillänge eines Hauptleiters und die Summe der angegebenen Abstände müssen übereinstimmen bzw. gleich sein."):
                     with tgb.layout(columns="1 1 1 1 1", columns__mobile="1 1 1 1 1"):
                         tgb.number(label="Abstand Phasenabstandshalter 1", value="{l_s_1}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
@@ -621,38 +645,39 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.html("hr")
             tgb.text(value="Ft,d bei {temperatur_niedrig_selected} °C: {F_td_temp_niedrig:.2f} kN", class_name="mb-4")
             tgb.text(value="Ff,d bei {temperatur_niedrig_selected} °C: {F_fd_temp_niedrig:.2f} kN", class_name="mb-4")
-            tgb.text(value="Fpi,d bei {temperatur_niedrig_selected} °C: {F_pid_temp_niedrig:.2f} kN",class_name="mb-4")
+            tgb.text(value="Fpi,d bei {temperatur_niedrig_selected} °C: {F_pi_d_temp_niedrig:.2f} kN",class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Maximale Seilzugkräfte bei {temperatur_hoch_selected} °C", class_name="h6")
             tgb.html("hr")
             tgb.text(value="Ft,d bei {temperatur_hoch_selected} °C: {F_td_temp_hoch:.2f} kN", class_name="mb-4")
             tgb.text(value="Ff,d bei {temperatur_hoch_selected} °C: {F_fd_temp_hoch:.2f} kN", class_name="mb-4")
-            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pid_temp_hoch:.2f} kN", class_name="mb-4")
+            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pi_d_temp_hoch:.2f} kN", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Massgebende Seilzugkräfte bei {temperatur_niedrig_selected}/{temperatur_hoch_selected} °C", class_name="h6")
             tgb.html("hr")
             tgb.text(value="Ft,d bei {temperatur_hoch_selected} °C: {F_td_massg:.2f} kN", class_name="mb-4")
             tgb.text(value="Ff,d bei {temperatur_hoch_selected} °C: {F_fd_massg:.2f} kN", class_name="mb-4")
-            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pid_massg:.2f} kN", class_name="mb-4")
+            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pi_d_massg:.2f} kN", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Auslegungen der Verbindungsmittel und Unterkonstruktionen", class_name="h6")
             tgb.html("hr")
             tgb.text(value="Die Befestigungsmittel von Leiterseilen sind für den höchsten der Werte 1,5 Ft,d, 1,0 Ff,d oder "
-                      "1,0 Fpi,d, hier {F_pid_massg:.2f},zu bemessen.", hover_text="" , class_name="mb-4")
+                           "1,0 Fpi,d, hier {F_td_fd_pi_d_massg_1:.2f} kN, zu bemessen.", hover_text="" , class_name="mb-4")
             tgb.text(value="Für die Bemessung der Abspanngerüste, Ketten-Isolatoren, Verbindungsmittel ist der höchste der "
-                           "Werte Ft,d, Ff,d, Fpi,d, hier {F_pid_massg:.2f},als statische Last anzusetzen.", class_name="mb-4")
-            tgb.text(
-                value="Bei Anordnungen mit Leiterseilen darf der höchste der Werte Ft,d, Ff,d, Fpi,d, hier {F_pid_massg:.2f}, "
-                      "nicht größer sein als der Bemessungswert der Festigkeit, der von den Herstellern der "
-                      "Unterkonstruktionen und Stützisolatoren angegeben wird. Bei durch Biegekräfte beanspruchten "
-                      "Stützisolatoren wird der Bemessungswert der Festigkeit als eine am Isolatorkopf angreifende "
-                      "Kraft angegeben.", class_name="mb-4")
+                           "Werte Ft,d, Ff,d, Fpi,d, hier {F_td_fd_pi_d_massg_2:.2f} kN, als statische Last anzusetzen.",
+                     class_name="mb-4")
+            tgb.text(value="Bei Anordnungen mit Leiterseilen darf der höchste der Werte Ft,d, Ff,d, Fpi,d, hier "
+                           "{F_td_fd_pi_d_massg_2:.2f} kN, nicht größer sein als der Bemessungswert der Festigkeit, "
+                           "der von den Herstellern der Unterkonstruktionen und Stützisolatoren angegeben wird. Bei "
+                           "durch Biegekräfte beanspruchten Stützisolatoren wird der Bemessungswert der Festigkeit "
+                           "als eine am Isolatorkopf angreifende Kraft angegeben.", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Seilauslenkung und Abstand", class_name="h6")
             tgb.html("hr")
-            tgb.text(value="bh max. horizontalen Seilauslenkung bei {temperatur_hoch_selected}: {F_pid_massg:.2f} m",
+            # TODO Hier noch dynamische Temperturen eingügen
+            tgb.text(value="Maximale horizontale Seilauslenkung bei {temp_b_h} °C: {b_h_max:.2f} m",
                      class_name="mb-4")
-            tgb.text(value="amin min. Leiterabstand bei {temperatur_hoch_selected}: {F_pid_massg:.2f} m", class_name="mb-4")
+            tgb.text(value="Minimaler Leiterabstand bei {temp_b_h} °C: {a_min_min:.2f} m", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Erweiterte Ergebnisse", class_name="h6")
             tgb.html("hr")

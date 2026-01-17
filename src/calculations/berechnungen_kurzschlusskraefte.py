@@ -13,6 +13,38 @@ g = scipy.constants.g # 9.81 ist auch möglich
 σ_fin = 50 * 10**6 # σ_fin niedrigste Spannung, ab der das Elastizitätsmodul konstant wird in N/m^2 - Gleichung (27)
 
 
+# Hilfsgleichung l_s Abstände Abstandshalter
+def l_s(l_s_1: float|None = None, l_s_2: float|None = None, l_s_3: float|None = None, l_s_4: float|None = None,
+        l_s_5: float|None = None, l_s_6: float|None = None, l_s_7: float|None = None, l_s_8: float|None = None,
+        l_s_9: float|None = None, l_s_10: float|None = None) -> float:
+
+    liste_abstände_abstandshalter: list[float|None] = [l_s_1, l_s_2, l_s_3, l_s_4, l_s_5, l_s_6, l_s_7, l_s_8, l_s_9, l_s_10]
+
+    summe_abstände_abstandshalter: float = 0.0
+    summe_abstandshalter: int = 0
+
+    for abstand_abstandshalter in liste_abstände_abstandshalter:
+        if abstand_abstandshalter is not None and abstand_abstandshalter != 0.0:
+            summe_abstände_abstandshalter += abstand_abstandshalter
+            summe_abstandshalter += 1
+
+    if summe_abstandshalter == 0:
+        return 0.0
+    l_s: float = summe_abstände_abstandshalter / summe_abstandshalter
+    return l_s
+
+# Hilfsgleichungen m_c Masse konzentrischer Massen
+def m_c(m_c: float|None , n: float, l_c: float) -> float:
+    if m_c is not None and m_c != 0.0:
+        m_c: float = m_c / (n * l_c)
+        return m_c
+    return 0.0
+
+# Hilfsgleichungen l_v Seilbogen Länge der Schlaufe
+def l_v(h: float, w:float) -> float:
+    l_v: float = (math.sqrt(h**2 + w**2)) * 1.03
+    return l_v
+
 # Grössen ab Kapitel 6.2.2
 def l_c(l: float, l_i: float) -> float:
     """
@@ -1030,6 +1062,7 @@ def F_pi_d_ohne_j(F_td: float, a_s: float, d: float, l_s: float) -> float:
         F_pi_d_ohne_j_1: float = 1.1 * F_td
         F_pi_d_ohne_j = F_pi_d_ohne_j_1
         return F_pi_d_ohne_j
+
     elif a_s / d <= 2.5 and l_s >= 70 * a_s:
         F_pi_d_ohne_j_2: float = 1.1 * F_td
         F_pi_d_ohne_j = F_pi_d_ohne_j_2
@@ -1082,12 +1115,6 @@ def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ζ: float = N
 
 
 
-
-
-# Hilfsgleichungen l_v
-# Hilfsgleichungen l_s
-# TODO m_c Funktion erstellen
-# Hilfsgleichungen m_c
 
 
 

@@ -63,8 +63,8 @@ class Kurschlusskräfte_Input:
 
 @dataclass
 class ShortCircuitResult:
-
     l_c: Optional[float] = None
+    m_c: Optional[float] = None
     F_a: Optional[float] = None
     r: Optional[float] = None
     δ_1: Optional[float] = None
@@ -87,6 +87,8 @@ class ShortCircuitResult:
     F_fd: Optional[float] = None
     b_h: Optional[float] = None
     a_min: Optional[float] = None
+    l_s: Optional[float] = None
+    F_pi_d: Optional[float] = None
 
 
     def convert_units(self):
@@ -95,6 +97,8 @@ class ShortCircuitResult:
             self.F_td = self.F_td / 1000
         if self.F_fd is not None:
             self.F_fd = self.F_fd / 1000
+        if self.F_pi_d is not None:
+            self.F_pi_d = self.F_pi_d / 1000
 
 class ShortCircuitMediator:
     def __init__(self, inputs: Kurschlusskräfte_Input):
@@ -174,22 +178,25 @@ class ShortCircuitMediator:
         
         for key, F_st in [('F_st_20', self.inputs.F_st_20), ('F_st_80', self.inputs.F_st_80)]:
             result = ShortCircuitResult()
-            
+
             # Schritt 1: Effektive Seillänge
             result.l_c = bkskls.l_c(self.inputs.l, self.inputs.l_i)
+
+            # Schritt 1a: Massenbelag konzentrischer Lasten
+            result.m_c = bkskls.m_c(self.inputs.m_c, self.inputs.n, result.l_c)
 
             # Schritt 2: Charakteristischer elektromagnetischer Kraftbelag
             result.F_a = bkskls.F_a(self.mu0, self.inputs.standardkurzschlussstroeme, 
                                     self.inputs.l, result.l_c, self.inputs.a)
         
             # Schritt 3: Verhältnis r
-            result.r = bkskls.r(result.F_a, self.inputs.n, self.inputs.m_s, self.g)
+            result.r = bkskls.r(result.F_a, self.inputs.n, self.inputs.m_s+result.m_c, self.g)
         
             # Schritt 4: Richtung δ_1
             result.δ_1 = bkskls.δ_1(result.r)
         
             # Schritt 5: Statischer Durchhang
-            result.f_es = bkskls.f_es(self.inputs.n, self.inputs.m_s, self.g, self.inputs.l, F_st)
+            result.f_es = bkskls.f_es(self.inputs.n, self.inputs.m_s+result.m_c, self.g, self.inputs.l, F_st)
         
             # Schritt 6: Periodendauer
             result.T = bkskls.T(result.f_es, self.g)
@@ -205,7 +212,7 @@ class ShortCircuitMediator:
                                self.inputs.n, result.E_eff, self.inputs.A_s)
         
             # Schritt 10: Beanspruchungsfaktor
-            result.ζ = bkskls.ζ(self.inputs.n, self.g, self.inputs.m_s, self.inputs.l, F_st, result.N)
+            result.ζ = bkskls.ζ(self.inputs.n, self.g, self.inputs.m_s+result.m_c, self.inputs.l, F_st, result.N)
 
             # Schritt 11: Ausschwingwinkel
             result.δ_end = bkskls.δ_end(result.δ_1, self.inputs.t_k, result.T_res)
@@ -246,6 +253,16 @@ class ShortCircuitMediator:
 
             # Schritt 23: Min. minimaler Leiterabstand a_min
             result.a_min = bkskls.a_min(self.inputs.a, result.b_h)
+
+            # Schritt 24: Abstände Abstandshalter
+            result.l_s = bkskls.l_s(self.inputs.l_s_1, self.inputs.l_s_2, self.inputs.l_s_3, self.inputs.l_s_4, self.inputs.l_s_5,
+                                    self.inputs.l_s_6, self.inputs.l_s_7, self.inputs.l_s_8, self.inputs.l_s_9, self.inputs.l_s_10)
+
+            # Schritt 25:
+            if (self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s):
+                result.F_pi_d = bkskls.F_pi_d_ohne_j(result.F_td, self.inputs.a_s, self.inputs.d, result.l_s)
+            else:
+                pass
 
 
             # Einheitenkonvertierung
