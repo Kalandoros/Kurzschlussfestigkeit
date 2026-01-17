@@ -537,7 +537,7 @@ with tgb.Page() as kurzschlusskraefte_page:
                              dropdown=True, on_change=on_change_selectable_leiterseiltyp)
                 tgb.selector(label="n Anzahl der Teilleiter eines Hauptleiters",
                              value="{teilleiter_selected}", lov="{teilleiter_lov}", dropdown=True)
-                tgb.number(label="m_c Summe konzentrischer Massen im Spannfeld", value = "{m_c}", min = 0.0, max = 10.0,
+                tgb.number(label="m_c Summe konzentrischer Massen im Spannfeld", value = "{m_c}", min = 0.0, max = 500.0,
                            step = 0.1, hover_text="z. B. durch Klemmen, Schlaufen oder Gegenkontakte.",
                            class_name = "input-with-unit kg-unit Mui-focused")
             tgb.html("br")

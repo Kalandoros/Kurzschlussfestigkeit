@@ -239,7 +239,7 @@ class ShortCircuitMediator:
             result.f_ed = bkskls.f_ed(result.C_D, result.C_F, result.f_es)
 
             # Schritt 21: Fall-Seilzugkraft F_fd
-            result.F_fd = bkskls.f_ed(F_st, result.ζ, result.δ_max)
+            result.F_fd = bkskls.F_fd(F_st, result.ζ, result.δ_max)
 
             # Schritt 22: Max. Horizontale Seilauslenkung b_h
             result.b_h = bkskls.b_h_ohne_schlaufe_spannfeldmitte_abgespannt(result.f_ed, result.δ_max, result.δ_1)

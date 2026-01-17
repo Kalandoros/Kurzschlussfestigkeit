@@ -529,7 +529,7 @@ def a_min(a: float, b_h: float) -> float:
     a: Leitermittenabstand in m
     b_h: maximale horizontale Seilauslenkung in m
     """
-    a_min: float = a - b_h
+    a_min: float = a - (2 * b_h)
     return a_min
 
 # Grössen ab Kapitel 6.3
@@ -1026,11 +1026,11 @@ def F_pi_d_ohne_j(F_td: float, a_s: float, d: float, l_s: float) -> float:
     Teilleiter als auch der Abstand ls zweier benachbarter Abstandhalter entweder Gleichung (52) ODER Gleichung (53)
     erfüllen.
     """
-    if a_s / d <= 2.0 and l_s >= 50:
+    if a_s / d <= 2.0 and l_s >= 50 * a_s:
         F_pi_d_ohne_j_1: float = 1.1 * F_td
         F_pi_d_ohne_j = F_pi_d_ohne_j_1
         return F_pi_d_ohne_j
-    elif a_s / d <= 2.5 and l_s >= 70:
+    elif a_s / d <= 2.5 and l_s >= 70 * a_s:
         F_pi_d_ohne_j_2: float = 1.1 * F_td
         F_pi_d_ohne_j = F_pi_d_ohne_j_2
         return F_pi_d_ohne_j
@@ -1085,6 +1085,7 @@ def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ζ: float = N
 
 
 # Hilfsgleichungen l_v
+# Hilfsgleichungen l_s
 # TODO m_c Funktion erstellen
 # Hilfsgleichungen m_c
 
