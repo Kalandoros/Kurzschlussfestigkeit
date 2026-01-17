@@ -987,7 +987,7 @@ def F_fd(F_st: float, ζ: float, δ_max: float) -> float:
     Der Höchstwert F_fd der am Ende des Falles auftretenden Seilzugkraft ist nur zu berücksichtigen bei r > 0,6, wenn
     δ_max ≥ 70°, und mit einer Schlaufe in Spannfeldmitte, wenn δ ≥ 60°.
     """
-    F_fd: float = 1.2 * F_st * math.sqrt(1 + (8 * ζ *(δ_max / 180)))
+    F_fd: float = 1.2 * F_st * (math.sqrt(1 + ((8 * ζ) *(δ_max / 180))))
     return F_fd
 
 # Grössen ab Kapitel 6.3

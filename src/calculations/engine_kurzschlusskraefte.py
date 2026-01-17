@@ -84,12 +84,17 @@ class ShortCircuitResult:
     C_D: Optional[float] = None
     C_F: Optional[float] = None
     f_ed: Optional[float] = None
+    F_fd: Optional[float] = None
+    b_h: Optional[float] = None
+    a_min: Optional[float] = None
+
 
     def convert_units(self):
         """Konvertiert berechnete Werte in die gewünschten Einheiten """
         if self.F_td is not None:
             self.F_td = self.F_td / 1000
-
+        if self.F_fd is not None:
+            self.F_fd = self.F_fd / 1000
 
 class ShortCircuitMediator:
     def __init__(self, inputs: Kurschlusskräfte_Input):
@@ -232,6 +237,15 @@ class ShortCircuitMediator:
 
             # Schritt 20: Dynamischer Seildurchhangs f_ed
             result.f_ed = bkskls.f_ed(result.C_D, result.C_F, result.f_es)
+
+            # Schritt 21: Fall-Seilzugkraft F_fd
+            result.F_fd = bkskls.f_ed(F_st, result.ζ, result.δ_max)
+
+            # Schritt 22: Max. Horizontale Seilauslenkung b_h
+            result.b_h = bkskls.b_h_ohne_schlaufe_spannfeldmitte_abgespannt(result.f_ed, result.δ_max, result.δ_1)
+
+            # Schritt 23: Min. minimaler Leiterabstand a_min
+            result.a_min = bkskls.a_min(self.inputs.a, result.b_h)
 
 
             # Einheitenkonvertierung

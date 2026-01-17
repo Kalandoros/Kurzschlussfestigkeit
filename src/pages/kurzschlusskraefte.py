@@ -40,7 +40,7 @@ temperatur_hoch_selected: None | int | float = None
 teilleiter_lov: list[str] = ["1", "2", "3", "4", "5", "6"]
 teilleiter_selected: None|int = None
 
-federkoeffizient_lov: list[str] = ["100000", "150000", "1300000", "400000", "2000000", "600000", "3000000"]
+federkoeffizient_lov: list[str] = ["100000", "150000", "1300000", "400000", "500000", "2000000", "600000", "3000000"]
 federkoeffizient_selected: None|int = None
 
 """
@@ -276,9 +276,9 @@ def on_click_berechnen(state):
         # Auf die Ergebnisse zugreifen, um sie darzustellen:
         state.F_td_temp_niedrig = state.calc_result['F_st_20'].F_td  # in kN
         state.F_td_temp_hoch = state.calc_result['F_st_80'].F_td
+        state.F_fd_temp_niedrig = state.calc_result['F_st_20'].F_fd
+        state.F_fd_temp_hoch = state.calc_result['F_st_80'].F_fd
         # TODO: Wenn F_fd und F_pid implementiert sind, auch diese hinzufügen:
-        # state.F_fd_temp_niedrig = state.calc_result['F_st_20'].F_fd
-        # state.F_fd_temp_hoch = state.calc_result['F_st_80'].F_fd
         # state.F_pid_temp_niedrig = state.calc_result['F_st_20'].F_pid
         # state.F_pid_temp_hoch = state.calc_result['F_st_80'].F_pid
 
@@ -288,7 +288,7 @@ def on_click_berechnen(state):
             return max(values) if values else ""
 
         state.F_td_massg = get_max_value(state.F_td_temp_niedrig, state.F_td_temp_hoch)
-        #state.F_fd_massg = get_max_value(state.F_fd_temp_niedrig, state.F_fd_temp_hoch)
+        state.F_fd_massg = get_max_value(state.F_fd_temp_niedrig, state.F_fd_temp_hoch)
         #state.F_pid_massg = get_max_value(state.F_pid_temp_niedrig, state.F_pid_temp_hoch)
 
         notify(state, notification_type="success", message="Berechnung abgeschlossen")
@@ -297,7 +297,7 @@ def on_click_berechnen(state):
         notify(state, notification_type="error", message=f"{str(ve)}", duration=10000)
 
     except NotImplementedError as nie:
-        # ← ÄNDERUNG 3: Spezielle Behandlung für noch nicht implementierte Fälle
+        # Behandlung für noch nicht implementierte Fälle
         notify(state, notification_type="warning",
                message=f"⚠️ Diese Berechnungsmethode ist noch nicht implementiert:\n{str(nie)}",
                duration=10000)
