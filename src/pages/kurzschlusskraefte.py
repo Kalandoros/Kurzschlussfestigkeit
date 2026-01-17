@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 from pandas.io.clipboard import init_windows_clipboard
 from taipy.gui import notify, download
 import taipy.gui.builder as tgb
@@ -72,7 +74,7 @@ l_s_8: None|float = None
 l_s_9: None|float = None
 l_s_10: None|float = None
 
-content_vorlage: None = None
+content_vorlage: str = ""
 vorlage_backup: None|dict = None
 
 F_td_temp_niedrig: None|float|str = ""
@@ -82,6 +84,15 @@ F_pid_temp_niedrig: None|float|str = ""
 F_td_temp_hoch: None|float|str = ""
 F_fd_temp_hoch: None|float|str = ""
 F_pid_temp_hoch: None|float|str = ""
+
+F_td_massg: None|float|str = ""
+F_fd_massg: None|float|str = ""
+F_pid_massg: None|float|str = ""
+
+
+
+calc_result: None|ShortCircuitResult = None
+calc_result_formatted: None|str = None
 
 
 def on_change_selectable_leiterseiltyp(state):
@@ -127,58 +138,19 @@ def on_click_zurücksetzen(state):
     state.l_s_8 = None
     state.l_s_9 = None
     state.l_s_10 = None
+    on_click_leiterseiltyp_zurücksetzen(state)
 
-# Für die spätere Bearbeitung
-def on_calculate(state):
+def on_click_berechnen(state):
     if not state.leiterseiltyp_selected:
         notify(state, notification_type="error", message="Bitte Leiterseiltyp auswählen!")
         return
-    if not state.standardkurzschlussstroeme_selected:
-        notify(state, notification_type="error", message="Bitte Kurzschlussstrom auswählen!")
-        return
 
-    # Extraktion der Seildaten
-    row = state.leiterseiltyp[state.leiterseiltyp["Bezeichnung"] == state.leiterseiltyp_selected]
-    if row.empty:
-        return
-
-    try:
-        # Erstellung des Input-Objekts für den Mediator
-        inputs = Kurschlusskräfte_Input(
-            I_k_double_prime=float(state.standardkurzschlussstroeme_selected),
-            t_k=state.t_k,
-            n=int(state.teilleiter_selected) if state.teilleiter_selected else 1,
-            befestigung=state.leiterseilbefestigung_selected or "Aufgelegt",
-            l=state.l,
-            l_i=state.l_i,
-            a=state.a,
-            a_s=state.a_s,
-            m_s=float(row["Massenbelag eines Teilleiters"].values[0].replace(',', '.')) if isinstance(
-                row["Massenbelag eines Teilleiters"].values[0], str) else row["Massenbelag eines Teilleiters"].values[
-                0],
-            A_s=(float(row["Querschnitt eines Teilleiters"].values[0].replace(',', '.')) if isinstance(
-                row["Querschnitt eines Teilleiters"].values[0], str) else row["Querschnitt eines Teilleiters"].values[
-                0]) * 1e-6,
-            E=(float(row["Elastizitätsmodul"].values[0].replace(',', '.')) if isinstance(
-                row["Elastizitätsmodul"].values[0], str) else row["Elastizitätsmodul"].values[0]),
-            F_st=state.F_st_20,  # Beispielhaft für -20°C
-            S=float(state.steifigkeitsnorm_selected) if state.steifigkeitsnorm_selected else 100000.0
-        )
-
-        # Berechnung über den Mediator
-        state.calc_result = calculate_short_circuit(inputs)
-        notify(state, notification_type="success", message="Berechnung abgeschlossen")
-
-    except Exception as e:
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(e)}")
-
-def on_click_test(state):
     required_fields = [
         # Allgemeine Angaben
         ('leiterseilbefestigung_selected', 'Art der Leiterseilbefestigung'),
         ('schlaufe_in_spannfeldmitte_selected', 'Schlaufe in Spannfeldmitte'),
         ('hoehenunterschied_befestigungspunkte_selected', 'Höhenunterschied der Befestigungspunkte'),
-        ('schlaufenebene_parallel_senkrecht_selected', 'Schlaufebene'),
+        #('schlaufenebene_parallel_senkrecht_selected', 'Schlaufebene'),
         ('temperatur_niedrig_selected', 'Niedrigste Temperatur'),
         ('temperatur_hoch_selected', 'Höchste Temperatur'),
         # Elektrische Werte
@@ -221,14 +193,14 @@ def on_click_test(state):
             schlaufenebene_parallel_senkrecht=str(state.schlaufenebene_parallel_senkrecht_selected),
             temperatur_niedrig=int(state.temperatur_niedrig_selected),
             temperatur_hoch=int(state.temperatur_hoch_selected),
-            standardkurzschlussstroeme=float(state.standardkurzschlussstroeme_selected)*10**3,
+            standardkurzschlussstroeme=float(state.standardkurzschlussstroeme_selected),
             κ=float(state.kappa),
             t_k=float(state.t_k),
             leiterseiltyp=str(state.leiterseiltyp_selected) if state.leiterseiltyp_selected else None,
-            d=float(state.leiterseiltyp["Aussendurchmesser"].values[0])*10**-3,
-            A_s=float(state.leiterseiltyp["Querschnitt eines Teilleiters"].values[0])*10**-6,
+            d=float(state.leiterseiltyp["Aussendurchmesser"].values[0]),
+            A_s=float(state.leiterseiltyp["Querschnitt eines Teilleiters"].values[0]),
             m_s=float(state.leiterseiltyp["Massenbelag eines Teilleiters"].values[0]),
-            E=float(state.leiterseiltyp["Elastizitätsmodul"].values[0])*10**6,
+            E=float(state.leiterseiltyp["Elastizitätsmodul"].values[0]),
             c_th=float(state.leiterseiltyp["Kurzzeitstromdichte"].values[0]),
             n=int(state.teilleiter_selected),
             m_c=float(state.m_c) if state.m_c not in (None, 0.0) else None,
@@ -252,24 +224,98 @@ def on_click_test(state):
         )
 
         # Berechnung über den Mediator
-        print(inputs)
+        #print(inputs)
+        state.calc_result = calculate_short_circuit(inputs)
+
+        # Dartellung der Ergebnisse:
+        # Im Callback:
+        def format_results(calc_result):
+            """Formatiert Ergebnisse in zwei Spalten nebeneinander"""
+
+            # Hole beide Ergebnisse
+            result_20 = calc_result.get('F_st_20')
+            result_80 = calc_result.get('F_st_80')
+
+            if not result_20 or not result_80:
+                return "Keine Berechnungsergebnisse verfügbar"
+
+            # Konvertiere zu Dictionaries
+            dict_20 = asdict(result_20)
+            dict_80 = asdict(result_80)
+
+            # Spaltenbreiten
+            col1_width = 25  # Parameter Name
+            col2_width = 20  # -20°C Werte
+            col3_width = 20  # 80°C Werte
+
+            # Erstelle Header
+            lines = []
+            lines.append(f"┌─{'─' * col1_width}─┬─{'─' * col2_width}─┬─{'─' * col3_width}─┐")
+            lines.append(f"│ {'Parameter':<{col1_width}} │ {'-20°C':^{col2_width}} │ {'80°C':^{col3_width}} │")
+            lines.append(f"├─{'─' * col1_width}─┼─{'─' * col2_width}─┼─{'─' * col3_width}─┤")
+
+            # Iteriere durch alle Felder
+            for param_name in dict_20.keys():
+                val_20 = dict_20[param_name]
+                val_80 = dict_80[param_name]
+
+                # Nur nicht-None Werte anzeigen
+                if val_20 is not None and val_80 is not None:
+                    # Formatiere die Werte rechtsbündig
+                    val_20_str = f"{val_20:.4f}"
+                    val_80_str = f"{val_80:.4f}"
+                    lines.append(
+                        f"│ {param_name:<{col1_width}} │ {val_20_str:>{col2_width}} │ {val_80_str:>{col3_width}} │")
+
+            lines.append(f"└─{'─' * col1_width}─┴─{'─' * col2_width}─┴─{'─' * col3_width}─┘")
+
+            return "\n".join(lines)
+
+        state.calc_result_formatted = format_results(state.calc_result)
+
+        # Auf die Ergebnisse zugreifen, um sie darzustellen:
+        state.F_td_temp_niedrig = state.calc_result['F_st_20'].F_td  # in kN
+        state.F_td_temp_hoch = state.calc_result['F_st_80'].F_td
+        # TODO: Wenn F_fd und F_pid implementiert sind, auch diese hinzufügen:
+        # state.F_fd_temp_niedrig = state.calc_result['F_st_20'].F_fd
+        # state.F_fd_temp_hoch = state.calc_result['F_st_80'].F_fd
+        # state.F_pid_temp_niedrig = state.calc_result['F_st_20'].F_pid
+        # state.F_pid_temp_hoch = state.calc_result['F_st_80'].F_pid
+
+        # Bestimme maximale (maßgebende) Werte
+        def get_max_value(val1, val2):
+            values = [v for v in [val1, val2] if v not in (None, "")]
+            return max(values) if values else ""
+
+        state.F_td_massg = get_max_value(state.F_td_temp_niedrig, state.F_td_temp_hoch)
+        #state.F_fd_massg = get_max_value(state.F_fd_temp_niedrig, state.F_fd_temp_hoch)
+        #state.F_pid_massg = get_max_value(state.F_pid_temp_niedrig, state.F_pid_temp_hoch)
+
         notify(state, notification_type="success", message="Berechnung abgeschlossen")
 
-
     except ValueError as ve:
-        notify(state, notification_type="error", message=f"Ungültiger Zahlenwert: {str(ve)}")
+        notify(state, notification_type="error", message=f"{str(ve)}", duration=10000)
+
+    except NotImplementedError as nie:
+        # ← ÄNDERUNG 3: Spezielle Behandlung für noch nicht implementierte Fälle
+        notify(state, notification_type="warning",
+               message=f"⚠️ Diese Berechnungsmethode ist noch nicht implementiert:\n{str(nie)}",
+               duration=10000)
+
     except Exception as e:
-        notify(state, notification_type="error", message=f"Fehler: {str(e)}")
+        print(f"Detaillierter Fehler:")
+        traceback.print_exc()
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(e)}")
 
 def on_click_load_vorlage(state):
     """
-    Callback-Funktion die aufgerufen wird, wenn der "Vorlage laden" Button geklickt wird.
+    Callback-Funktion, die aufgerufen wird, wenn der "Vorlage laden" Button geklickt wird.
     Lädt die Eingabedaten aus der hochgeladenen Datei und setzt die GUI Widgets entsprechend.
     """
     # Check if file_selector has content (it can be a string path or empty)
     file_path = state.content_vorlage
 
-    # Check if file path exists and is valid
+    # Check if a file path exists and is valid
     if not file_path or file_path == '' or file_path is None:
         notify(state, notification_type="warning", message="Bitte erst eine Datei auswählen")
         return
@@ -302,6 +348,9 @@ def on_click_load_vorlage(state):
         # Setze alle State-Variablen aus dem Dictionary
         for key, value_from_dict in input_dict.items():
             setattr(state, key, value_from_dict)
+
+        # Laden des Leiterseiltyps
+        on_change_selectable_leiterseiltyp(state)
 
         # Erstelle Feedback-Nachricht
         message = f"✓ {len(loaded_fields)} Felder geladen"
@@ -553,7 +602,7 @@ with tgb.Page() as kurzschlusskraefte_page:
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
             with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p0"):
-                tgb.button(label="Berechnen", on_action=on_click_test, class_name="fullwidth")
+                tgb.button(label="Berechnen", on_action=on_click_berechnen, class_name="fullwidth")
                 tgb.button(label="Alles zurücksetzen", on_action=on_click_zurücksetzen, class_name="fullwidth")
                 tgb.button(label="Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen, class_name="fullwidth")
             tgb.html("br")
@@ -570,36 +619,47 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.html("br")
             tgb.text(value="Maximale Seilzugkräfte bei {temperatur_niedrig_selected} °C", class_name="h6")
             tgb.html("hr")
-            tgb.text(value="Ft,d bei {temperatur_niedrig_selected} °C: {F_td_temp_niedrig} kN")
-            tgb.text(value="Ff,d bei {temperatur_niedrig_selected} °C: {F_fd_temp_niedrig} kN")
-            tgb.text(value="Fpi,d bei {temperatur_niedrig_selected} °C: {F_pid_temp_niedrig} kN")
+            tgb.text(value="Ft,d bei {temperatur_niedrig_selected} °C: {F_td_temp_niedrig:.2f} kN", class_name="mb-4")
+            tgb.text(value="Ff,d bei {temperatur_niedrig_selected} °C: {F_fd_temp_niedrig:.2f} kN", class_name="mb-4")
+            tgb.text(value="Fpi,d bei {temperatur_niedrig_selected} °C: {F_pid_temp_niedrig:.2f} kN",class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Maximale Seilzugkräfte bei {temperatur_hoch_selected} °C", class_name="h6")
             tgb.html("hr")
-            tgb.text(value="Ft,d bei {temperatur_hoch_selected} °C: {F_td_temp_hoch} kN")
-            tgb.text(value="Ff,d bei {temperatur_hoch_selected} °C: {F_fd_temp_hoch} kN")
-            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pid_temp_hoch} kN")
+            tgb.text(value="Ft,d bei {temperatur_hoch_selected} °C: {F_td_temp_hoch:.2f} kN", class_name="mb-4")
+            tgb.text(value="Ff,d bei {temperatur_hoch_selected} °C: {F_fd_temp_hoch:.2f} kN", class_name="mb-4")
+            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pid_temp_hoch:.2f} kN", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Massgebende Seilzugkräfte bei {temperatur_niedrig_selected}/{temperatur_hoch_selected} °C", class_name="h6")
             tgb.html("hr")
-
+            tgb.text(value="Ft,d bei {temperatur_hoch_selected} °C: {F_td_massg:.2f} kN", class_name="mb-4")
+            tgb.text(value="Ff,d bei {temperatur_hoch_selected} °C: {F_fd_massg:.2f} kN", class_name="mb-4")
+            tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pid_massg:.2f} kN", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Auslegungen der Verbindungsmittel und Unterkonstruktionen", class_name="h6")
             tgb.html("hr")
-
+            tgb.text(value="Die Befestigungsmittel von Leiterseilen sind für den höchsten der Werte 1,5 Ft,d, 1,0 Ff,d oder "
+                      "1,0 Fpi,d, hier {F_pid_massg:.2f},zu bemessen.", hover_text="" , class_name="mb-4")
+            tgb.text(value="Für die Bemessung der Abspanngerüste, Ketten-Isolatoren, Verbindungsmittel ist der höchste der "
+                           "Werte Ft,d, Ff,d, Fpi,d, hier {F_pid_massg:.2f},als statische Last anzusetzen.", class_name="mb-4")
+            tgb.text(
+                value="Bei Anordnungen mit Leiterseilen darf der höchste der Werte Ft,d, Ff,d, Fpi,d, hier {F_pid_massg:.2f}, "
+                      "nicht größer sein als der Bemessungswert der Festigkeit, der von den Herstellern der "
+                      "Unterkonstruktionen und Stützisolatoren angegeben wird. Bei durch Biegekräfte beanspruchten "
+                      "Stützisolatoren wird der Bemessungswert der Festigkeit als eine am Isolatorkopf angreifende "
+                      "Kraft angegeben.", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Seilauslenkung und Abstand", class_name="h6")
             tgb.html("hr")
-
+            tgb.text(value="bh max. horizontalen Seilauslenkung bei {temperatur_hoch_selected}: {F_pid_massg:.2f} m",
+                     class_name="mb-4")
+            tgb.text(value="amin min. Leiterabstand bei {temperatur_hoch_selected}: {F_pid_massg:.2f} m", class_name="mb-4")
             tgb.html("br")
             tgb.text(value="Erweiterte Ergebnisse", class_name="h6")
             tgb.html("hr")
 
             with tgb.layout(columns="1", columns__mobile="1"):
                 with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
-                    with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
-                        pass
-
+                    tgb.text(value="{calc_result_formatted}", mode="pre")
 
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
         with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False):

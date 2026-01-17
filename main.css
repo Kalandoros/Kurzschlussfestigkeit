@@ -155,3 +155,13 @@
 .input-with-unit > div {
     pointer-events: auto !important;
 }
+
+/* -------------------------------------------------------- */
+
+/* --- 8. Margin Bottom Classes --- */
+/* Target the parent div of text elements with mb-* class */
+.taipy-text.mb-4 {
+    display: block !important;
+    margin-top: 15px !important;
+    margin-bottom: 2px !important;
+}
