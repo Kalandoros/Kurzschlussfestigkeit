@@ -19,6 +19,7 @@ class Kurschlusskräfte_Input:
     standardkurzschlussstroeme: float
     κ: float
     t_k: float
+    f: float
 
     # Leiterseilkonfiguration
     leiterseiltyp: str
@@ -258,11 +259,12 @@ class ShortCircuitMediator:
             result.l_s = bkskls.l_s(self.inputs.l_s_1, self.inputs.l_s_2, self.inputs.l_s_3, self.inputs.l_s_4, self.inputs.l_s_5,
                                     self.inputs.l_s_6, self.inputs.l_s_7, self.inputs.l_s_8, self.inputs.l_s_9, self.inputs.l_s_10)
 
-            # Schritt 25:
+            # Schritt 25: Bündel-Seilzugkraft F_pi_d
             if (self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s):
                 result.F_pi_d = bkskls.F_pi_d_ohne_j(result.F_td, self.inputs.a_s, self.inputs.d, result.l_s)
             else:
-                pass
+                result.ν_1 = bkskls.ν_1(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, self.inputs.n, self.inputs.m_s, self.inputs.d, )
+                result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
 
 
             # Einheitenkonvertierung

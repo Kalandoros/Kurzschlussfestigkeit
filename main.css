@@ -72,6 +72,7 @@
 
 /* Unit Injection for Selector Inputs */
 .A-unit .MuiSelect-select:after { content: "kA"; }
+.Hz-unit .MuiSelect-select:after { content: "Hz"; }
 .inv-N_m-unit .MuiSelect-select:after { content: "N/m"; }
 .Grad-Celsius-unit .MuiSelect-select:after { content: "°C"; }
 

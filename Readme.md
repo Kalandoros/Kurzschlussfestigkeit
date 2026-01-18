@@ -2,13 +2,13 @@
 
 ## Seilzugkraft $F_{f,d}$ nach dem Kurzschluss durch das Fallen (Fall-Seilzugkraft) 
 Nach dem Ausschalten des Kurzschlusses pendelt das Seil oder es fällt in seine Ruhelage zurück. Der 
-Höchstwert Ff,d der am Ende des Falles auftretenden Seilzugkraft ist nur zu berücksichtigen bei $r > 0,6$, 
+Höchstwert $F_{f,d}$ der am Ende des Falles auftretenden Seilzugkraft ist nur zu berücksichtigen bei $r > 0,6$, 
 wenn $δmax ≥ 70°$, und mit einer Schlaufe in Spannfeldmitte, wenn $δ ≥ 60°$.
 
 Unter berücksichtigung von [4] Beipiel Kapitel 9.3.2.5 wird die Fall-Seilzugkraft nur als unbedeutend angenommen,
 wenn die Berechnung der Kurzschluss-Seilzugkraft $F_{t,d}$ nach [3] Kapitel 6.2.5 erfolgt ist.
 
-Bei kurzen Spannfeldern vermindert die Biegesteifigkeit der Seile den Seilfall; deshalb wird die Fall-Seilzugkraft
+Bei kurzen Spannfeldern vermindert die Biegesteifigkeit der Seile den Leiterseilfall. Deshalb wird die Fall-Seilzugkraft
 zu groß berechnet, wenn die Spannfeldlänge den etwa 100-fachen Durchmesser des Einzelseils 
 unterschreitet, d. h. $l < 100 d$. 
 
@@ -32,14 +32,20 @@ Hier nutzt du dein berechnetes $\eta$.$\eta = 1.0$: Die Leiter schlagen zusammen
 Hier musst du auf die Formel mit dem Faktor $i_s$ (Gleichung 60) ausweichen.
 
 ## Einzellasten
-Bei der Berechnung der Seilzugkräfte durch Ausschwingen und Fallen des Spannfeldes werden
-die Einzellasten gleichmässig auf die Seillänge verteilt, bei der Berechnung der Seilzugkraft durch
+Bei der Berechnung der Seilzugkräfte durch Ausschwingen $F_{t,d}$ und Fallen $F_{f,d}$ des Spannfeldes werden
+die Einzellasten gleichmässig auf die Seillänge verteilt, jodch bei der Berechnung der Seilzugkraft durch
 Bündelkontraktion bleiben sie unberücksichtigt. [2], [3]
 Die Masse der Seilschlaufe in Spannfeldmitte und ihrer Befestigung wird jedoch nicht berücksichtigt. [3]
 
-Bei der Ermittlung der statischen Seilzugkraft Fst und des statischen Durchhangs fst sollte der Beitrag 
+Bei der Ermittlung der statischen Seilzugkraft $F_{st}$ und des statischen Durchhangs $f_{st}$ sollte der Beitrag 
 konzentrierter Massen im Spannfeld, z. B. durch Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt 
 werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden. [3]
+
+## Schlaufen
+Schlaufen in der Nähe der Hauptleiterbefestigungen haben geringen Einfluss auf die Seilzugkräfte und die Bewegung des HAuptleiters. 
+Es wird empfohlen, in diesem Fall die Berechnung ohne Schlaufe in Spannfeldmitte (Im Programm "Schlaufe in Spannfeldmitte" mit 
+Auswahl Nein) durchzuführen. [3] Als Richtlinie soll gelten, das Schlaufen als in der Nähe der Hauptleiterbefestigungen betrachtet
+werden, wenn sich diese im Bereich von 10% in Bezug auf die Spannfeldlänge an den äusseren Enden der Spannfeldlänge befinden.
 
 ## Schlaufenebenen
 Die Schlaufenebenen können parallel oder senkrecht zu den Hauptleitern sein. Der tatsächliche Ausschwing-
@@ -77,7 +83,7 @@ Leitungsseilen mit Schlaufen im Spannfeld, 2002 - FAU, Meyer
 
 [3] SN EN 60865-1:2012
 
-[3] SN EN 60865-2:2017
+[4] SN EN 60865-2:2017
 
 Formel zur Berechnung von $T_{pi}$, diese nicht in der Norm erwähnt ist.
 

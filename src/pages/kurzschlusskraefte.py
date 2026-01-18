@@ -20,28 +20,31 @@ leiterseilbefestigung_lov: list[str] = ["Abgespannt", "Aufgelegt", "Unterschlauf
 leiterseilbefestigung_selected: None|str = None
 
 schlaufe_in_spannfeldmitte_lov: list[str] = ["Ja", "Nein"]
-schlaufe_in_spannfeldmitte_selected: None|int = None
+schlaufe_in_spannfeldmitte_selected: None|str = None
 
 standardkurzschlussstroeme_lov: list[str] = ["10", "12.5", "16", "20", "25", "31.5", "40", "50", "63", "80"]
-standardkurzschlussstroeme_selected: None | int | float = None
+standardkurzschlussstroeme_selected: None|str = None
+
+frequenz_des_netzes_lov: list[str] = ["50", "16.66"]
+frequenz_des_netzes_selected: None|str = None
 
 hoehenunterschied_befestigungspunkte_lov: list[str] = ["Ja", "Nein"]
-hoehenunterschied_befestigungspunkte_selected: None|int = None
+hoehenunterschied_befestigungspunkte_selected: None|str = None
 
 schlaufenebene_parallel_senkrecht_lov: list[str] = ["Ebene senkrecht", "Ebene parallel"]
-schlaufenebene_parallel_senkrecht_selected: None|int = None
+schlaufenebene_parallel_senkrecht_selected: None|str = None
 
 temperatur_niedrig_lov: list[str] = ["-20", "-30", "-40", "-50"]
-temperatur_niedrig_selected: None | int | float = None
+temperatur_niedrig_selected: None|str = None
 
 temperatur_hoch_lov: list[str] = ["60", "70", "80", "90", "100"]
-temperatur_hoch_selected: None | int | float = None
+temperatur_hoch_selected: None|str = None
 
 teilleiter_lov: list[str] = ["1", "2", "3", "4", "5", "6"]
-teilleiter_selected: None|int = None
+teilleiter_selected: None|str = None
 
 federkoeffizient_lov: list[str] = ["100000", "150000", "1300000", "400000", "500000", "2000000", "600000", "3000000"]
-federkoeffizient_selected: None|int = None
+federkoeffizient_selected: None|str = None
 
 """
 Auswahl der Leiterseiltypen: 
@@ -56,6 +59,7 @@ leiterseiltyp_selected: None|str = None
 name_der_verbindung: None|str = ""
 kappa: None|float = None
 t_k: None|float = None
+f: None|float = None
 m_c: None|float = None
 l: None|float = None
 l_i: None|float = None
@@ -125,6 +129,7 @@ def on_click_zurücksetzen(state):
     state.standardkurzschlussstroeme_selected = "0.0" # muss float sein
     state.kappa = None
     state.t_k = None
+    state.frequenz_des_netzes_selected = None
     state.leiterseiltyp_selected = None
     state.l = None
     state.l_i = None
@@ -167,6 +172,7 @@ def on_click_berechnen(state):
         ('standardkurzschlussstroeme_selected', 'Kurzschlussstrom'),
         ('kappa', 'Stossfaktor'),
         ('t_k', 'Kurzschlussdauer'),
+        ('frequenz_des_netzes_selected', 'Frequenz des Netzes'),
         # Leiterseilkonfiguration
         ('leiterseiltyp_selected', 'Leiterseiltyp'),
         ('teilleiter_selected', 'Anzahl Teilleiter'),
@@ -190,8 +196,8 @@ def on_click_berechnen(state):
             missing.append(label)
 
     if missing:
-        notify(state, notification_type="error",
-               message=f"Bitte folgende Pflichtfelder ausfüllen: {', '.join(missing)}", duration=100000)
+        notify(state, notification_type="warning",
+               message=f"Bitte folgende Pflichtfelder ausfüllen: {', '.join(missing)}", duration=15000)
         return
 
     try:
@@ -206,6 +212,7 @@ def on_click_berechnen(state):
             standardkurzschlussstroeme=float(state.standardkurzschlussstroeme_selected),
             κ=float(state.kappa),
             t_k=float(state.t_k),
+            f=float(state.frequenz_des_netzes_selected),
             leiterseiltyp=str(state.leiterseiltyp_selected) if state.leiterseiltyp_selected else None,
             d=float(state.leiterseiltyp["Aussendurchmesser"].values[0]),
             A_s=float(state.leiterseiltyp["Querschnitt eines Teilleiters"].values[0]),
@@ -314,21 +321,22 @@ def on_click_berechnen(state):
         state.temp_b_h = state.temperatur_hoch_selected if state.b_h_temp_niedrig < state.b_h_temp_hoch else state.temperatur_niedrig_selected
         state.a_min_min = get_min_value(state.a_min_temp_niedrig, state.a_min_temp_hoch)
 
-        notify(state, notification_type="success", message="Berechnung abgeschlossen")
+        notify(state, notification_type="success", message="Berechnung abgeschlossen", duration=5000)
 
     except ValueError as ve:
-        notify(state, notification_type="error", message=f"{str(ve)}", duration=10000)
+        notify(state, notification_type="error", message=f"{str(ve)}", duration=15000)
 
     except NotImplementedError as nie:
         # Behandlung für noch nicht implementierte Fälle
         notify(state, notification_type="warning",
                message=f"⚠️ Diese Berechnungsmethode ist noch nicht implementiert:\n{str(nie)}",
-               duration=10000)
+               duration=15000)
 
     except Exception as e:
         print(f"Detaillierter Fehler:")
         traceback.print_exc()
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(e)}")
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(e)}",
+               duration=15000)
 
 def on_click_load_vorlage(state):
     """
@@ -404,6 +412,8 @@ def on_click_undo_vorlage(state):
         for key, value in state.vorlage_backup.items():
             setattr(state, key, value)
 
+        on_click_leiterseiltyp_zurücksetzen(state)
+
         # Lösche das Backup nach dem Wiederherstellen
         state.vorlage_backup = None
 
@@ -427,7 +437,8 @@ def on_click_export_vorlage(state):
             template_path = Path(dataloader.get_project_root()) / "data" / "Export Vorlage.xlsx"
 
         if not template_path.exists():
-            notify(state, notification_type="error", message="Keine Vorlage gefunden. Bitte erst eine Datei auswählen.")
+            notify(state, notification_type="error", message="Keine Vorlage gefunden. Bitte erst eine Datei auswählen.",
+                   duration=15000)
             return
 
         # Sammle alle aktuellen State-Werte
@@ -441,6 +452,7 @@ def on_click_export_vorlage(state):
             'standardkurzschlussstroeme_selected': state.standardkurzschlussstroeme_selected,
             'kappa': state.kappa,
             't_k': state.t_k,
+            'frequenz_des_netzes_selected': state.frequenz_des_netzes_selected,
             'leiterseiltyp_selected': state.leiterseiltyp_selected,
             'teilleiter_selected': state.teilleiter_selected,
             'm_c': state.m_c,
@@ -487,14 +499,15 @@ def on_click_export_vorlage(state):
 
             # Nutze download() Funktion für korrekten Dateinamen
             download(state, content=file_content, name=filename)
-            notify(state, notification_type="success", message=f"Download gestartet: {filename}")
+            notify(state, notification_type="success", message=f"Download gestartet: {filename}",
+                   duration=5000)
         else:
-            notify(state, notification_type="error", message="Fehler beim Erstellen der Excel-Datei. Prüfe die Konsole für Details.")
+            notify(state, notification_type="error", message="Fehler beim Erstellen der Excel-Datei.", duration=15000)
 
     except Exception as e:
         print(f"Detaillierter Fehler beim Export:")
         traceback.print_exc()
-        notify(state, notification_type="error", message=f"Fehler beim Export: {str(e)}")
+        notify(state, notification_type="error", message=f"Fehler beim Export: {str(e)}", duration=15000)
 
 with tgb.Page() as kurzschlusskraefte_page:
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
@@ -519,8 +532,8 @@ with tgb.Page() as kurzschlusskraefte_page:
                 tgb.selector(label="Höhenunterschied der Befestigungspunkte mehr als 25%",
                              value="{hoehenunterschied_befestigungspunkte_selected}",
                              lov="{hoehenunterschied_befestigungspunkte_lov}",
-                             dropdown=True, hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte"
-                                                       " mehr als 25 % der Spannfeldlänge beträgt.")
+                             dropdown=True, hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte "
+                                                       "mehr als 25 % der Spannfeldlänge beträgt.")
                 tgb.selector(label="Schlaufebene bei Schlaufen in Spannfeldmitte",
                              value="{schlaufenebene_parallel_senkrecht_selected}",
                              lov="{schlaufenebene_parallel_senkrecht_lov}",
@@ -544,7 +557,7 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.html("br")
             tgb.text(value="Elektrische Werte", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name=""):
+            with tgb.layout(columns="1 1 1 1", columns__mobile="1 1 1 1", class_name=""):
                 tgb.selector(label="I''k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)",
                              value="{standardkurzschlussstroeme_selected}", lov="{standardkurzschlussstroeme_lov}",
                              dropdown=True, class_name="input-with-unit A-unit")
@@ -552,6 +565,9 @@ with tgb.Page() as kurzschlusskraefte_page:
                 tgb.number(label="Tk Kurzschlussdauer", value="{t_k}", min=0.01, max=5.0, step=0.01,
                            hover_text="Wird kein Stossfaktor angegeben wird der Wert 1.8 angenommen.",
                            class_name="input-with-unit tk-unit Mui-focused")
+                tgb.selector(label="f Frequenz des Netzes",
+                             value="{frequenz_des_netzes_selected}", lov="{frequenz_des_netzes_lov}",
+                             dropdown=True, class_name="input-with-unit Hz-unit")
             tgb.html("br")
             tgb.text(value="Leiterseilkonfiguration", class_name="h6")
             tgb.html("hr")
