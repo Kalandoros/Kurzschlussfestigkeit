@@ -14,12 +14,14 @@ unterschreitet, d. h. $l < 100 d$.
 
 ## Seilzugkraft $F_{pi,d}$ beim Kurzschluss durch zusammenziehen der Teilleiter (Bündel-Seilzugkraft) 
 
-Hinweis: Dieses Programm löst die analytische Gleichung A.10 exakt inklusive des Dehnungsterms $(1 + \varepsilon_{st})$. 
+Dieses Programm löst die analytische Gleichung A.10 exakt inklusive des Dehnungsterms $(1 + \varepsilon_{st})$. 
 Die grafischen Näherungen in den Bildern 12a-c vernachlässigen diesen Term zur Vereinfachung, weshalb dieses Programm 
 bei hohen Seildehnungen konservativere (sicherere) Werte liefert. Würde man den Term $(1 + \varepsilon_{st})$ in die 
 Diagramme einbauen, wäre für jedes $a_s/d$ nicht nur ein Diagramm nötig, sondern ein ganzes Buch voll, weil die 
 Kurven sich je nach Dehnung massiv verschieben würden. Mathematisch führt die Kombination aus Gleichung (58) und (A.10) dazu, 
-dass sich die Dehnung $\varepsilon_{st}$ im Lastterm neutralisiert. In den Diagrammen werden verschiedene Kurven gezeigt, 
+dass sich die Dehnung $\varepsilon_{st}$ im Lastterm neutralisiert. 
+
+In den Diagrammen werden verschiedene Kurven gezeigt, 
 um den Einfluss der Seildehnung sichtbarer zu machen. In der Formel nach (A.10) wird dieser Einfluss jedoch direkt über 
 den Parameter $j$ mitberücksichtigt, weshalb die grafische Aufteilung im Programm nicht erforderlich ist.
 Die Berechnung folgt strikt der analytischen Methode nach IEC 60865-1, Anhang A.10. Die beobachteten Abweichungen zu den 
@@ -27,9 +29,9 @@ Bildern 12a-c resultieren aus der numerischen Exaktheit der Gleichung, die im Ge
 Linearisierungen vornimmt. Dies führt zu einer konservativen und damit sicherheitsgerichteten Auslegung.
 
 Info:
-Es zwei Pfade:$\eta < 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. 
-Hier nutzt du dein berechnetes $\eta$.$\eta = 1.0$: Die Leiter schlagen zusammen (Clashing). 
-Hier musst du auf die Formel mit dem Faktor $i_s$ (Gleichung 60) ausweichen.
+Es gibt zwei Pfade:<br>
+$\eta < 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. Hier wird das berechnete $\eta$ verwendet. <br>
+$\eta = 1.0$: Die Leiter schlagen zusammen. Es wird die Formel mit dem Faktor $i_s$ (Gleichung 60) verwendet.
 
 ## Einzellasten
 Bei der Berechnung der Seilzugkräfte durch Ausschwingen $F_{t,d}$ und Fallen $F_{f,d}$ des Spannfeldes werden
@@ -38,11 +40,11 @@ Bündelkontraktion bleiben sie unberücksichtigt. [2], [3]
 Die Masse der Seilschlaufe in Spannfeldmitte und ihrer Befestigung wird jedoch nicht berücksichtigt. [3]
 
 Bei der Ermittlung der statischen Seilzugkraft $F_{st}$ und des statischen Durchhangs $f_{st}$ sollte der Beitrag 
-konzentrierter Massen im Spannfeld, z. B. durch Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt 
+konzentrierter Massen im Spannfeld, z. B. durch Abstandshalter, Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt 
 werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden. [3]
 
 ## Schlaufen
-Schlaufen in der Nähe der Hauptleiterbefestigungen haben geringen Einfluss auf die Seilzugkräfte und die Bewegung des HAuptleiters. 
+Schlaufen in der Nähe der Hauptleiterbefestigungen haben geringen Einfluss auf die Seilzugkräfte und die Bewegung des Hauptleiters. 
 Es wird empfohlen, in diesem Fall die Berechnung ohne Schlaufe in Spannfeldmitte (Im Programm "Schlaufe in Spannfeldmitte" mit 
 Auswahl Nein) durchzuführen. [3] Als Richtlinie soll gelten, das Schlaufen als in der Nähe der Hauptleiterbefestigungen betrachtet
 werden, wenn sich diese im Bereich von 10% in Bezug auf die Spannfeldlänge an den äusseren Enden der Spannfeldlänge befinden.
@@ -90,8 +92,10 @@ Formel zur Berechnung von $T_{pi}$, diese nicht in der Norm erwähnt ist.
 $$T_{pi} = 1,15 \cdot \sqrt{\frac{m_s \cdot (a_s - d_s)}{F'_{pi}}}$$
 
 Weitere Tipps:
-Vorsicht bei math.radians()Du erwähntest math.sin(math.radians()). Das ist absolut korrekt für statische Winkel wie $180^\circ$ oder $90^\circ$.Aber Achtung: Die Terme in der Norm, die $\pi$ enthalten (z. B. $2\pi f T_{pi}$), sind bereits im Bogenmaß. Diese darfst du nicht noch einmal durch math.radians() jagen, sonst rechnet Python mit winzigen Werten weiter.
+Vorsicht bei math.radians():<br>
+$math.sin(math.radians())$ ist korrekt für statische Winkel wie $180^\circ$ oder $90^\circ$.<br>
+Achtung: Die Terme in der Norm, die $\pi$ enthalten (z. B. $2\pi f T_{pi}$), sind bereits im Bogenmass.<br>
+Diese darfman nicht noch einmal durch $math.radians()$ verfälschen, da sonst Python mit winzigen Werten weiter rechnet.
 
-Richtig: $math.sin(math.pi / n)$ 
-
+Richtig: $math.sin(math.pi / n)$<br>
 Falsch: $math.sin(math.radians(math.pi / n)$

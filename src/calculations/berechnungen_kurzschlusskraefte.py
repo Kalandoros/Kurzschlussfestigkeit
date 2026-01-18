@@ -42,7 +42,8 @@ def m_c(m_c: float|None , n: float, l_c: float) -> float:
 
 # Hilfsgleichungen l_v Seilbogen Länge der Schlaufe
 def l_v(h: float, w:float) -> float:
-    l_v: float = (math.sqrt(h**2 + w**2)) * 1.03
+    # Der Faktor von 1.05 basiert auf dem Mittelwert von Beispielrechnungen.
+    l_v: float = (math.sqrt(h**2 + w**2)) * 1.05
     return l_v
 
 # Grössen ab Kapitel 6.2.2
@@ -59,7 +60,6 @@ def l_c(l: float, l_i: float) -> float:
     (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
     """
     l_c: float = l - (2 * l_i)
-    print(f"l_c: {l_c}")
     return l_c
 
 # Gleichung (20)
@@ -74,7 +74,6 @@ def r(F_: float, n: float, m_s: float, g: float) -> float:
     g: Normfallbeschleunigung in m/s^2
     """
     r: float = F_ / (n * m_s * g)
-    print(f"r: {r}")
     return r
 
 # Gleichung (21)
@@ -86,7 +85,6 @@ def δ_1(r: float) -> float:
     Eigengewichtskraft (dimensionslos)
     """
     δ_1: float = math.degrees((math.atan(r)))
-    print(f"δ_1: {δ_1}")
     return δ_1
 
 # Gleichung (22)
@@ -101,7 +99,6 @@ def f_es(n: float, m_s: float, g: float, l: float, F_st: float) -> float:
     F_st: statische Seilzugkraft in einem Hauptleiter in N
     """
     f_es: float = (n * m_s * g * l**2) / (8 * F_st)
-    print(f"f_es: {f_es}")
     return f_es
 
 # Gleichung (23)
@@ -115,7 +112,6 @@ def T(f_es: float, g: float) -> float:
     Gilt für kleine Ausschwingwinkel ohne Stromfluss im Leiter.
     """
     T: float = 2 * math.pi * math.sqrt(0.8 * (f_es / g))
-    print(f"T: {T}")
     return T
 
 # Gleichung (24)
@@ -130,7 +126,6 @@ def T_res(T: float, r: float, δ_1: float) -> float:
     δ_1: Richtung der resultierenden Kraft in °
     """
     T_res: float = T / ((math.sqrt(math.sqrt(1 + r**2))) * (1 - ((math.pi**2 / 64) * ((δ_1 / 90)**2))))
-    print(f"T_res: {T_res}")
     return T_res
 
 # Gleichung (26)
@@ -149,7 +144,6 @@ def E_eff(E: float, F_st: float, n: float, A_s: float, σ_fin: float) -> float:
         E_eff: float = E_eff
     elif F_st / (n * A_s) > σ_fin:
         E_eff: float = E
-    print(f"E_eff: {E_eff}")
     return E_eff
 
 # Gleichung (25)
@@ -165,7 +159,6 @@ def N(S: float, l: float, n: float, E_eff: float, A_s: float) -> float:
     A_s: Querschnitt eines Teilleiters in m^2
     """
     N: float = (1 / (S * l)) + (1 / (n * E_eff * A_s))
-    print(f"N: {N}")
     return N
 
 # Gleichung (28)
@@ -183,7 +176,6 @@ def ζ(n: float, g: float, m_s: float, l: float, F_st: float, N: float) -> float
     N: Steifigkeitsnorm einer Anordnung mit Leiterseilen in 1/N
     """
     ζ: float = ((n * g * m_s * l)**2) / (24 * math.pow(F_st,3) * N)
-    print(f"ζ: {ζ}")
     return ζ
 
 # Gleichung (29)
@@ -201,11 +193,9 @@ def δ_end(δ_1: float, T_k1: float, T_res: float) -> float:
 
     if 0 <= T_k1 / T_res <= 0.5:
         δ_end: float = δ_end_1
-        print(f"δ_end: {δ_end}")
         return δ_end
     elif T_k1 / T_res > 0.5:
         δ_end: float = δ_end_2
-        print(f"δ_end: {δ_end}")
         return δ_end
 
 # Gleichung (30, 31)
@@ -236,7 +226,6 @@ def δ_max(r: float, δ_end: float) -> float:
     elif δ_end > 90:
         χ_2: float = 1 - r
         χ: float = χ_2
-        print("x", χ)
         if 0.766 < χ <= 1:
             δ_max_1: float = 1.25 * math.degrees(arccos(χ))
             δ_max: float = δ_max_1
@@ -266,12 +255,10 @@ def φ_ohne_schlaufe(T_k1: float, T_res: float, r: float, δ_end: float) -> floa
     if T_k1  >= T_res / 4:
         φ_1: float = 3 * (math.sqrt((1 + r ** 2)) - 1)
         φ: float = φ_1
-        print(f"φ: {φ}")
         return φ
     elif T_k1  < T_res / 4:
         φ_2: float = 3 * ((r * math.sin(math.radians(δ_end))) - (math.cos(math.radians(δ_end)) - 1))
         φ: float = φ_2
-        print(f"φ: {φ}")
         return φ
 
 def ψ_ohne_schlaufe(φ: float, ζ: float) -> float:
@@ -293,7 +280,6 @@ def ψ_ohne_schlaufe(φ: float, ζ: float) -> float:
             list_sol.append(i)
         else:
             return None
-    print("ψ_ohne_schlaufe:", list_sol[0])
     return list_sol[0]
     #return gl_Psi[0]
 
@@ -739,16 +725,15 @@ def T_pi_and_ν_2(ν_1, f, τ, γ) -> float:
             return np.array([-ν_1])
 
         # A, B und C mit np-Funktionen berechnet (keine Warnungen mehr!)
-        A: float = (np.sin(4 * np.pi * x - 2 * γ) + np.sin(2 * γ)) / (4 * np.pi * x)
-        B: float  = (y / x) * (1 - np.exp(-2 * x / y)) * (np.sin(γ) ** 2)
+        A: float = (np.sin((4 * np.pi * x) - (2 * γ)) + np.sin(2 * γ)) / (4 * np.pi * x)
+        B: float  = (y / x) * (1 - (np.exp(-((2 * x) / y)))) * (np.sin(γ) ** 2)
+        P: float  = ((2 * np.pi * y) * (np.cos((2 * np.pi * x) - γ) / (2 * np.pi * x)))
+        Q: float  = ((np.sin((2 * np.pi * x) - γ)) / (2 * np.pi * x))
+        R: float  = ((np.sin(γ) - (2 * np.pi) * y * np.cos(γ)) / (2 * np.pi * x))
+        M: float  = ((P + Q) * np.exp(-(x / y)) + R)
+        C: float  = ((8 * np.pi * y * np.sin(γ)) / (1 + (2 * np.pi * y) ** 2)) * M
 
-        P: float  = 2 * np.pi * np.cos(2 * np.pi * x - γ) / (2 * np.pi * x)
-        Q: float  = np.sin(2 * np.pi * x - γ) / (2 * np.pi * x)
-        R: float  = (np.sin(γ) - 2 * np.pi * y * np.cos(γ)) / (2 * np.pi * x)
-        M: float  = (P + Q) * np.exp(-x / y) + R
-        C: float  = 8 * np.pi * y * np.sin(γ) / (1 + (2 * np.pi * y) ** 2) * M
-
-        sqrt_ν_2: float  = np.sqrt(np.abs(1 - A + B + C))
+        sqrt_ν_2: float  = np.sqrt(np.abs(1 - A + B - C))
 
         # Rückgabe als Array (wie von fsolve erwartet)
         return x * sqrt_ν_2 - ν_1
@@ -775,7 +760,7 @@ def ν_3(a_s: float, d: float, n: float = None) -> float:
     return ν_3
 
 # Gleichung (A.9 Bild 11)
-def ζ_pi(j: float, ε_st: float) -> float:
+def ξ(j: float, ε_st: float) -> float:
     """
     Funktion zur Berechnung des Faktors ζ zur Berechnung des Beanspruchungsfaktors des Hauptleiters in Seilanordnungen
     (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
@@ -784,17 +769,18 @@ def ζ_pi(j: float, ε_st: float) -> float:
     ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
     Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
     """
-    ζ = sympy.symbols(names='ζ', real=True)
-    polynom = (ζ**3) + (ε_st * ζ**2) - ((j**2)*(1 + ε_st))
-    gl_Zeta = sympy.solve(polynom, ζ)
+    ξ = sympy.symbols(names='ξ', real=True)
+    polynom = (ξ**3) + (ε_st * ξ**2) - ((j**2)*(1 + ε_st))
+    gl_Zeta = sympy.solve(polynom, ξ)
 
     list_sol: [list] = []
     for i in gl_Zeta:
         if  j**(2/3) <= i <= j:
-            list_sol = list_sol.append(i)
+            list_sol.append(i)
         else:
             break
-    return gl_Zeta
+    return list_sol[0]
+    #return gl_Zeta
 
 # Gleichung (A.10 Bild 12)
 def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> float:
@@ -942,7 +928,6 @@ def F_a(μ0: float, I_k: float, l: float, l_c: float, a: float) -> float:
     (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
     """
     F_a: float = (μ0 / (2 * math.pi)) * 0.75 * (I_k**2 / a) * (l_c / l)
-    print(f"F_a: {F_a}")
     return F_a
 
 # Grössen ab Kapitel 6.2.2
@@ -981,7 +966,6 @@ def F_td_ohne_schlaufe_spannfeldmitte(F_st: float, φ: float, ψ: float) -> floa
     Anzuwenden bei Stromfluss über die gesamte Seillänge des Hauptleiters im Spannfeld ohne Schlaufe in Spannfeldmitte.
     """
     F_td: float = F_st * (1 + (φ * ψ))
-    print(f"F_td: {F_td}")
     return F_td
 
 # Bis hierhin verfiziert
@@ -1087,12 +1071,12 @@ def F_v(μ0: float, I_k: float, a_s: float, l_s: float, n: float, ν_2: float, �
     Teilleiter als auch der Abstand ls zweier benachbarter Abstandhalter entweder Gleichung (52) ODER Gleichung (53)
     erfüllen.
     """
-    F_v: float = (n - 1) * (μ0 / 2 * math.pi)  * (I_k**2 / n) * (l_s / a_s) * (ν_2 / ν_3)
+    F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_s / a_s) * (ν_2 / ν_3)
     return F_v
 
 # Grössen ab Kapitel 6.4.2
 # Gleichung (59, 62)
-def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ζ: float = None, η: float = None) -> float:
+def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ξ: float = None, η: float = None) -> float:
     """
     Funktion zur Berechnung der Kraft F_pi_d Bündel-Seilzugkraft in einem Hauptleiter (Bemessungswert)
     in N nach SN EN 60865-1:2012 Kapitel 6.4.2.
@@ -1101,11 +1085,11 @@ def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ζ: float = N
     j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
     ν_e: Faktor zur Berechnung von F_pi_d
     ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
-    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    ξ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
     η: Faktor zur Berechnung von Fpi,d bei nicht zusammenschlagenden Bündelleitern (dimensionslos)
     """
     if j >= 1:
-        F_pi_d_mit_j_1: float = F_st * (1 + ((ν_e / ε_st) * ζ))
+        F_pi_d_mit_j_1: float = F_st * (1 + ((ν_e / ε_st) * ξ))
         F_pi_d_mit_j = F_pi_d_mit_j_1
         return F_pi_d_mit_j
     elif j < 1:

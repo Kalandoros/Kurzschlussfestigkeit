@@ -90,6 +90,20 @@ class ShortCircuitResult:
     a_min: Optional[float] = None
     l_s: Optional[float] = None
     F_pi_d: Optional[float] = None
+    ν_1: Optional[float] = None
+    τ: Optional[float] = None
+    γ: Optional[float] = None
+    t_pi: Optional[float] = None
+    ν_2: Optional[float] = None
+    ν_3: Optional[float] = None
+    F_v: Optional[float] = None
+    ε_st: Optional[float] = None
+    ε_pi: Optional[float] = None
+    j: Optional[float] = None
+    ν_4: Optional[float] = None
+    ξ: Optional[float] = None
+    η: Optional[float] = None
+    ν_e: Optional[float] = None
 
 
     def convert_units(self):
@@ -260,12 +274,25 @@ class ShortCircuitMediator:
                                     self.inputs.l_s_6, self.inputs.l_s_7, self.inputs.l_s_8, self.inputs.l_s_9, self.inputs.l_s_10)
 
             # Schritt 25: Bündel-Seilzugkraft F_pi_d
-            if (self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s):
+            if (self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s and self.inputs.n > 1) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s and self.inputs.n > 1):
                 result.F_pi_d = bkskls.F_pi_d_ohne_j(result.F_td, self.inputs.a_s, self.inputs.d, result.l_s)
-            else:
-                result.ν_1 = bkskls.ν_1(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, self.inputs.n, self.inputs.m_s, self.inputs.d, )
+            elif self.inputs.n > 1:
+                result.ν_1 = bkskls.ν_1(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, self.inputs.n, self.inputs.m_s, self.inputs.d, self.inputs.f)
+                result.τ = bkskls.τ(self.inputs.f, self.inputs.κ)
+                result.γ = bkskls.γ(self.inputs.f, result.τ)
+                result.t_pi, result.ν_2 = bkskls.T_pi_and_ν_2(result.ν_1, self.inputs.f, result.τ, result.γ)
+                result.ν_3 = bkskls.ν_3(self.inputs.a_s, self.inputs.d, self.inputs.n)
                 result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
-
+                result.ε_st = bkskls.ε_st(F_st, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                result.ε_pi = bkskls.ε_pi(result.F_v, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                result.j = bkskls.j(result.ε_st, result.ε_pi)
+                # Optional ein If-else einfügen für j=>1 und j<1
+                result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
+                result.ξ = bkskls.ξ(result.j, result.ε_st)
+                result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
+                result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
+                                        self.inputs.n, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
+                result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)
 
             # Einheitenkonvertierung
             result.convert_units()

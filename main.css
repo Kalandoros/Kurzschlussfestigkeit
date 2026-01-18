@@ -66,7 +66,7 @@
 /* Targets inputs with the seconds unit (tk-unit) and injects "s" */
 .tk-unit .MuiInputBase-root:after { content: "s"; }
 .m-unit .MuiInputBase-root:after { content: "m"; }
-.N-unit .MuiInputBase-root:after { content: "N"; }
+.N-unit .MuiInputBase-root:after { content: "kN"; }
 .kg-unit .MuiInputBase-root:after { content: "kg"; }
 .--unit .MuiInputBase-root:after { content: ""; }
 
