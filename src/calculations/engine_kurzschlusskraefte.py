@@ -5,7 +5,7 @@ import scipy.constants
 from . import berechnungen_kurzschlusskraefte as bkskls
 
 
-@dataclass
+@dataclass(slots=True)
 class Kurschlusskräfte_Input:
     # Allgemeine Angaben
     leiterseilbefestigung: str
@@ -62,7 +62,7 @@ class Kurschlusskräfte_Input:
         self.F_st_20 = self.F_st_20 * 10 ** 3
         self.F_st_80 = self.F_st_80 * 10 ** 3
 
-@dataclass
+@dataclass(slots=True)
 class ShortCircuitResult:
     l_c: Optional[float] = None
     m_c: Optional[float] = None
@@ -274,25 +274,26 @@ class ShortCircuitMediator:
                                     self.inputs.l_s_6, self.inputs.l_s_7, self.inputs.l_s_8, self.inputs.l_s_9, self.inputs.l_s_10)
 
             # Schritt 25: Bündel-Seilzugkraft F_pi_d
-            if (self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s and self.inputs.n > 1) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s and self.inputs.n > 1):
-                result.F_pi_d = bkskls.F_pi_d_ohne_j(result.F_td, self.inputs.a_s, self.inputs.d, result.l_s)
-            elif self.inputs.n > 1:
-                result.ν_1 = bkskls.ν_1(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, self.inputs.n, self.inputs.m_s, self.inputs.d, self.inputs.f)
-                result.τ = bkskls.τ(self.inputs.f, self.inputs.κ)
-                result.γ = bkskls.γ(self.inputs.f, result.τ)
-                result.t_pi, result.ν_2 = bkskls.T_pi_and_ν_2(result.ν_1, self.inputs.f, result.τ, result.γ)
-                result.ν_3 = bkskls.ν_3(self.inputs.a_s, self.inputs.d, self.inputs.n)
-                result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
-                result.ε_st = bkskls.ε_st(F_st, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
-                result.ε_pi = bkskls.ε_pi(result.F_v, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
-                result.j = bkskls.j(result.ε_st, result.ε_pi)
-                # Optional ein If-else einfügen für j=>1 und j<1
-                result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
-                result.ξ = bkskls.ξ(result.j, result.ε_st)
-                result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
-                result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
-                                        self.inputs.n, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
-                result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)
+            if self.inputs.a_s not in (None, 0) and self.inputs.d not in (None, 0) and self.inputs.n not in (None, 0):
+                if (self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s and self.inputs.n > 1) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s and self.inputs.n > 1):
+                    result.F_pi_d = bkskls.F_pi_d_ohne_j(result.F_td, self.inputs.a_s, self.inputs.d, result.l_s)
+                elif self.inputs.n > 1:
+                    result.ν_1 = bkskls.ν_1(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, self.inputs.n, self.inputs.m_s, self.inputs.d, self.inputs.f)
+                    result.τ = bkskls.τ(self.inputs.f, self.inputs.κ)
+                    result.γ = bkskls.γ(self.inputs.f, result.τ)
+                    result.t_pi, result.ν_2 = bkskls.T_pi_and_ν_2(result.ν_1, self.inputs.f, result.τ, result.γ)
+                    result.ν_3 = bkskls.ν_3(self.inputs.a_s, self.inputs.d, self.inputs.n)
+                    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                    result.ε_st = bkskls.ε_st(F_st, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.ε_pi = bkskls.ε_pi(result.F_v, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.j = bkskls.j(result.ε_st, result.ε_pi)
+                    # Optional ein If-else einfügen für j=>1 und j<1
+                    result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
+                    result.ξ = bkskls.ξ(result.j, result.ε_st)
+                    result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
+                    result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
+                                            self.inputs.n, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
+                    result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)
 
             # Einheitenkonvertierung
             result.convert_units()
@@ -369,7 +370,117 @@ class ShortCircuitMediator:
         """
         # TODO: Implementierung für Fall 3.1
         # Ähnlich wie 1.1, aber l_c = l (keine Isolatorkette)
-        raise NotImplementedError("Fall 3.1 noch nicht implementiert")
+        results = {}
+
+        for key, F_st in [('F_st_20', self.inputs.F_st_20), ('F_st_80', self.inputs.F_st_80)]:
+            result = ShortCircuitResult()
+
+            # Schritt 1: Effektive Seillänge
+            #result.l_c = bkskls.l_c(self.inputs.l, self.inputs.l_i)
+
+            # Schritt 1a: Massenbelag konzentrischer Lasten
+            result.m_c = bkskls.m_c(self.inputs.m_c, self.inputs.n, self.inputs.l)
+
+            # Schritt 2: Charakteristischer elektromagnetischer Kraftbelag
+            result.F_a = bkskls.F_a(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.l, self.inputs.l, self.inputs.a)
+
+            # Schritt 3: Verhältnis r
+            result.r = bkskls.r(result.F_a, self.inputs.n, self.inputs.m_s + result.m_c, self.g)
+
+            # Schritt 4: Richtung δ_1
+            result.δ_1 = bkskls.δ_1(result.r)
+
+            # Schritt 5: Statischer Durchhang
+            result.f_es = bkskls.f_es(self.inputs.n, self.inputs.m_s + result.m_c, self.g, self.inputs.l, F_st)
+
+            # Schritt 6: Periodendauer
+            result.T = bkskls.T(result.f_es, self.g)
+
+            # Schritt 7: Resultierende Periodendauer
+            result.T_res = bkskls.T_res(result.T, result.r, result.δ_1)
+
+            # Schritt 8: Effektiver E-Modul
+            result.E_eff = bkskls.E_eff(self.inputs.E, F_st, self.inputs.n, self.inputs.A_s, self.σ_fin)
+
+            # Schritt 9: Steifigkeitsnorm
+            result.N = bkskls.N(self.inputs.federkoeffizient, self.inputs.l, self.inputs.n, result.E_eff, self.inputs.A_s)
+
+            # Schritt 10: Beanspruchungsfaktor
+            result.ζ = bkskls.ζ(self.inputs.n, self.g, self.inputs.m_s + result.m_c, self.inputs.l, F_st, result.N)
+
+            # Schritt 11: Ausschwingwinkel
+            result.δ_end = bkskls.δ_end(result.δ_1, self.inputs.t_k, result.T_res)
+
+            # Schritt 12: Maximaler Ausschwingwinkel
+            result.δ_max = bkskls.δ_max(result.r, result.δ_end)
+
+            # Schritt 13: Lastparameter φ
+            result.φ = bkskls.φ_ohne_schlaufe(self.inputs.t_k, result.T_res, result.r, result.δ_end)
+
+            # Schritt 14: Lastparameter ψ
+            result.ψ = bkskls.ψ_ohne_schlaufe(result.φ, result.ζ)
+
+            # Schritt 15: Kurzschluss-Seilzugkraft F_td
+            result.F_td = bkskls.F_td_ohne_schlaufe_spannfeldmitte(F_st, result.φ, result.ψ)
+
+            # Schritt 16: Elastische Seildehnung ε_ela
+            result.ε_ela = bkskls.ε_ela(result.N, result.F_td, F_st)
+
+            # Schritt 17: thermische Seildehnung ε_th
+            result.ε_th = bkskls.ε_th(self.inputs.c_th, self.inputs.standardkurzschlussstroeme, self.inputs.n, self.inputs.A_s, self.inputs.t_k, result.T_res)
+
+            # Schritt 18: Faktor Durchhangvergrößerung C_D
+            result.C_D = bkskls.C_D(self.inputs.l, result.f_es, result.ε_ela, result.ε_th)
+
+            # Schritt 19: Faktor Durchhangvergrößerung C_F
+            result.C_F = bkskls.C_F(result.r)
+
+            # Schritt 20: Dynamischer Seildurchhangs f_ed
+            result.f_ed = bkskls.f_ed(result.C_D, result.C_F, result.f_es)
+
+            # Schritt 21: Fall-Seilzugkraft F_fd
+            result.F_fd = bkskls.F_fd(F_st, result.ζ, result.δ_max)
+
+            # Schritt 22: Max. Horizontale Seilauslenkung b_h
+            result.b_h = bkskls.b_h_ohne_schlaufe_spannfeldmitte_aufgelegt(result.f_ed, result.δ_max)
+
+            # Schritt 23: Min. minimaler Leiterabstand a_min
+            result.a_min = bkskls.a_min(self.inputs.a, result.b_h)
+
+            # Schritt 24: Abstände Abstandshalter
+            result.l_s = bkskls.l_s(self.inputs.l_s_1, self.inputs.l_s_2, self.inputs.l_s_3, self.inputs.l_s_4,
+                                    self.inputs.l_s_5,
+                                    self.inputs.l_s_6, self.inputs.l_s_7, self.inputs.l_s_8, self.inputs.l_s_9,
+                                    self.inputs.l_s_10)
+
+            # Schritt 25: Bündel-Seilzugkraft F_pi_d
+            if self.inputs.a_s not in (None, 0) and self.inputs.d not in (None, 0) and self.inputs.n not in (None, 0):
+                if ((self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s and self.inputs.n > 1) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s and self.inputs.n > 1)):
+                    result.F_pi_d = bkskls.F_pi_d_ohne_j(result.F_td, self.inputs.a_s, self.inputs.d, result.l_s)
+                elif self.inputs.n > 1:
+                    result.ν_1 = bkskls.ν_1(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, self.inputs.n, self.inputs.m_s, self.inputs.d, self.inputs.f)
+                    result.τ = bkskls.τ(self.inputs.f, self.inputs.κ)
+                    result.γ = bkskls.γ(self.inputs.f, result.τ)
+                    result.t_pi, result.ν_2 = bkskls.T_pi_and_ν_2(result.ν_1, self.inputs.f, result.τ, result.γ)
+                    result.ν_3 = bkskls.ν_3(self.inputs.a_s, self.inputs.d, self.inputs.n)
+                    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                    result.ε_st = bkskls.ε_st(F_st, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.ε_pi = bkskls.ε_pi(result.F_v, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.j = bkskls.j(result.ε_st, result.ε_pi)
+                    # Optional ein If-else einfügen für j=>1 und j<1
+                    result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
+                    result.ξ = bkskls.ξ(result.j, result.ε_st)
+                    result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
+                    result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
+                                            self.inputs.n, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
+                    result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)
+
+            # Einheitenkonvertierung
+            result.convert_units()
+
+            results[key] = result
+
+        return results
 
 
 def calculate_short_circuit(inputs: Kurschlusskräfte_Input) -> dict[str, ShortCircuitResult]:

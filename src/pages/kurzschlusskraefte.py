@@ -22,7 +22,7 @@ leiterseilbefestigung_selected: None|str = None
 schlaufe_in_spannfeldmitte_lov: list[str] = ["Ja", "Nein"]
 schlaufe_in_spannfeldmitte_selected: None|str = None
 
-standardkurzschlussstroeme_lov: list[str] = ["10", "12.5", "16", "20", "25", "31.5", "40", "50", "63", "80"]
+standardkurzschlussstroeme_lov: list[str] = ["10", "12.5", "16",  "20", "25", "31.5", "40", "50", "63", "80"]
 standardkurzschlussstroeme_selected: None|str = None
 
 frequenz_des_netzes_lov: list[str] = ["50", "16.66"]
@@ -361,7 +361,7 @@ def on_click_berechnen(state):
         state.F_td_temp_niedrig = round(state.calc_result['F_st_20'].F_td, 2)  if state.calc_result['F_st_20'].F_td not in (None, 0.0) else None
         state.F_td_temp_hoch = round(state.calc_result['F_st_80'].F_td, 2) if state.calc_result['F_st_80'].F_td not in (None, 0.0) else None
         state.F_fd_temp_niedrig = round(state.calc_result['F_st_20'].F_fd, 2) if state.calc_result['F_st_20'].F_fd not in (None, 0.0) else None
-        state.F_fd_temp_hoch = round(state.calc_result['F_st_80'].F_fd) if state.calc_result['F_st_80'].F_fd not in (None, 0.0) else None
+        state.F_fd_temp_hoch = round(state.calc_result['F_st_80'].F_fd, 2) if state.calc_result['F_st_80'].F_fd not in (None, 0.0) else None
         state.F_pi_d_temp_niedrig = round(state.calc_result['F_st_20'].F_pi_d, 2) if state.calc_result['F_st_20'].F_pi_d not in (None, 0.0) else None
         state.F_pi_d_temp_hoch = round(state.calc_result['F_st_80'].F_pi_d, 2) if state.calc_result['F_st_80'].F_pi_d not in (None, 0.0) else None
         state.b_h_temp_niedrig = round(state.calc_result['F_st_20'].b_h, 2) if state.calc_result['F_st_20'].b_h not in (None, 0.0) else None
@@ -384,7 +384,8 @@ def on_click_berechnen(state):
         state.F_fd_massg = get_max_value(state.F_fd_temp_niedrig, state.F_fd_temp_hoch)
         state.temp_F_fd_massg = state.temperatur_hoch_selected if state.F_fd_temp_hoch > state.F_fd_temp_niedrig else state.temperatur_niedrig_selected
         state.F_pi_d_massg = get_max_value(state.F_pi_d_temp_niedrig, state.F_pi_d_temp_hoch)
-        state.temp_F_pi_d_massg = state.temperatur_hoch_selected if state.F_pi_d_temp_hoch > state.F_pi_d_temp_niedrig else state.temperatur_niedrig_selected
+        if state.F_pi_d_temp_hoch not in (None, 0.0) and state.F_pi_d_temp_niedrig not in (None, 0.0):
+            state.temp_F_pi_d_massg = state.temperatur_hoch_selected if state.F_pi_d_temp_hoch > state.F_pi_d_temp_niedrig else state.temperatur_niedrig_selected
         state.F_td_fd_pi_d_massg_1 = round(get_max_value(state.F_td_massg*1.5, state.F_fd_massg, state.F_pi_d_massg), 2)
         state.F_td_fd_pi_d_massg_2 = get_max_value(state.F_td_massg, state.F_fd_massg, state.F_pi_d_massg)
         state.b_h_max = get_max_value(state.b_h_temp_niedrig, state.b_h_temp_hoch)
