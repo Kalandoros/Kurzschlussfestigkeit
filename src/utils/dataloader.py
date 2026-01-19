@@ -4,6 +4,11 @@ import pandas as pd
 from openpyxl import load_workbook
 import shutil
 import warnings
+from dataclasses import asdict
+
+pd.options.display.float_format = '{:12.3e}'.format
+
+from src.utils import formatter
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -293,6 +298,75 @@ def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, outp
         # Stelle sicher, dass die Datei geschlossen wird, auch bei Fehler
         if wb is not None:
             wb.close()
+
+def create_df_from_calc_results(calc_result: dict, temp_low: str, temp_high: str) -> pd.DataFrame:
+    """
+    Erstellt einen formatierten DataFrame aus den Berechnungsergebnissen.
+
+    Args:
+        calc_result: Dictionary mit 'F_st_20' und 'F_st_80' als Keys
+        temp_low: String of the selected temperature
+        temp_high: String of the selected temperature
+    Returns:
+        DataFrame mit formatierten Ergebnissen
+    """
+    temp_low_with_unit = str(temp_low) + " " + "°C"
+    temp_high_with_unit = str(temp_high) + " " + "°C"
+
+    # Hole beide Ergebnisse
+    result_20 = calc_result.get('F_st_20')
+    result_80 = calc_result.get('F_st_80')
+
+    if not result_20 or not result_80:
+        return pd.DataFrame({'Hinweis': ['Keine Berechnungsergebnisse verfügbar']})
+
+    # Konvertiere zu Dictionaries
+    dict_20 = asdict(result_20)
+    dict_80 = asdict(result_80)
+
+    # Erstelle Liste für DataFrame-Rows
+    data = []
+
+    # Iteriere durch alle Felder
+    for param_name in dict_20.keys():
+        val_20 = dict_20[param_name]
+        val_80 = dict_80[param_name]
+
+        # Nur nicht-None Werte hinzufügen
+        if val_20 is not None and val_80 is not None:
+            # WICHTIG: Konvertiere Sympy-Objekte zu nativen Python-Typen
+            # Sympy.Float ist nicht JSON-serialisierbar für Taipy
+            if hasattr(val_20, '__float__'):
+                val_20 = float(val_20)
+            if hasattr(val_80, '__float__'):
+                val_80 = float(val_80)
+
+            # Formatiere mit der Formatter-Funktion
+            val_20_formatted = formatter.format_value_smart(val_20)
+            val_80_formatted = formatter.format_value_smart(val_80)
+
+            data.append({
+                'Parameter': param_name,
+                temp_low_with_unit: val_20_formatted,
+                temp_high_with_unit: val_80_formatted
+                #'-20°C': val_20,
+                #'80°C': val_80
+            })
+    # Erstelle DataFrame
+    df = pd.DataFrame(data)
+
+    # Unindent this part and the part above if for numerical export needed
+    """
+        if not df.empty:
+            df['Parameter'] = df['Parameter'].astype(str)
+            df['-20°C'] = pd.to_numeric(df['-20°C'], errors='coerce')
+            df['80°C'] = pd.to_numeric(df['80°C'], errors='coerce')
+    """
+
+    return df
+
+
+
 
 if __name__ == "__main__":
     # Liefert alle Werte einer Spalte zurück

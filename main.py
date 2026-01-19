@@ -14,7 +14,7 @@ pages = {
 }
 
 if __name__ == "__main__":
-    Gui(pages=pages, css_file="main.css").run(
+    Gui(pages=pages, css_file="src/css/main.css").run(
         initial_page="Willkommen",
         use_reloader=True, 
         title="Kurzschlussfestigkeit", 

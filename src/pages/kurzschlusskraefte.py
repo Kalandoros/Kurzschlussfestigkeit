@@ -1,5 +1,6 @@
 from dataclasses import asdict
 
+from pandas import DataFrame
 from pandas.io.clipboard import init_windows_clipboard
 from taipy.gui import notify, download
 import taipy.gui.builder as tgb
@@ -8,13 +9,15 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 import traceback
-from src.utils import dataloader
+import math
+from src.utils import dataloader, formatter
 from src.calculations.engine_kurzschlusskraefte import Kurschlusskräfte_Input, ShortCircuitResult, calculate_short_circuit
 
 # Configuration for pandas
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.precision', 3)
+pd.options.display.float_format = '{:12.3e}'.format
 
 leiterseilbefestigung_lov: list[str] = ["Abgespannt", "Aufgelegt", "Unterschlaufung", "Schlaufe am Spannfeldende"]
 leiterseilbefestigung_selected: None|str = None
@@ -109,7 +112,7 @@ a_min_temp_hoch: None|float|str = ""
 a_min_min: None|float|str = ""
 
 calc_result: None|ShortCircuitResult = None
-calc_result_formatted: None|str = None
+calc_result_formatted: None|DataFrame = None
 
 
 def on_change_selectable_leiterseiltyp(state):
@@ -311,53 +314,11 @@ def on_click_berechnen(state):
         #print(inputs)
         state.calc_result = calculate_short_circuit(inputs)
 
-        # Dartellung der Erweiterten Ergebnisse:
-        # Im Callback:
-        def format_results(calc_result):
-            """Formatiert Ergebnisse in zwei Spalten nebeneinander"""
+        # Darstellung der erweiterten Ergebnisse im Callback:
+        #state.calc_result_formatted = formatter.format_numbers_strings_scientific_and_normal(state.calc_result)
+        state.calc_result_formatted = dataloader.create_df_from_calc_results(state.calc_result, state.temperatur_niedrig_selected, state.temperatur_hoch_selected )
 
-            # Hole beide Ergebnisse
-            result_20 = calc_result.get('F_st_20')
-            result_80 = calc_result.get('F_st_80')
-
-            if not result_20 or not result_80:
-                return "Keine Berechnungsergebnisse verfügbar"
-
-            # Konvertiere zu Dictionaries
-            dict_20 = asdict(result_20)
-            dict_80 = asdict(result_80)
-
-            # Spaltenbreiten
-            col1_width = 25  # Parameter Name
-            col2_width = 20  # -20°C Werte
-            col3_width = 20  # 80°C Werte
-
-            # Erstelle Header
-            lines = []
-            lines.append(f"┌─{'─' * col1_width}─┬─{'─' * col2_width}─┬─{'─' * col3_width}─┐")
-            lines.append(f"│ {'Parameter':<{col1_width}} │ {'-20°C':^{col2_width}} │ {'80°C':^{col3_width}} │")
-            lines.append(f"├─{'─' * col1_width}─┼─{'─' * col2_width}─┼─{'─' * col3_width}─┤")
-
-            # Iteriere durch alle Felder
-            for param_name in dict_20.keys():
-                val_20 = dict_20[param_name]
-                val_80 = dict_80[param_name]
-
-                # Nur nicht-None Werte anzeigen
-                if val_20 is not None and val_80 is not None:
-                    # Formatiere die Werte rechtsbündig
-                    val_20_str = f"{val_20:.4f}"
-                    val_80_str = f"{val_80:.4f}"
-                    lines.append(
-                        f"│ {param_name:<{col1_width}} │ {val_20_str:>{col2_width}} │ {val_80_str:>{col3_width}} │")
-
-            lines.append(f"└─{'─' * col1_width}─┴─{'─' * col2_width}─┴─{'─' * col3_width}─┘")
-
-            return "\n".join(lines)
-
-        state.calc_result_formatted = format_results(state.calc_result)
-
-        # Auf die Ergebnisse zugreifen, um sie in den Text Widgets darzustellen:
+        # Auf die Ergebnisse zugreifen, um sie in dem Text Widgets darzustellen:
         state.F_td_temp_niedrig = round(state.calc_result['F_st_20'].F_td, 2)  if state.calc_result['F_st_20'].F_td not in (None, 0.0) else None
         state.F_td_temp_hoch = round(state.calc_result['F_st_80'].F_td, 2) if state.calc_result['F_st_80'].F_td not in (None, 0.0) else None
         state.F_fd_temp_niedrig = round(state.calc_result['F_st_20'].F_fd, 2) if state.calc_result['F_st_20'].F_fd not in (None, 0.0) else None
@@ -759,6 +720,12 @@ with tgb.Page() as kurzschlusskraefte_page:
                     tgb.html("br")
             with tgb.layout(columns="1 1", columns__mobile="1 1", class_name="p0"):
                 with tgb.part():
+                    tgb.text(value="Seilauslenkung und Abstand", class_name="h6")
+                    tgb.html("hr")
+                    tgb.text(value="Maximale horizontale Seilauslenkung bei {temp_b_h} °C: {b_h_max} m",
+                             class_name="mb-4")
+                    tgb.text(value="Minimaler Leiterabstand bei {temp_b_h} °C: {a_min_min} m", class_name="mb-4")
+                    tgb.html("br")
                     tgb.text(value="Auslegungen der Verbindungsmittel und Unterkonstruktionen", class_name="h6")
                     tgb.html("hr")
                     tgb.text(value="Die Befestigungsmittel von Leiterseilen (z.B. Klemmen) sind für den höchsten der "
@@ -774,17 +741,19 @@ with tgb.Page() as kurzschlusskraefte_page:
                                    "Isolatorkopf angreifende Kraft angegeben.", class_name="mb-4")
                     tgb.html("br")
                 with tgb.part():
-                    tgb.text(value="Seilauslenkung und Abstand", class_name="h6")
+                    tgb.text(value="Erweiterte Ergebnisse", class_name="h6")
                     tgb.html("hr")
-                    tgb.text(value="Maximale horizontale Seilauslenkung bei {temp_b_h} °C: {b_h_max} m", class_name="mb-4")
-                    tgb.text(value="Minimaler Leiterabstand bei {temp_b_h} °C: {a_min_min} m", class_name="mb-4")
-                    tgb.html("br")
-            tgb.text(value="Erweiterte Ergebnisse", class_name="h6")
+                    with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False):
+                        tgb.table(data="{calc_result_formatted}", rebuild=True, number_format="%.3e",
+                                  size="small", width="100%", page_size=6, page_size_options=[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
+            tgb.text(value="Abbildungen", class_name="h6")
             tgb.html("hr")
             with tgb.layout(columns="1", columns__mobile="1"):
-                with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
-                    tgb.text(value="{calc_result_formatted}", mode="pre")
-
+                with tgb.expandable(title="Diagramme", expanded=False):
+                    pass
+                    #tgb.table(data="{calc_result_formatted}", rebuild=True, show_all=True, number_format="%.3e", size="small", width="35%")
+                #with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
+                    #tgb.text(value="{calc_result_formatted}", mode="pre")
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
         with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False):
             tgb.table("{leiterseiltyp}")

@@ -803,7 +803,7 @@ def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> fl
         """
 
     def zielfunktion(η_test):
-        # Ssicherstellen, dass η_test ein Skalar ist
+        # Sicherstellen, dass η_test ein Skalar ist
         η_val = float(np.atleast_1d(η_test)[0])
 
         # Falls η_val außerhalb der Grenzen 0..1 gerät, wird korrigiert für den Solver
