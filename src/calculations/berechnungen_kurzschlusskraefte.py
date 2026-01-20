@@ -599,35 +599,51 @@ def ν_1(μ0: float, I_k: float, a_s: float, n: float, m_s: float, d: float, f: 
     return ν_1
 
 # Gleichung (56)
-def ε_st(F_st: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
+def ε_st(F_st: float, l_c: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
     """
     Funktion zur Berechnung der Dehnungsfaktoren bei der Kontraktion eines Seilbündels ε_st (dimensionslos) nach
     SN EN 60865-1:2012 Kapitel 6.4.1.
     ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
     F_st: statische Seilzugkraft in einem Hauptleiter in N
+    l_c: Seillänge eines Hauptleiters im Spannfeld m
     l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
     N: Steifigkeitsnorm einer Anordnung mit Leiterseilen in 1/N
     a_s: wirksamer Abstand zwischen Teilleitern in m
     n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
     d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
     """
-    ε_st: float = (1.5 * ((F_st * l_s**2 * N) / (a_s - d)**2) * (math.sin(math.radians(180 / n)))**2)
+    # In Abweichung von der Norm wird hier eine Unterscheidung zwischen hier unterschieden, ob Abstandhalter
+    # vorhanden sind oder nicht. Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der
+    # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
+    # verwendet. (Verifiziert mit dem Programm IEC865D)
+    if l_s != 0.0:
+        ε_st: float = (1.5 * ((F_st * l_s**2 * N) / (a_s - d)**2) * (math.sin(math.radians(180 / n)))**2)
+    else:
+        ε_st: float = (1.5 * ((F_st * l_c**2 * N) / (a_s - d)**2) * (math.sin(math.radians(180 / n)))**2)
     return ε_st
 
 # Gleichung (57)
-def ε_pi(F_v: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
+def ε_pi(F_v: float, l_c: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
     """
     Funktion zur Berechnung der Dehnungsfaktoren bei der Kontraktion eines Seilbündels ε_pi (dimensionslos) nach
     SN EN 60865-1:2012 Kapitel 6.4.1.
     ε_pi: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
     F_v: Kurzschluss-Stromkraft zwischen den Teilleitern eines Bündels in N
+    l_c: Seillänge eines Hauptleiters im Spannfeld m
     l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
     N: Steifigkeitsnorm einer Anordnung mit Leiterseilen in 1/N
     a_s: wirksamer Abstand zwischen Teilleitern in m
     n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
     d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
     """
-    ε_pi: float = (0.375 * n * ((F_v * l_s**3 * N) / (a_s - d)**3) * (math.sin(math.radians(180 / n)))**3)
+    # In Abweichung von der Norm wird hier eine Unterscheidung zwischen hier unterschieden, ob Abstandhalter
+    # vorhanden sind oder nicht. Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der
+    # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
+    # verwendet. (Verifiziert mit dem Programm IEC865D)
+    if l_s != 0.0:
+        ε_pi: float = (0.375 * n * ((F_v * l_s**3 * N) / (a_s - d)**3) * (math.sin(math.radians(180 / n)))**3)
+    else:
+        ε_pi: float = (0.375 * n * ((F_v * l_c**3 * N) / (a_s - d)**3) * (math.sin(math.radians(180 / n)))**3)
     return ε_pi
 
 # Gleichung (58)
@@ -643,7 +659,7 @@ def j(ε_st: float, ε_pi: float) -> float:
     return j
 
 # Gleichung (60, 63)
-def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_s: float, d: float, ν_2: float, ν_4: float, ζ: float = None, η: float = None) -> float:
+def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_c: float, l_s: float, d: float, ν_2: float, ν_4: float, ζ: float = None, η: float = None) -> float:
     """
     Funktion zur Berechnung des Faktors ν_e zur Berechnung von F_pi_d (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.4.1.
     ν_e: Faktor zur Berechnung von F_pi_d
@@ -653,6 +669,7 @@ def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_s: 
     a_s: wirksamer Abstand zwischen Teilleitern in m
     N: Steifigkeitsnorm einer Anordnung mit Leiterseilen in 1/N
     n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
+    l_c: Seillänge eines Hauptleiters im Spannfeld m
     l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
     d: Außendurchmesser von Rohrleitern oder Seildurchmesser in m
     ν_2: Faktor zur Berechnung von F_pi_d
@@ -660,13 +677,25 @@ def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_s: 
     ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
     η: Faktor zur Berechnung von Fpi,d bei nicht zusammenschlagenden Bündelleitern (dimensionslos)
     """
+    # In Abweichung von der Norm wird hier eine Unterscheidung zwischen hier unterschieden, ob Abstandhalter
+    # vorhanden sind oder nicht. Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der
+    # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
+    # verwendet. (Verifiziert mit dem Programm IEC865D)
     if j >= 1:
-        ν_e_1: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / ζ**3) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
-        ν_e = ν_e_1
+        if l_s != 0.0:
+            ν_e_1: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / ζ**3) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
+            ν_e = ν_e_1
+        else:
+            ν_e_1: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_c / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / ζ**3) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
+            ν_e = ν_e_1
         return ν_e
     elif j < 1:
-        ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
-        ν_e = ν_e_2
+        if l_s != 0.0:
+            ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
+            ν_e = ν_e_2
+        else:
+            ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_c / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1 / 4)**(1/2)
+            ν_e = ν_e_2
         return ν_e
 
 # Gleichung (61, 64)
@@ -855,6 +884,8 @@ def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> fl
         # Suche nach der Nullstelle mit Startwert 0.5
         η_sol = scipy.optimize.fsolve(zielfunktion, x0=0.5)[0]
         # Das Ergebnis auf den physikalisch sinnvollen Bereich [0, 1] begrenzen
+        print(f"η_sol: {η_sol}")
+        print(f"η_sol_typ: {type(η_sol)}")
         return max(0.0, min(1.0, float(η_sol)))
     except (ValueError, RuntimeError) as e:
         print(f"Solver-Fehler für Berechnung von η: {e}")
@@ -1069,7 +1100,7 @@ def F_pi_d_ohne_j(F_td: float, a_s: float, d: float, l_s: float) -> float:
 
 # Grössen ab Kapitel 6.4.1
 # Gleichung (54)
-def F_v(μ0: float, I_k: float, a_s: float, l_s: float, n: float, ν_2: float, ν_3: float) -> float:
+def F_v(μ0: float, I_k: float, a_s: float, l_c: float, l_s: float, n: float, ν_2: float, ν_3: float) -> float:
     """
     Funktion zur Berechnung der Kurzschluss-Stromkraft zwischen den Teilleitern eines Bündels F_v in N nach
     SN EN 60865-1:2012 Kapitel 6.4.1.
@@ -1077,6 +1108,7 @@ def F_v(μ0: float, I_k: float, a_s: float, l_s: float, n: float, ν_2: float, �
     μ0: magnetische Feldkonstante, Permeabilität des leeren Raumes Vs/(Am)
     I_k: Anfangs-Kurzschlusswechselstrom (Effektivwert) beim dreipoligen Kurzschluss in A
     a_s: wirksamer Abstand zwischen Teilleitern in m
+    l_c: Seillänge eines Hauptleiters im Spannfeld m
     l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts in m
     n: Anzahl der Teilleiter eines Hauptleiters (dimensionslos)
     ν_2: Faktor zur Berechnung von F_pi_d
@@ -1086,7 +1118,14 @@ def F_v(μ0: float, I_k: float, a_s: float, l_s: float, n: float, ν_2: float, �
     Teilleiter als auch der Abstand ls zweier benachbarter Abstandhalter entweder Gleichung (52) ODER Gleichung (53)
     erfüllen.
     """
-    F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_s / a_s) * (ν_2 / ν_3)
+    # In Abweichung von der Norm wird hier eine Unterscheidung zwischen hier unterschieden, ob Abstandhalter
+    # vorhanden sind oder nicht. Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der
+    # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
+    # verwendet. (Verifiziert mit dem Programm IEC865D)
+    if l_s != 0.0:
+        F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_s / a_s) * (ν_2 / ν_3)
+    else:
+        F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_c / a_s) * (ν_2 / ν_3)
     return F_v
 
 # Grössen ab Kapitel 6.4.2

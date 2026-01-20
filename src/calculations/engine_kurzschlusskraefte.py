@@ -285,16 +285,16 @@ class ShortCircuitMediator:
                     result.γ = bkskls.γ(self.inputs.f, result.τ)
                     result.t_pi, result.ν_2 = bkskls.T_pi_and_ν_2(result.ν_1, self.inputs.f, result.τ, result.γ)
                     result.ν_3 = bkskls.ν_3(self.inputs.a_s, self.inputs.d, self.inputs.n)
-                    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
-                    result.ε_st = bkskls.ε_st(F_st, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
-                    result.ε_pi = bkskls.ε_pi(result.F_v, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_c, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                    result.ε_st = bkskls.ε_st(F_st, result.l_c, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
                     # Optional ein If-else einfügen für j=>1 und j<1
                     result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
                     result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
                     result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
-                                            self.inputs.n, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
+                                            self.inputs.n, result.l_c, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
                     result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)
 
             # Einheitenkonvertierung
@@ -465,16 +465,16 @@ class ShortCircuitMediator:
                     result.γ = bkskls.γ(self.inputs.f, result.τ)
                     result.t_pi, result.ν_2 = bkskls.T_pi_and_ν_2(result.ν_1, self.inputs.f, result.τ, result.γ)
                     result.ν_3 = bkskls.ν_3(self.inputs.a_s, self.inputs.d, self.inputs.n)
-                    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
-                    result.ε_st = bkskls.ε_st(F_st, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
-                    result.ε_pi = bkskls.ε_pi(result.F_v, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_c, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                    result.ε_st = bkskls.ε_st(F_st, result.l_c, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
+                    result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
                     # Optional ein If-else einfügen für j=>1 und j<1
                     result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
                     result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
                     result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
-                                            self.inputs.n, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
+                                            self.inputs.n, result.l_c, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
                     result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)
 
             # Einheitenkonvertierung
