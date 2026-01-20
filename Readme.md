@@ -1,4 +1,4 @@
-<img width="1925" height="1084" alt="The-Mechanical-Effects-Of-Short-circuit-Currents-In-Open-Air-Substations_staus" src="https://github.com/user-attachments/assets/5103d3b7-12ee-4a6b-9b82-c5161ed9c1f6" />
+<img width="1925" height="1029" alt="The-Mechanical-Effects-Of-Short-circuit-Currents-In-Open-Air-Substations_staus" src="https://github.com/user-attachments/assets/83d87454-5e75-470b-97e6-8cc11ada1e85" />
 
 ## Seilzugkraft $F_{f,d}$ nach dem Kurzschluss durch das Fallen (Fall-Seilzugkraft) 
 Nach dem Ausschalten des Kurzschlusses pendelt das Seil oder es fällt in seine Ruhelage zurück. Der 
