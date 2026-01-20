@@ -26,12 +26,18 @@ um den Einfluss der Seildehnung sichtbarer zu machen. In der Formel nach (A.10) 
 den Parameter $j$ mitberücksichtigt, weshalb die grafische Aufteilung im Programm nicht erforderlich ist.
 Die Berechnung folgt strikt der analytischen Methode nach IEC 60865-1, Anhang A.10. Die beobachteten Abweichungen zu den 
 Bildern 12a-c resultieren aus der numerischen Exaktheit der Gleichung, die im Gegensatz zur grafischen Darstellung keine 
-Linearisierungen vornimmt. Dies führt zu einer konservativen und damit sicherheitsgerichteten Auslegung.
+Linearisierungen zwischen den Verhältnissen von $a_s/d$ in den angegebenen Bereichen vornimmt. 
+Dies führt zu einer konservativen und damit sicherheitsgerichteten Auslegung. Die resultierenden Werte für $\eta$wurden 
+mit dem Programm IEC865D verfiziert.
 
-Info:
 Es gibt zwei Pfade:<br>
-$\eta < 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. Hier wird das berechnete $\eta$ verwendet. <br>
-$\eta = 1.0$: Die Leiter schlagen zusammen. Es wird die Formel mit dem Faktor $i_s$ (Gleichung 60) verwendet.
+$j ≥ 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. Hier wird das berechnete $\eta$ (Gleichung A.10 Bild 12) verwendet. <br>
+$j < 1.0$: Die Leiter schlagen zusammen. Es wird die Formel mit dem Faktor $\xi$ (Gleichung A.9 Bild 11) verwendet.
+
+In Abweichung von der Norm [3]  wird  unterschieden, ob Abstandhalter vorhanden sind oder nicht. 
+Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der Abstandshalter nach [4] gerechnet. 
+Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
+verwendet. Dieser Ansatz wurde mit dem Programm IEC865D verifiziert.
 
 ## Einzellasten
 Bei der Berechnung der Seilzugkräfte durch Ausschwingen $F_{t,d}$ und Fallen $F_{f,d}$ des Spannfeldes werden
@@ -92,10 +98,5 @@ Formel zur Berechnung von $T_{pi}$, diese nicht in der Norm erwähnt ist.
 $$T_{pi} = 1,15 \cdot \sqrt{\frac{m_s \cdot (a_s - d_s)}{F'_{pi}}}$$
 
 Weitere Tipps:
-Vorsicht bei math.radians():<br>
-$math.sin(math.radians())$ ist korrekt für statische Winkel wie $180^\circ$ oder $90^\circ$.<br>
-Achtung: Die Terme in der Norm, die $\pi$ enthalten (z. B. $2\pi f T_{pi}$), sind bereits im Bogenmass.<br>
-Diese darfman nicht noch einmal durch $math.radians()$ verfälschen, da sonst Python mit winzigen Werten weiter rechnet.
-
 Richtig: $math.sin(math.pi / n)$<br>
 Falsch: $math.sin(math.radians(math.pi / n)$
