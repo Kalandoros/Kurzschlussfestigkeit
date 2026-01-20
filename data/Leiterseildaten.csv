@@ -1,4 +1,5 @@
 ﻿Bezeichnung;Querschnitt eines Teilleiters;Aussendurchmesser;Massenbelag eines Teilleiters;Elastizitätsmodul;Längenausdehnungskoeffizient;Normbezeichnung;Rechnerische Bruchkraft;Dauerstrombelastbarkeit;Kurzzeitstromdichte
+EN  600-AL1;600.38;31.68;1.6800;55000;0.000023;600-Ad;106.45;;2.7E-19
 16-AL1 (16);15.9;5.1;0.0434;60000;0.000023; 16-E-Al;3.02;;2.7E-19
 24-AL1 (25);24.2;6.3;0.0663;60000;0.000023; 25-E-Al;4.36;;2.7E-19
 34-AL1 (35);34.4;7.5;0.0939;60000;0.000023; 35-E-Al;6.01;;2.7E-19

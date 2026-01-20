@@ -66,6 +66,7 @@ f: None|float = None
 m_c: None|float = None
 l: None|float = None
 l_i: None|float = None
+l_h_f: None|float = None
 a: None|float = None
 a_s: None|float = None
 F_st_20: None|float = None
@@ -139,6 +140,7 @@ def on_click_zurücksetzen(state):
     state.leiterseiltyp_selected = None
     state.l = None
     state.l_i = None
+    state.l_h_f = None
     state.a = None
     state.teilleiter_selected = "0" # muss int sein
     state.a_s = None
@@ -293,6 +295,7 @@ def on_click_berechnen(state):
             m_c=float(state.m_c) if state.m_c not in (None, 0.0) else None,
             l=float(state.l),
             l_i=float(state.l_i) if state.l_i not in (None, 0.0)  else None,
+            l_h_f= float(state.l_h_f) if state.l_h_f not in (None, 0.0)  else None,
             a=float(state.a),
             a_s=float(state.a_s) if state.a_s not in (None, 0.0) else None,
             F_st_20=float(state.F_st_20),
@@ -617,11 +620,15 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.html("br")
             tgb.text(value="Abstände", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1 1 1", columns__mobile="1 1 1 1"):
-                tgb.number(label="l Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=100.0, step=0.1,
+            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
+                tgb.number(label="l Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=150.0, step=0.1,
                            class_name="input-with-unit m-unit Mui-focused")
-                tgb.number(label="l_i Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=10.0,
+                tgb.number(label="l_i Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=20.0,
                            step=0.1, hover_text="Es ist der Abstand nur einer Abspann-Isolatorkette einzugeben.",
+                           class_name="input-with-unit m-unit Mui-focused")
+                tgb.number(label="l_h_f Länge einer Klemme u. Formfaktor", value="{l_h_f}", min=0.0, max=20.0,
+                           step=0.1, hover_text="Nur bei aufgelegten Leiterseilen anzugeben. Es ist der "
+                                                "Abstand nur einer Klemme und ein Formfaktor anzugeben.",
                            class_name="input-with-unit m-unit Mui-focused")
                 tgb.number(label="a Leitermittenabstand", value="{a}", min=0.0, max=20.0, step=0.1,
                            hover_text="Bei sich verändernden Leitermittenabständen in der Spannfeld (z.B. zueinander "
@@ -629,8 +636,8 @@ with tgb.Page() as kurzschlusskraefte_page:
                                       "unterschiedlich sind, ist der Mittelwert, also der über die Länge gemittelte "
                                       "Abstand, zu verwenden.",
                            class_name="input-with-unit m-unit Mui-focused")
-                tgb.number(label="a_s wirksamer Abstand zwischen Teilleitern", value="{a_s}", min=0.0, step=0.1,
-                           class_name="input-with-unit m-unit Mui-focused")
+                tgb.number(label="a_s wirksamer Abstand zwischen Teilleitern", value="{a_s}", min=0.0, max=5.0, step=0.1,
+                           hover_text="Nur bei mehreren Teilleitern anzugeben.", class_name="input-with-unit m-unit Mui-focused")
             tgb.html("br")
             tgb.text(value="Mechanische Kraftwerte", class_name="h6")
             tgb.html("hr")
@@ -735,7 +742,7 @@ with tgb.Page() as kurzschlusskraefte_page:
                                    "Isolatorketten, Verbindungsmittel, Fundamente und Stützisolatoren ist der höchste "
                                    "der Werte Ft,d, Ff,d, Fpi,d, hier {F_td_fd_pi_d_massg_2} kN, als "
                                    "statische Last anzusetzen.", class_name="mb-4")
-                    tgb.text(value="Der Bemessungswert der Festigkeit, der Unterkonstruktionen und Stützisolatoren "
+                    tgb.text(value="Der Bemessungswert der Festigkeit, der Unterkonstruktionen, der Stahlgerüste und Stützisolatoren "
                                    "muss mindestens {F_td_fd_pi_d_massg_2} kN betragen. Bei durch Biegekräfte "
                                    "beanspruchten Stützisolatoren wird der Bemessungswert der Festigkeit als eine am "
                                    "Isolatorkopf angreifende Kraft angegeben.", class_name="mb-4")

@@ -62,6 +62,21 @@ def l_c(l: float, l_i: float) -> float:
     l_c: float = l - (2 * l_i)
     return l_c
 
+def l_eff(l: float, l_h_f: float) -> float:
+    """
+    Funktion zur Berechnung der Seillänge lc eines Hauptleiters im Spannfeld in m nach SN EN 60865-1:2012 Kapitel 6.2.2
+    l_c: Seillänge eines Hauptleiters im Spannfeld in m
+    l: Mittenabstand der Stützpunkte in m
+    l_h_f: Länge einer Klemme u. Formfaktor in m
+    a: Leitermittenabstand in m
+    Erläuterung zu lc:
+    Bei Feldern mit aufgelegten Seilen, die Stützisolatoren auf Biegung beanspruchen, gilt lc = l. Bei Feldern mit
+    abgespannten Seilen gilt l_c = l − 2 * l_i, dabei ist li die Länge einer Abspann-Isolatorkette.
+    (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
+    """
+    l_eff: float = l - (2 * l_h_f)
+    return l_eff
+
 # Gleichung (20)
 def r(F_: float, n: float, m_s: float, g: float) -> float:
     """

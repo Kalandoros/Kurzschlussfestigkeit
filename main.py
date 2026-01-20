@@ -22,6 +22,6 @@ if __name__ == "__main__":
         watermark="© Angelo Rusvai", 
         margin="2em", 
         dark_mode=False, 
-        debug=True
-
+        debug=True,
+        port="auto"
     )

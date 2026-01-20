@@ -34,6 +34,7 @@ class Kurschlusskräfte_Input:
     # Abstände
     l: float
     l_i: Optional[float]
+    l_h_f: Optional[float]
     a: float
     a_s: Optional[float]
 
@@ -65,6 +66,7 @@ class Kurschlusskräfte_Input:
 @dataclass(slots=True)
 class ShortCircuitResult:
     l_c: Optional[float] = None
+    l_eff: Optional[float] = None
     m_c: Optional[float] = None
     F_a: Optional[float] = None
     r: Optional[float] = None
@@ -376,13 +378,13 @@ class ShortCircuitMediator:
             result = ShortCircuitResult()
 
             # Schritt 1: Effektive Seillänge
-            #result.l_c = bkskls.l_c(self.inputs.l, self.inputs.l_i)
+            result.l_eff = bkskls.l_eff(self.inputs.l, self.inputs.l_h_f)
 
             # Schritt 1a: Massenbelag konzentrischer Lasten
             result.m_c = bkskls.m_c(self.inputs.m_c, self.inputs.n, self.inputs.l)
 
             # Schritt 2: Charakteristischer elektromagnetischer Kraftbelag
-            result.F_a = bkskls.F_a(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.l, self.inputs.l, self.inputs.a)
+            result.F_a = bkskls.F_a(self.mu0, self.inputs.standardkurzschlussstroeme, result.l_eff, result.l_eff, self.inputs.a)
 
             # Schritt 3: Verhältnis r
             result.r = bkskls.r(result.F_a, self.inputs.n, self.inputs.m_s + result.m_c, self.g)
@@ -391,7 +393,7 @@ class ShortCircuitMediator:
             result.δ_1 = bkskls.δ_1(result.r)
 
             # Schritt 5: Statischer Durchhang
-            result.f_es = bkskls.f_es(self.inputs.n, self.inputs.m_s + result.m_c, self.g, self.inputs.l, F_st)
+            result.f_es = bkskls.f_es(self.inputs.n, self.inputs.m_s + result.m_c, self.g, result.l_eff, F_st)
 
             # Schritt 6: Periodendauer
             result.T = bkskls.T(result.f_es, self.g)
@@ -403,10 +405,10 @@ class ShortCircuitMediator:
             result.E_eff = bkskls.E_eff(self.inputs.E, F_st, self.inputs.n, self.inputs.A_s, self.σ_fin)
 
             # Schritt 9: Steifigkeitsnorm
-            result.N = bkskls.N(self.inputs.federkoeffizient, self.inputs.l, self.inputs.n, result.E_eff, self.inputs.A_s)
+            result.N = bkskls.N(self.inputs.federkoeffizient, result.l_eff, self.inputs.n, result.E_eff, self.inputs.A_s)
 
             # Schritt 10: Beanspruchungsfaktor
-            result.ζ = bkskls.ζ(self.inputs.n, self.g, self.inputs.m_s + result.m_c, self.inputs.l, F_st, result.N)
+            result.ζ = bkskls.ζ(self.inputs.n, self.g, self.inputs.m_s + result.m_c, result.l_eff, F_st, result.N)
 
             # Schritt 11: Ausschwingwinkel
             result.δ_end = bkskls.δ_end(result.δ_1, self.inputs.t_k, result.T_res)
@@ -430,7 +432,7 @@ class ShortCircuitMediator:
             result.ε_th = bkskls.ε_th(self.inputs.c_th, self.inputs.standardkurzschlussstroeme, self.inputs.n, self.inputs.A_s, self.inputs.t_k, result.T_res)
 
             # Schritt 18: Faktor Durchhangvergrößerung C_D
-            result.C_D = bkskls.C_D(self.inputs.l, result.f_es, result.ε_ela, result.ε_th)
+            result.C_D = bkskls.C_D(result.l_eff, result.f_es, result.ε_ela, result.ε_th)
 
             # Schritt 19: Faktor Durchhangvergrößerung C_F
             result.C_F = bkskls.C_F(result.r)
