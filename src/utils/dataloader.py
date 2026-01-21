@@ -54,26 +54,28 @@ def load_excel_to_df(file_path: str | Path = None) -> pd.DataFrame:
     else:
         file_path = Path(file_path)
 
-    if file_path.exists():
-        try:
-            # Lese ohne Header, da die Excel-Datei vertikal aufgebaut ist
-            raw_data = pd.read_excel(file_path, header=None, na_filter=False)
-            df = pd.DataFrame(raw_data)
-            return df
-        except FileNotFoundError as e:
-            print(f"Excel-Datei nicht gefunden: {e}")
-            return pd.DataFrame()
-        except PermissionError as e:
-            print(f"Keine Leseberechtigung für Excel-Datei: {e}")
-            return pd.DataFrame()
-        except ValueError as e:
-            print(f"Ungültiges Excel-Format oder fehlerhafte Daten: {e}")
-            return pd.DataFrame()
-        except Exception as e:
-            print(f"Unerwarteter Fehler beim Laden der Excel-Datei {file_path}: {e}")
-            return pd.DataFrame()
-    else:
+    if not file_path.exists():
         print(f"Datei {file_path} konnte nicht gefunden werden!")
+        return pd.DataFrame()
+
+    try:
+        # Verwende Context Manager für automatisches Schließen
+        with pd.ExcelFile(file_path, engine='openpyxl') as xlsx:
+            raw_data = pd.read_excel(xlsx, header=None, na_filter=False)
+            df = pd.DataFrame(raw_data)
+        return df
+
+    except FileNotFoundError as e:
+        print(f"Excel-Datei nicht gefunden: {e}")
+        return pd.DataFrame()
+    except PermissionError as e:
+        print(f"Keine Leseberechtigung für Excel-Datei: {e}")
+        return pd.DataFrame()
+    except ValueError as e:
+        print(f"Ungültiges Excel-Format oder fehlerhafte Daten: {e}")
+        return pd.DataFrame()
+    except Exception as e:
+        print(f"Unerwarteter Fehler beim Laden der Excel-Datei {file_path}: {e}")
         return pd.DataFrame()
 
 def convert_excel_to_input_dict(df: pd.DataFrame) -> tuple[dict, list[str], list[str]]:
@@ -189,11 +191,10 @@ def _convert_value(value):
 
     return value
 
+
 def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, output_path: str | Path) -> bool:
     """
-    Exportiert ein Dictionary mit Eingabewerten in eine Excel-Datei.
-    Verwendet eine Vorlagen-Datei als Basis und füllt die Werte aus.
-    Behält die Formatierung der Vorlage bei.
+    Exportiert Dictionary in Excel-Datei basierend auf Vorlage.
 
     Args:
         input_dict: Dictionary mit State-Variablennamen als Keys und Werten
@@ -203,16 +204,13 @@ def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, outp
     Returns:
         True bei Erfolg, False bei Fehler
     """
-    # Unterdrücke ResourceWarning von openpyxl (bekanntes internes Problem)
     warnings.filterwarnings("ignore", category=ResourceWarning, message=".*unclosed file.*")
 
-    # Lade die Vorlage
     template_path = Path(template_path)
     if not template_path.exists():
         print(f"Vorlage nicht gefunden: {template_path}")
         return False
 
-    # Reverse Mapping: State-Variablennamen zu Excel-Zeilennamen
     reverse_field_mapping = {
         'leiterseilbefestigung_selected': 'Art der Leiterseilbefestigung',
         'schlaufe_in_spannfeldmitte_selected': 'Schlaufe in Spannfeldmitte',
@@ -229,7 +227,7 @@ def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, outp
         'm_c': 'm_c Summe konzentrischer Massen im Spannfeld',
         'l': 'l Mittenabstand der Stützpunkte',
         'l_i': 'l_i Länge einer Abspann-Isolatorkette',
-        'l_h_f Länge einer Klemme u. Formfaktor': 'l_h_f',
+        'l_h_f': 'l_h_f Länge einer Klemme u. Formfaktor',
         'a': 'a Leitermittenabstand',
         'a_s': 'a_s wirksamer Abstand zwischen Teilleitern',
         'F_st_20': 'Fst-20 statische Seilzugkraft in einem Hauptleiter',

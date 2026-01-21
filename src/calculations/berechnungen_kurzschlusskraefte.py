@@ -813,18 +813,21 @@ def ξ(j: float, ε_st: float) -> float:
     ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
     Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
     """
-    ξ = sympy.symbols(names='ξ', real=True)
-    polynom = (ξ**3) + (ε_st * ξ**2) - ((j**2)*(1 + ε_st))
-    gl_Zeta = sympy.solve(polynom, ξ)
+    if j >= 1:
+        ξ = sympy.symbols(names='ξ', real=True)
+        polynom = (ξ**3) + (ε_st * ξ**2) - ((j**2)*(1 + ε_st))
+        gl_Zeta = sympy.solve(polynom, ξ)
 
-    list_sol: [list] = []
-    for i in gl_Zeta:
-        if  j**(2/3) <= i <= j:
-            list_sol.append(i)
-        else:
-            break
-    return list_sol[0]
-    #return gl_Zeta
+        list_sol: [list] = []
+        for i in gl_Zeta:
+            if  j**(2/3) <= i <= j:
+                list_sol.append(i)
+            else:
+                break
+        return list_sol[0] # if len(list_sol) >= 1 else None
+        return gl_Zeta
+    else:
+        return None
 
 # Gleichung (A.10 Bild 12)
 def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> float:
@@ -884,11 +887,11 @@ def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> fl
         # Suche nach der Nullstelle mit Startwert 0.5
         η_sol = scipy.optimize.fsolve(zielfunktion, x0=0.5)[0]
         # Das Ergebnis auf den physikalisch sinnvollen Bereich [0, 1] begrenzen
-        print(f"η_sol: {η_sol}")
-        print(f"η_sol_typ: {type(η_sol)}")
+        #print(f"η_sol: {η_sol}")
+        #print(f"η_sol_typ: {type(float(η_sol))}")
         return max(0.0, min(1.0, float(η_sol)))
     except (ValueError, RuntimeError) as e:
-        print(f"Solver-Fehler für Berechnung von η: {e}")
+        #print(f"Solver-Fehler für Berechnung von η: {e}")
         return 0.0
 
 # Gleichung (A.10 Bild 12)

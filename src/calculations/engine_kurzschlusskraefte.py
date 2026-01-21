@@ -290,9 +290,9 @@ class ShortCircuitMediator:
                     result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
                     # Optional ein If-else einfügen für j=>1 und j<1
-                    result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
                     result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
+                    result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, result.η)
                     result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
                                             self.inputs.n, result.l_c, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
                     result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)
@@ -470,9 +470,9 @@ class ShortCircuitMediator:
                     result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
                     # Optional ein If-else einfügen für j=>1 und j<1
-                    result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, self.inputs.n)
                     result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
+                    result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, result.η)
                     result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
                                             self.inputs.n, result.l_c, result.l_s, self.inputs.d, result.ν_2, result.ν_4, result.ξ, result.η)
                     result.F_pi_d = bkskls.F_pi_d_mit_j(F_st, result.j, result.ν_e, result.ε_st, result.ξ, result.η)

@@ -2,6 +2,8 @@ import taipy.gui.builder as tgb
 from taipy.gui import Gui
 from src.pages import kurzschlusskraefte_page, root_page, on_menu_action
 
+# Importiere das komplette Modul, damit Taipy die Variablen findet
+from src.pages.kurzschlusskraefte import content_vorlage
 
 with tgb.Page() as home_page:
     tgb.text(value="# Willkommen", mode="md")

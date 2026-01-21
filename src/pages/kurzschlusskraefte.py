@@ -10,7 +10,7 @@ from datetime import datetime
 import tempfile
 import traceback
 import math
-from src.utils import dataloader, formatter
+from src.utils import dataloader, formatter, helper
 from src.calculations.engine_kurzschlusskraefte import Kurschlusskräfte_Input, ShortCircuitResult, calculate_short_circuit
 
 # Configuration for pandas
@@ -82,7 +82,7 @@ l_s_8: None|float = None
 l_s_9: None|float = None
 l_s_10: None|float = None
 
-content_vorlage: str = ""
+content_vorlage: None|dict = None
 vorlage_backup: None|dict = None
 
 F_td_temp_niedrig: None|float|str = ""
@@ -359,10 +359,12 @@ def on_click_berechnen(state):
         notify(state, notification_type="success", message="Berechnung abgeschlossen", duration=5000)
 
     except ValueError as ve:
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(ve)}", duration=15000)
+        error_msg = helper.format_exception_message(ve, show_chain=True)
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ve)}", duration=15000)
 
     except IndexError as ie:
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(ie)}", duration=15000)
+        error_msg = helper.format_exception_message(ie, show_chain=True)
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ie)}", duration=15000)
 
     except NotImplementedError as nie:
         # Behandlung für noch nicht implementierte Fälle
@@ -373,13 +375,15 @@ def on_click_berechnen(state):
     except Exception as e:
         print(f"Detaillierter Fehler:")
         traceback.print_exc()
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung: {str(e)}",
+        tb = traceback.extract_tb(e.__traceback__)
+        error_msg = helper.format_exception_message(e, show_chain=True)
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(e)}",
                duration=15000)
+
 
 def on_click_load_vorlage(state):
     """
-    Callback-Funktion, die aufgerufen wird, wenn der "Vorlage laden" Button geklickt wird.
-    Lädt die Eingabedaten aus der hochgeladenen Datei und setzt die GUI Widgets entsprechend.
+    Lädt Vorlage aus Excel und setzt GUI-Widgets.
     """
     # Check if file_selector has content (it can be a string path or empty)
     file_path = state.content_vorlage
@@ -425,7 +429,8 @@ def on_click_load_vorlage(state):
         message = f"✓ {len(loaded_fields)} Felder geladen"
         if skipped_fields:
             # Nur optionale Felder anzeigen, wenn sie übersprungen wurden
-            optional_keywords = ['Phasenabstandshalter', 'Summe konzentrischer Massen', 'Länge einer Abspann-Isolatorkette', 'wirksamer Abstand']
+            optional_keywords = ['Phasenabstandshalter', 'Summe konzentrischer Massen',
+                                 'Länge einer Abspann-Isolatorkette', 'wirksamer Abstand']
             optional_skipped = [f for f in skipped_fields if any(kw in f for kw in optional_keywords)]
             required_skipped = [f for f in skipped_fields if f not in optional_skipped]
 
@@ -434,8 +439,13 @@ def on_click_load_vorlage(state):
 
         notify(state, notification_type="success", message=message, duration=5000)
 
+        # WICHTIG: Setze content_vorlage zurück, um Memory Leak zu vermeiden
+        state.content_vorlage = None
+
     except Exception as e:
         notify(state, notification_type="error", message=f"Fehler beim Laden der Datei: {str(e)}")
+        # Setze auch bei Fehler zurück
+        state.content_vorlage = None
 
 def on_click_undo_vorlage(state):
     """
@@ -694,7 +704,7 @@ with tgb.Page() as kurzschlusskraefte_page:
                 tgb.button(label="Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen, class_name="fullwidth")
             tgb.html("br")
             with tgb.layout(columns="1 1 1 1", columns__mobile="1 1 1 1", class_name="p0"):
-                tgb.file_selector(content="{content_vorlage}", label="Vorlage auswählen", extensions=".csv,.xlsx",
+                tgb.file_selector(content="{content_vorlage}", label="Vorlage auswählen", extensions=".xlsx",
                                   drop_message="Drop Message", class_name="fullwidth")
                 tgb.button(label="Vorlage laden", on_action=on_click_load_vorlage, class_name="fullwidth")
                 tgb.button(label="Laden Rückgängig", on_action=on_click_undo_vorlage, class_name="fullwidth")
