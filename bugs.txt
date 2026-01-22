@@ -1,0 +1,208 @@
+[2026-01-22 00:09:32.507][Taipy][INFO]  * Server reloaded on http://127.0.0.1:53785
+1450
+[2026-01-22 00:10:32.859][Taipy][INFO]  * Server reloaded on http://127.0.0.1:61428
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\data\data_scope.py:52: TaipyGuiWarning: Session id 20260122000942041386-0.36029621930958733 not found in data scope. Taipy will automatically create a scope for this session id but you may have to reload your page.
+  _warn(
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'teilleiter_selected_TPMDL_2' in module '__main__'.
+  _warn(
+[2026-01-22 00:10:42.792][Taipy][INFO]  * Server reloaded on http://127.0.0.1:53108
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'federkoeffizient_selected_TPMDL_2' in module '__main__'.
+  _warn(
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'F_st_20_TPMDL_2' in module '__main__'.
+  _warn(
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'F_st_80_TPMDL_2' in module '__main__'.
+  _warn(
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'l_TPMDL_2' in module '__main__'.
+  _warn(
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'l_h_f_TPMDL_2' in module '__main__'.
+  _warn(
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'a_TPMDL_2' in module '__main__'.
+  _warn(
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'a_s_TPMDL_2' in module '__main__'.
+  _warn(
+
+1450
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 468, in run_calculation_3_1
+    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_c, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 1131, in F_v
+    F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_c / a_s) * (ν_2 / ν_3)
+                                                                     ~~~~^~~~~
+TypeError: unsupported operand type(s) for /: 'NoneType' and 'float'
+[2026-01-22 00:14:07.023][Taipy][INFO]  * Server reloaded on http://127.0.0.1:63124
+C:\Users\angel\anaconda3\envs\Taipy\Lib\site-packages\taipy\gui\gui.py:702: TaipyGuiWarning: A problem occurred while resolving variable 'leiterseilbefestigung_selected_TPMDL_2' in module '__main__'.
+  _warn(
+1450
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 468, in run_calculation_3_1
+    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_c, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 1131, in F_v
+    F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_c / a_s) * (ν_2 / ν_3)
+                                                                     ~~~~^~~~~
+TypeError: unsupported operand type(s) for /: 'NoneType' and 'float'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 200, in run_calculation_1_1
+    result.l_c = bkskls.l_c(self.inputs.l, self.inputs.l_i)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 62, in l_c
+    l_c: float = l - (2 * l_i)
+                      ~~^~~~~
+TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 200, in run_calculation_1_1
+    result.l_c = bkskls.l_c(self.inputs.l, self.inputs.l_i)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 62, in l_c
+    l_c: float = l - (2 * l_i)
+                      ~~^~~~~
+TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 468, in run_calculation_3_1
+    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_c, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 1131, in F_v
+    F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_c / a_s) * (ν_2 / ν_3)
+                                                                     ~~~~^~~~~
+TypeError: unsupported operand type(s) for /: 'NoneType' and 'float'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 468, in run_calculation_3_1
+    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_c, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 1131, in F_v
+    F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_c / a_s) * (ν_2 / ν_3)
+                                                                     ~~~~^~~~~
+TypeError: unsupported operand type(s) for /: 'NoneType' and 'float'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 468, in run_calculation_3_1
+    result.F_v = bkskls.F_v(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.l_c, result.l_s, self.inputs.n, result.ν_2, result.ν_3)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 1131, in F_v
+    F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_c / a_s) * (ν_2 / ν_3)
+                                                                     ~~~~^~~~~
+TypeError: unsupported operand type(s) for /: 'NoneType' and 'float'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 381, in run_calculation_3_1
+    result.l_eff = bkskls.l_eff(self.inputs.l, self.inputs.l_h_f)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 77, in l_eff
+    l_eff: float = l - (2 * l_h_f)
+                        ~~^~~~~~~
+TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 381, in run_calculation_3_1
+    result.l_eff = bkskls.l_eff(self.inputs.l, self.inputs.l_h_f)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 77, in l_eff
+    l_eff: float = l - (2 * l_h_f)
+                        ~~^~~~~~~
+TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'
+Detaillierter Fehler:
+Traceback (most recent call last):
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\pages\kurzschlusskraefte.py", line 318, in on_click_berechnen
+    state.calc_result = calculate_short_circuit(inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 495, in calculate_short_circuit
+    return mediator.select_and_run_calculation()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 181, in select_and_run_calculation
+    return calculation_method()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\engine_kurzschlusskraefte.py", line 381, in run_calculation_3_1
+    result.l_eff = bkskls.l_eff(self.inputs.l, self.inputs.l_h_f)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\angel\OneDrive\Documents\GitHub\Kurzschlussfestigkeit\src\calculations\berechnungen_kurzschlusskraefte.py", line 77, in l_eff
+    l_eff: float = l - (2 * l_h_f)
+                        ~~^~~~~~~
+TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'

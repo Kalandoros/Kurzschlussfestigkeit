@@ -2,6 +2,7 @@ from dataclasses import asdict
 
 from pandas import DataFrame
 from pandas.io.clipboard import init_windows_clipboard
+from sympy.core.numbers import NaN
 from taipy.gui import notify, download
 import taipy.gui.builder as tgb
 import pandas as pd
@@ -120,7 +121,7 @@ def on_change_selectable_leiterseiltyp(state):
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
     state.leiterseiltyp = leiterseiltyp[leiterseiltyp["Bezeichnung"] == state.leiterseiltyp_selected]
     notify(state, notification_type="info", message=f'Leiterseiltyp auf {state.leiterseiltyp["Bezeichnung"].values[0]} geändert')
-    print(state.leiterseiltyp["Dauerstrombelastbarkeit"].values[0])
+    #print(state.leiterseiltyp["Dauerstrombelastbarkeit"].values[0])
 
 def on_click_leiterseiltyp_zurücksetzen(state):
     state.leiterseiltyp = dataloader.load_csv_to_df()
@@ -335,7 +336,7 @@ def on_click_berechnen(state):
 
         # Bestimme maximale (massgebende) Werte
         def get_max_value(val1, val2, val3=None):
-            values = [v for v in [val1, val2, val3] if v not in (None, "")]
+            values = [v for v in [val1, val2, val3] if v not in (None, "", NaN)]
             return max(values) if values else ""
 
         # Bestimme minimale (massgebende) Werte

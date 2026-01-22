@@ -1,10 +1,9 @@
 import math
 import scipy
 import sympy
-from scipy.optimize import fsolve
+from scipy.optimize import fsolve, brentq
 from numpy.ma.core import arccos
 import numpy as np
-
 
 
 # Konstanten
@@ -35,7 +34,7 @@ def l_s(l_s_1: float|None = None, l_s_2: float|None = None, l_s_3: float|None = 
 
 # Hilfsgleichungen m_c Masse konzentrischer Massen
 def m_c(m_c: float|None , n: float, l_c: float) -> float:
-    if m_c is not None and m_c != 0.0:
+    if m_c not in (None, 0.0, 0):
         m_c: float = m_c / (n * l_c)
         return m_c
     return 0.0
@@ -59,13 +58,18 @@ def l_c(l: float, l_i: float) -> float:
     abgespannten Seilen gilt l_c = l − 2 * l_i, dabei ist li die Länge einer Abspann-Isolatorkette.
     (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
     """
-    l_c: float = l - (2 * l_i)
-    return l_c
+    if l_i not in (None, 0.0, 0):
+        l_c: float = l - (2 * l_i)
+        return l_c
+    else:
+        l_c: float = l
+        return l_c
 
+# Hilfsgleichungen l_eff bei aufgelegten Seilen
 def l_eff(l: float, l_h_f: float) -> float:
     """
     Funktion zur Berechnung der Seillänge lc eines Hauptleiters im Spannfeld in m nach SN EN 60865-1:2012 Kapitel 6.2.2
-    l_c: Seillänge eines Hauptleiters im Spannfeld in m
+    l_eff: Seillänge eines Hauptleiters im Spannfeld in m bei aufgelegten Seilen
     l: Mittenabstand der Stützpunkte in m
     l_h_f: Länge einer Klemme u. Formfaktor in m
     a: Leitermittenabstand in m
@@ -74,8 +78,12 @@ def l_eff(l: float, l_h_f: float) -> float:
     abgespannten Seilen gilt l_c = l − 2 * l_i, dabei ist li die Länge einer Abspann-Isolatorkette.
     (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
     """
-    l_eff: float = l - (2 * l_h_f)
-    return l_eff
+    if l_h_f not in (None, 0.0, 0):
+        l_eff: float = l - (2 * l_h_f)
+        return l_eff
+    else:
+        l_eff: float = l
+        return l_eff
 
 # Gleichung (20)
 def r(F_: float, n: float, m_s: float, g: float) -> float:
@@ -285,6 +293,85 @@ def ψ_ohne_schlaufe(φ: float, ζ: float) -> float:
     ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
     Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
     """
+    """
+    Berechnung ψ (SN EN 60865-1:2012) im Mehrstufenverfahren:
+    1. Symbolische Methode (Exakte Lösung) 
+    2. Brent's Methode (Garantierte Intervallsuche)
+    3. fsolve (Allgemeiner numerischer Ansatz)
+    """
+    # Definiere die Polynomfunktion für numerische Methoden
+    def f(ψ):
+        return (ψ**3 * φ**2) + ((φ * (2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ * (2 + φ))
+
+    #1. Symbolische Methode (Exakte Lösung)
+    try:
+        ψ_sym = sympy.symbols('ψ', real=True)
+        polynom_sym = (ψ_sym**3 * φ**2) + ((φ * (2 + ζ)) * (ψ_sym**2)) + (ψ_sym * (1 + (2 * ζ))) - (ζ * (2 + φ))
+        solutions = sympy.solve(polynom_sym, ψ_sym)
+
+        valid_sols = [float(s) for s in solutions if 0 <= s <= 1]
+        if valid_sols:
+            return valid_sols[0]
+    except:
+        pass  # Fallen zurück auf numerisch
+    # 2. Brents's Methode (Präferierte numerische Methode)
+    try:
+        # Überprüfen Sie, ob die Zeichen an den Grenzen unterschiedlich sind (erforderlich für Brentq).
+        if f(0) * f(1) <= 0:
+            return brentq(f, 0, 1, xtol=1e-12)
+    except:
+        pass
+    # 3. FSOLVE (Notfallebene mit stabilen Ergebnissen)
+    for start in [0.1, 0.5, 0.9]:
+        try:
+            sol, info, ier, msg = fsolve(f, x0=start, full_output=True)
+            if ier == 1 and 0 <= sol[0] <= 1:
+                return float(sol[0])
+        except:
+            continue
+    return None
+
+def ψ_ohne_schlaufe_backup_1(φ: float, ζ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
+    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
+    def polynom(ψ):
+        return (ψ**3 * φ**2) + ((φ * (2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ * (2 + φ))
+
+    # Suche nach Nullstellen mit verschiedenen Startwerten im Bereich [0, 1]
+    candidates = []
+    for start_value in [0.1, 0.5, 0.9]:
+        try:
+            solution = fsolve(polynom, x0=start_value, full_output=True)
+            ψ_val = solution[0][0]
+            info = solution[1]
+
+            # Prüfen, ob die Lösung konvergiert ist und im gültigen Bereich liegt
+            if info['fvec'][0]**2 < 1e-10 and 0 <= ψ_val <= 1:
+                candidates.append(ψ_val)
+        except:
+            continue
+
+    if candidates:
+        # Wähle die Lösung, die am nächsten zur physikalisch erwarteten liegt
+        return float(candidates[0])
+    else:
+        return None
+
+def ψ_ohne_schlaufe_backup_2(φ: float, ζ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
+    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
     ψ = sympy.symbols(names='ψ', real=True)
     polynom = (ψ**3 * φ**2) + ((φ * ( 2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ*(2 + φ))
     gl_Psi = sympy.solve(polynom, ψ)
@@ -297,6 +384,7 @@ def ψ_ohne_schlaufe(φ: float, ζ: float) -> float:
             return None
     return list_sol[0]
     #return gl_Psi[0]
+
 
 # Grössen ab Kapitel 6.2.4
 # Gleichung (34)
@@ -421,7 +509,7 @@ def δ_ebene_senkrecht(f_es: float, f_ed: float, l_v: float, h: float, w: float)
         δ_ebene_senkrecht: float = arccos(((h +f_es)**2 + f_ed**2 - (l_v**2 - w**2)) / (2 * f_ed * math.sqrt((h +f_es)**2 + w**2))) + arccos((h + f_es) / (math.sqrt((h +f_es)**2 + w**2)))
         return δ_ebene_senkrecht
 
-# Gleichung (40)
+# Gleichung (40, 41)
 def φ_mit_schlaufe(T_k1: float, T_kres: float, r: float, δ_end: float, δ:float, δ_1: float) -> float:
     """
     Funktion zur Berechnung des Faktors φ für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
@@ -447,6 +535,7 @@ def φ_mit_schlaufe(T_k1: float, T_kres: float, r: float, δ_end: float, δ:floa
         if δ_end >= δ:
             φ_3: float = 3 * ((r * math.sin(math.radians(δ))) - (math.cos(math.radians(δ)) - 1))
             φ: float = φ_3
+            return φ
         elif δ_end < δ:
             φ_4: float = 3 * ((r * math.sin(math.radians(δ_end))) - (math.cos(math.radians(δ_end)) - 1))
             φ: float = φ_4
@@ -461,17 +550,45 @@ def ψ_mit_schlaufe(φ: float, ζ: float) -> float:
     ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
     Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
     """
-    ψ = sympy.symbols(names='ψ', real=True)
-    polynom = (ψ**3 * φ**2) + ((φ * ( 2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ*(2 + φ))
-    gl_Psi = sympy.solve(polynom, ψ)
+    """
+       Berechnung ψ (SN EN 60865-1:2012) im Mehrstufenverfahren:
+       1. Symbolische Methode (Exakte Lösung) 
+       2. Brent's Methode (Garantierte Intervallsuche)
+       3. fsolve (Allgemeiner numerischer Ansatz)
+       """
 
-    list_sol: [list] = []
-    for i in gl_Psi:
-        if  0 <= i <= 1:
-            list_sol.append(i)
-        else:
-            return None
-    return list_sol[0]
+    # Definiere die Polynomfunktion für numerische Methoden
+    def f(ψ):
+        return (ψ**3 * φ**2) + ((φ * (2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ * (2 + φ))
+
+    # 1. Symbolische Methode (Exakte Lösung)
+    try:
+        ψ_sym = sympy.symbols('ψ', real=True)
+        polynom_sym = (ψ_sym**3 * φ**2) + ((φ * (2 + ζ)) * (ψ_sym**2)) + (ψ_sym * (1 + (2 * ζ))) - (ζ * (2 + φ))
+        solutions = sympy.solve(polynom_sym, ψ_sym)
+
+        valid_sols = [float(s) for s in solutions if 0 <= s <= 1]
+        if valid_sols:
+            return valid_sols[0]
+    except:
+        pass  # Fallen zurück auf numerisch
+    # 2. Brents's Methode (Präferierte numerische Methode)
+    try:
+        # Überprüfen Sie, ob die Zeichen an den Grenzen unterschiedlich sind (erforderlich für Brentq).
+        if f(0) * f(1) <= 0:
+            return brentq(f, 0, 1, xtol=1e-12)
+    except:
+        pass
+    # 3. FSOLVE (Notfallebene mit stabilen Ergebnissen)
+    for start in [0.1, 0.5, 0.9]:
+        try:
+            sol, info, ier, msg = fsolve(f, x0=start, full_output=True)
+            if ier == 1 and 0 <= sol[0] <= 1:
+                return float(sol[0])
+        except:
+            continue
+    return None
+
 
 # Grössen ab Kapitel 6.2.7 (Horizontale Seilauslenkung und minimaler Leiterabstand)
 # Gleichung (44)
@@ -599,7 +716,7 @@ def ν_1(μ0: float, I_k: float, a_s: float, n: float, m_s: float, d: float, f: 
     return ν_1
 
 # Gleichung (56)
-def ε_st(F_st: float, l_c: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
+def ε_st(F_st: float, l_c: float, l_s: float, l_eff: float, N: float, a_s: float, n: float, d: float) -> float:
     """
     Funktion zur Berechnung der Dehnungsfaktoren bei der Kontraktion eines Seilbündels ε_st (dimensionslos) nach
     SN EN 60865-1:2012 Kapitel 6.4.1.
@@ -616,14 +733,16 @@ def ε_st(F_st: float, l_c: float, l_s: float, N: float, a_s: float, n: float, d
     # vorhanden sind oder nicht. Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der
     # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
     # verwendet. (Verifiziert mit dem Programm IEC865D)
-    if l_s != 0.0:
+    if l_s not in (None, 0.0, 0):
         ε_st: float = (1.5 * ((F_st * l_s**2 * N) / (a_s - d)**2) * (math.sin(math.radians(180 / n)))**2)
+    elif l_eff not in (None, 0.0, 0):
+        ε_st: float = (1.5 * ((F_st * l_eff**2 * N) / (a_s - d)**2) * (math.sin(math.radians(180 / n)))**2)
     else:
         ε_st: float = (1.5 * ((F_st * l_c**2 * N) / (a_s - d)**2) * (math.sin(math.radians(180 / n)))**2)
     return ε_st
 
 # Gleichung (57)
-def ε_pi(F_v: float, l_c: float, l_s: float, N: float, a_s: float, n: float, d: float) -> float:
+def ε_pi(F_v: float, l_c: float, l_s: float, l_eff: float, N: float, a_s: float, n: float, d: float) -> float:
     """
     Funktion zur Berechnung der Dehnungsfaktoren bei der Kontraktion eines Seilbündels ε_pi (dimensionslos) nach
     SN EN 60865-1:2012 Kapitel 6.4.1.
@@ -640,8 +759,10 @@ def ε_pi(F_v: float, l_c: float, l_s: float, N: float, a_s: float, n: float, d:
     # vorhanden sind oder nicht. Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der
     # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
     # verwendet. (Verifiziert mit dem Programm IEC865D)
-    if l_s != 0.0:
+    if l_s not in (None, 0.0, 0):
         ε_pi: float = (0.375 * n * ((F_v * l_s**3 * N) / (a_s - d)**3) * (math.sin(math.radians(180 / n)))**3)
+    elif l_eff not in (None, 0.0, 0):
+        ε_pi: float = (0.375 * n * ((F_v * l_eff**3 * N) / (a_s - d)**3) * (math.sin(math.radians(180 / n)))**3)
     else:
         ε_pi: float = (0.375 * n * ((F_v * l_c**3 * N) / (a_s - d)**3) * (math.sin(math.radians(180 / n)))**3)
     return ε_pi
@@ -659,7 +780,7 @@ def j(ε_st: float, ε_pi: float) -> float:
     return j
 
 # Gleichung (60, 63)
-def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_c: float, l_s: float, d: float, ν_2: float, ν_4: float, ζ: float = None, η: float = None) -> float:
+def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_c: float, l_s: float, l_eff: float, d: float, ν_2: float, ν_4: float, ζ: float = None, η: float = None) -> float:
     """
     Funktion zur Berechnung des Faktors ν_e zur Berechnung von F_pi_d (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.4.1.
     ν_e: Faktor zur Berechnung von F_pi_d
@@ -682,19 +803,25 @@ def ν_e(μ0: float, j: float, I_k: float, a_s: float, N: float, n: float, l_c: 
     # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
     # verwendet. (Verifiziert mit dem Programm IEC865D)
     if j >= 1:
-        if l_s != 0.0:
+        if l_s not in (None, 0.0, 0):
             ν_e_1: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / ζ**3) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
+            ν_e = ν_e_1
+        elif l_eff not in (None, 0.0, 0):
+            ν_e_1: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_eff / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / ζ**3) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
             ν_e = ν_e_1
         else:
             ν_e_1: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_c / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / ζ**3) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
             ν_e = ν_e_1
         return ν_e
     elif j < 1:
-        if l_s != 0.0:
+        if l_s not in (None, 0.0, 0):
             ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_s / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
             ν_e = ν_e_2
+        elif l_eff not in (None, 0.0, 0):
+            ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_eff / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
+            ν_e = ν_e_2
         else:
-            ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_c / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1 / 4)**(1/2)
+            ν_e_2: float = 1/2 + ((9/8) * n * (n - 1) * (μ0 / (2 * math.pi)) * (I_k / n)**2 * N * ν_2 * (l_c / (a_s - d))**4 * (math.sin(math.radians(180 / n))**4 / η**4) * (1 - (math.atan(math.sqrt(ν_4)) / math.sqrt(ν_4))) - 1/4)**(1/2)
             ν_e = ν_e_2
         return ν_e
 
@@ -756,7 +883,114 @@ def T_pi_and_ν_2(ν_1, f, τ, γ) -> float:
     Definition: $$\chi = f \cdot T_{pi}$$
     Kern der Gleichung ist dabei: $$\nu_1 = \chi \cdot \sqrt{\nu_2(\chi)}$$
     Zerlegung der Gleichung in einzelne Teile:
-    $$f(\chi) = \chi \cdot \sqrt{1 - A(\chi) + B(\chi) + C(\chi)} - \nu_1 = 0$$
+    $$f(\chi) = \chi \cdot \sqrt{1 - A(\chi) + B(\chi) - C(\chi)} - \nu_1 = 0$$
+    Diese Nullstelle wird im Programm mittels des Newton-Verfahrens (über scipy.optimize.fsolve) bestimmt.
+    Der resultierende Wert $\chi$ liefert direkt die reale Kontraktionszeit:$$T_{pi} = \frac{\chi}{f}$$
+    """
+    """
+    Berechnet T_pi und ν_2 nach SN EN 60865-1:2012 Anhang A.7 in einer rückfallsicheren Funktion.
+    Kombiniert Brent's Methode und fsolve für maximale Zuverlässigkeit.
+    """
+    y = f * τ
+    x_sol = None
+
+    # 1. Die Kern-Gleichung definieren
+    def equation(x):
+        if x < 1e-12:
+            return -ν_1
+
+        # Komponenten der Schwingungsgleichung
+        two_pi_x = 2 * np.pi * x
+        four_pi_x = 4 * np.pi * x
+        exp_term = np.exp(-x / y)
+
+        A = (np.sin(four_pi_x - 2 * γ) + np.sin(2 * γ)) / four_pi_x
+        B = (y / x) * (1 - exp_term**2) * (np.sin(γ)**2)
+
+        P = (2 * np.pi * y) * (np.cos(two_pi_x - γ) / two_pi_x)
+        Q = np.sin(two_pi_x - γ) / two_pi_x
+        R = (np.sin(γ) - (2 * np.pi * y * np.cos(γ))) / two_pi_x
+
+        M = (P + Q) * exp_term + R
+        C = ((8 * np.pi * y * np.sin(γ)) / (1 + (2 * np.pi * y)**2)) * M
+
+        # Ausdruck unter der Wurzel (ν_2)
+        # np.maximum(0, ...) schützt vor winzigen negativen Werten durch Rundungsfehler
+        val_under_sqrt = 1 - A + B - C
+        return x * np.sqrt(np.maximum(0, val_under_sqrt)) - ν_1
+
+    #Brent's Methode (Sicher im Intervall [0, 2])
+    try:
+        # Wir prüfen, ob ein Vorzeichenwechsel im physikalisch plausiblen Bereich vorliegt
+        if equation(1e-12) * equation(2.0) < 0:
+            x_sol = brentq(equation, 1e-12, 2.0, xtol=1e-12)
+    except ValueError:
+        pass
+
+    #FSOLVE (Backup mit verschiedenen Startpunkten)
+    if x_sol is None:
+        for start_val in [ν_1, 0.1, 0.5, 1.2]:
+            try:
+                sol, info, ier, msg = fsolve(equation, x0=np.array([start_val]), full_output=True)
+                if ier == 1 and sol[0] > 0:
+                    x_sol = float(sol[0])
+                    break
+            except:
+                continue
+
+    # --- FINALE BERECHNUNG ---
+    if x_sol is not None:
+        t_pi = x_sol / f
+        nu2 = (ν_1 / x_sol)**2
+        return float(t_pi), float(nu2)
+    else:
+        return None, None
+
+    y: float = f * τ
+
+    # np anstelle von math, um Vektoren/Arrays direkt zu verarbeiten
+    def equation(x):
+        # fsolve übergibt ein Array. Falls x ≤ 0, geben wir ein Array zurück.
+        if np.any(x <= 0):
+            return np.array([-ν_1])
+
+        # A, B und C mit np-Funktionen berechnet (keine Warnungen mehr!)
+        A: float = (np.sin((4 * np.pi * x) - (2 * γ)) + np.sin(2 * γ)) / (4 * np.pi * x)
+        B: float  = (y / x) * (1 - (np.exp(-((2 * x) / y)))) * (np.sin(γ) ** 2)
+        P: float  = ((2 * np.pi * y) * (np.cos((2 * np.pi * x) - γ) / (2 * np.pi * x)))
+        Q: float  = ((np.sin((2 * np.pi * x) - γ)) / (2 * np.pi * x))
+        R: float  = ((np.sin(γ) - (2 * np.pi) * y * np.cos(γ)) / (2 * np.pi * x))
+        M: float  = ((P + Q) * np.exp(-(x / y)) + R)
+        C: float  = ((8 * np.pi * y * np.sin(γ)) / (1 + (2 * np.pi * y) ** 2)) * M
+
+        sqrt_ν_2: float  = np.sqrt(np.abs(1 - A + B - C))
+
+        # Rückgabe als Array (wie von fsolve erwartet)
+        return x * sqrt_ν_2 - ν_1
+
+    # Startwert x0 als Array übergeben
+    x_solution_array = fsolve(equation, x0=np.array([ν_1]))
+    x_solution = x_solution_array[0]
+
+    t_pi = x_solution / f
+    ν_2 = (ν_1 / x_solution) ** 2
+
+    return t_pi, ν_2
+
+def T_pi_and_ν_2_backup(ν_1, f, τ, γ) -> float:
+    r"""
+    Funktion zur Berechnung des Faktors T_pi zur Berechnung der Zeit vom Kurzschlussbeginn bis zum Erreichen von F_pi
+    in s nach SN EN 60865-1:2012 Kapitel A.7
+    T_pi: Zeit vom Kurzschlussbeginn bis zum Erreichen von F_pi in s
+    ν_2: Faktor zur Berechnung von F_pi_d
+    f: Frequenz des Netzes in Hz
+    τ: Netzzeitkonstante (dimensionslos)
+    γ: Faktor für die Bestimmung der maßgeblichen Eigenfrequenz (dimensionslos)
+    Hinweis:
+    Definition: $$\chi = f \cdot T_{pi}$$
+    Kern der Gleichung ist dabei: $$\nu_1 = \chi \cdot \sqrt{\nu_2(\chi)}$$
+    Zerlegung der Gleichung in einzelne Teile:
+    $$f(\chi) = \chi \cdot \sqrt{1 - A(\chi) + B(\chi) - C(\chi)} - \nu_1 = 0$$
     Diese Nullstelle wird im Programm mittels des Newton-Verfahrens (über scipy.optimize.fsolve) bestimmt.
     Der resultierende Wert $\chi$ liefert direkt die reale Kontraktionszeit:$$T_{pi} = \frac{\chi}{f}$$
     """
@@ -813,6 +1047,63 @@ def ξ(j: float, ε_st: float) -> float:
     ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
     Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
     """
+    """
+    Berechnet den Faktor ξ nach SN EN 60865-1:2012.
+    Gleichung: ξ³ + ε_st * ξ² - j² * (1 + ε_st) = 0
+    Gültigkeitsbereich: j >= 1, gesuchte Wurzel ξ liegt zwischen j^(2/3) und j.
+    """
+    if j < 1:
+        return None
+
+    # Untere und obere Grenze für die physikalische Lösung
+    lower_bound = j**(2 / 3)
+    upper_bound = j
+
+    # Die Funktion für numerische Verfahren
+    def f(xi_val):
+        return (xi_val**3) + (ε_st * xi_val**2) - (j**2 * (1 + ε_st))
+
+    # Symbolisch (SymPy) ---
+    try:
+        xi_sym = sympy.symbols('xi', real=True)
+        polynom = (xi_sym**3) + (ε_st * xi_sym**2) - (j**2 * (1 + ε_st))
+        gl_Zeta = sympy.solve(polynom, xi_sym)
+
+        # Filter: Wir suchen die Wurzel im Bereich [j^(2/3), j]
+        valid_sols = [float(s) for s in gl_Zeta if lower_bound - 1e-7 <= s <= upper_bound + 1e-7]
+        if valid_sols:
+            return float(valid_sols[0])
+    except:
+        pass
+
+    # Brent's Methode (Sicher im Intervall) ---
+    try:
+        # Bei j >= 1 ist f(lower_bound) <= 0 und f(upper_bound) >= 0
+        # Das garantiert eine Lösung im Intervall.
+        return float(brentq(f, lower_bound, upper_bound, xtol=1e-12))
+    except ValueError:
+        pass
+
+    # FSOLVE (Notfall-Fallback) ---
+    # Startwerte: Mitte des Intervalls und die Grenzen
+    for start in [(lower_bound + upper_bound) / 2, lower_bound, upper_bound]:
+        try:
+            sol, info, ier, msg = fsolve(f, x0=np.array([start]), full_output=True)
+            if ier == 1 and lower_bound - 1e-7 <= sol[0] <= upper_bound + 1e-7:
+                return float(sol[0])
+        except:
+            continue
+    return None
+
+def ξ_backup(j: float, ε_st: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ζ zur Berechnung des Beanspruchungsfaktors des Hauptleiters in Seilanordnungen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
+    """
     if j >= 1:
         ξ = sympy.symbols(names='ξ', real=True)
         polynom = (ξ**3) + (ε_st * ξ**2) - ((j**2)*(1 + ε_st))
@@ -831,6 +1122,74 @@ def ξ(j: float, ε_st: float) -> float:
 
 # Gleichung (A.10 Bild 12)
 def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors η zur Berechnung von F_pi bei nicht zusammenschlagenden
+    Bündelleitern (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
+    ε_st: ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    j: j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ν_3: Faktor zur Berechnung von F_pi_d
+    η: Faktor zur Berechnung von Fpi bei nicht zusammenschlagenden Bündelleitern (dimensionslos)
+    a_s: wirksamer Abstand zwischen Teilleitern in m
+    d: Aussendurchmesser von Rohrleitern oder Seildurchmesser in m
+    fη: Faktor zur Beschreibung der Teilleiter-Annäherung im Seilbündel
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
+    """
+    Berechnet den Faktor η nach SN EN 60865-1:2012 Kapitel A.10.
+    Nutzt ein Tiered-Numerical-Modell (Brent + fsolve) für die implizite Gleichung.
+    """
+    # Vorfaktor für asw_as (konstant während der Iteration)
+    sin_n = math.sin(math.radians(180 / n))
+    d_as_ratio = d / a_s
+
+    def zielfunktion(η_val):
+        # 1. Schutz gegen Grenzwert-Überschreitung (0 ≤ η ≤ 1)
+        η_val = max(1e-9, min(1.0 - 1e-9, η_val))
+
+        # 2. Berechnung von 2ya/as
+        u = 1 - (η_val * (1 - d_as_ratio))
+
+        # 3. Berechnung von asw/as (mit numerischem Schutz für u -> 1)
+        # Wenn u -> 1 (η -> 0), geht sqrt((1-u)/u) gegen 0.
+        # Da lim x->0 (x / atan(x)) = 1, ist der Grenzwert stabil.
+        term = math.sqrt((1 - u) / u)
+        if term < 1e-7:
+            asw_as_val = u / sin_n
+        else:
+            asw_as_val = (u / sin_n) * (term / math.atan(term))
+
+        # 4. Berechnung von f_eta
+        val_f_eta = v_3 / asw_as_val
+
+        # 5. Die Zielgleichung: η³ + ε_st * η - j² * (1 + ε_st) * fη = 0
+        return (η_val**3) + (ε_st * η_val) - (j**2 * (1 + ε_st) * val_f_eta)
+
+    # Prüfung der Grenzen (Physik-Check)
+    # Wenn die Funktion bei η=1 noch negativ ist, berühren sich die Leiter (η=1)
+    if zielfunktion(0.99999) < 0:
+        return 1.0
+
+    # Brent's Methode (Sicher und präzise)
+    try:
+        # Suche im Bereich [1e-8, 0.99999]
+        # Da f(0) meist negativ ist (wegen -j²...) und f(1) bei Nicht-Zusammenschlagen positiv
+        if zielfunktion(1e-8) * zielfunktion(0.99999) < 0:
+            return float(brentq(zielfunktion, 1e-8, 0.99999, xtol=1e-12))
+    except (ValueError, RuntimeError):
+        pass
+
+    #FSOLVE (Fallback)
+    for start in [0.2, 0.5, 0.8]:
+        try:
+            sol, info, ier, msg = fsolve(zielfunktion, x0=np.array([start]), full_output=True)
+            if ier == 1:
+                return float(np.clip(sol[0], 0.0, 1.0))
+        except:
+            continue
+
+    return 1.0 # Standardwert bei extremen Fehlern (Zusammenschlagen angenommen)
+
+def η_backup(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> float:
     """
     Funktion zur Berechnung des Faktors η zur Berechnung von F_pi bei nicht zusammenschlagenden
     Bündelleitern (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.10
@@ -1057,7 +1416,7 @@ def F_fd(F_st: float, ζ: float, δ_max: float) -> float:
 
 # Grössen ab Kapitel 6.3
 # Gleichung (49)
-def F_td_verikaler_höhenunterschied_befestigungspunktel(μ0: float, I_k: float, l_v: float, a: float, w: float) -> float:
+def F_td_verikaler_höhenunterschied_befestigungspunkte(μ0: float, I_k: float, l_v: float, a: float, w: float) -> float:
     """
     Funktion zur Berechnung der Kraft F_td Kurzschluss-Seilzugkraft in einem Hauptleiter (Bemessungswert) in
     Seilanordnungen in N nach SN EN 60865-1:2012 Kapitel 6.3.
@@ -1095,7 +1454,6 @@ def F_pi_d_ohne_j(F_td: float, a_s: float, d: float, l_s: float) -> float:
         F_pi_d_ohne_j_1: float = 1.1 * F_td
         F_pi_d_ohne_j = F_pi_d_ohne_j_1
         return F_pi_d_ohne_j
-
     elif a_s / d <= 2.5 and l_s >= 70 * a_s:
         F_pi_d_ohne_j_2: float = 1.1 * F_td
         F_pi_d_ohne_j = F_pi_d_ohne_j_2
@@ -1103,7 +1461,7 @@ def F_pi_d_ohne_j(F_td: float, a_s: float, d: float, l_s: float) -> float:
 
 # Grössen ab Kapitel 6.4.1
 # Gleichung (54)
-def F_v(μ0: float, I_k: float, a_s: float, l_c: float, l_s: float, n: float, ν_2: float, ν_3: float) -> float:
+def F_v(μ0: float, I_k: float, a_s: float, l_c: float, l_s: float, l_eff: float, n: float, ν_2: float, ν_3: float) -> float:
     """
     Funktion zur Berechnung der Kurzschluss-Stromkraft zwischen den Teilleitern eines Bündels F_v in N nach
     SN EN 60865-1:2012 Kapitel 6.4.1.
@@ -1125,8 +1483,10 @@ def F_v(μ0: float, I_k: float, a_s: float, l_c: float, l_s: float, n: float, ν
     # vorhanden sind oder nicht. Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der
     # gerechnet. Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
     # verwendet. (Verifiziert mit dem Programm IEC865D)
-    if l_s != 0.0:
+    if l_s not in (None, 0.0, 0):
         F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_s / a_s) * (ν_2 / ν_3)
+    elif l_eff not in (None, 0.0, 0):
+        F_v: float = (n - 1) * (μ0 / (2 * math.pi)) * ((I_k / n)**2) * (l_eff / a_s) * (ν_2 / ν_3)
     else:
         F_v: float = (n - 1) * (μ0 / (2 * math.pi))  * ((I_k / n)**2) * (l_c / a_s) * (ν_2 / ν_3)
     return F_v
