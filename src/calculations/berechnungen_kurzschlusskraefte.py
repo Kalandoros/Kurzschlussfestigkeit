@@ -1,4 +1,4 @@
-import math
+﻿import math
 import scipy
 import sympy
 from scipy.optimize import fsolve, brentq
@@ -343,6 +343,7 @@ def ψ_ohne_schlaufe(φ: float, ζ: float) -> float:
         except:
             continue
     return None
+
 
 def ψ_ohne_schlaufe_backup_1(φ: float, ζ: float) -> float:
     """
@@ -1728,5 +1729,6 @@ if __name__ == "__main__":
 
     print(ψ_ohne_schlaufe(φ= 1.57, ζ= 1.1))
     print(ψ_ohne_schlaufe(φ= 1.57, ζ= 2.7))
+
 
 

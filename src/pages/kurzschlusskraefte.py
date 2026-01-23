@@ -12,6 +12,7 @@ import tempfile
 import traceback
 import math
 from src.utils import dataloader, formatter, helper
+from src.calculations.engine_kurzschlusskraefte import calculate_short_circuit_sweep_df
 from src.calculations.engine_kurzschlusskraefte import Kurschlusskräfte_Input, ShortCircuitResult, calculate_short_circuit
 
 # Configuration for pandas
@@ -115,6 +116,7 @@ a_min_min: None|float|str = ""
 
 calc_result: None|ShortCircuitResult = None
 calc_result_formatted: None|DataFrame = None
+sweep_calc_df: None|DataFrame = None
 
 
 def on_change_selectable_leiterseiltyp(state):
@@ -194,6 +196,8 @@ def on_click_zurücksetzen(state):
 
     state.calc_result = None
     state.calc_result_formatted = None
+    state.sweep_calc_df = None
+
 
 def on_click_berechnen(state):
     if not state.leiterseiltyp_selected:
@@ -358,6 +362,16 @@ def on_click_berechnen(state):
         state.a_min_min = get_min_value(state.a_min_temp_niedrig, state.a_min_temp_hoch)
 
         notify(state, notification_type="success", message="Berechnung abgeschlossen", duration=5000)
+
+        try:
+            state.sweep_calc_df = calculate_short_circuit_sweep_df(inputs)
+            print("Sweep calc df preview:")
+            print(state.sweep_calc_df.head(10).to_string(index=False))
+            notify(state, notification_type="success", message=f"Diagramm Daten: {len(state.sweep_calc_df)} Zeilen", duration=5000)
+        except Exception as sweep_error:
+            state.sweep_calc_df = None
+            notify(state, notification_type="warning",
+                   message=f"Diagramm konnte nicht erstellt werden: {str(sweep_error)}", duration=10000)
 
     except ValueError as ve:
         error_msg = helper.format_exception_message(ve, show_chain=True)
@@ -768,10 +782,39 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.html("hr")
             with tgb.layout(columns="1", columns__mobile="1"):
                 with tgb.expandable(title="Diagramme", expanded=False):
-                    pass
+                    tgb.chart(data="{sweep_calc_df}", x="F_st_20",
+                              y=["F_td_20", "F_td_80", "F_fd_20", "F_fd_80", "F_pi_d_20", "F_pi_d_80"],
+                              mode="lines", rebuild=True, height="800px",
+                              layout={
+                                  "paper_bgcolor": "white",
+                                  "plot_bgcolor": "white",
+                                  "font": {"family": "Times New Roman", "size": 12, "color": "black"},
+                                  "xaxis": {
+                                      "title": "statische Seilzugkraft (kN)",
+                                      "showline": True,
+                                      "linecolor": "black",
+                                      "ticks": "outside",
+                                      "tickcolor": "black",
+                                      "gridcolor": "#d0d0d0",
+                                  },
+                                  "yaxis": {
+                                      "title": "Kraft (kN)",
+                                      "rangemode": "tozero",
+                                      "showline": True,
+                                      "linecolor": "black",
+                                      "ticks": "outside",
+                                      "tickcolor": "black",
+                                      "gridcolor": "#d0d0d0",
+                                      "zeroline": True,
+                                      "zerolinecolor": "black",
+                                  },
+                                  "legend": {"title": {"text": "Reihen"}, "orientation": "h", "y": -0.2, "x": 0},
+                                  "margin": {"l": 60, "r": 20, "t": 20, "b": 60},
+                              })
                     #tgb.table(data="{calc_result_formatted}", rebuild=True, show_all=True, number_format="%.3e", size="small", width="35%")
                 #with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
                     #tgb.text(value="{calc_result_formatted}", mode="pre")
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
         with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False):
             tgb.table("{leiterseiltyp}")
+

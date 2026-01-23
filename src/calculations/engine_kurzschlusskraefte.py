@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from typing import Optional, Callable
 import math
 import scipy.constants
@@ -179,19 +179,100 @@ class ShortCircuitMediator:
         # Führe die ausgewählte Berechnung durch
         return calculation_method()
 
+    def calculate_sweep_f_st(self, f_st_min: float = 0.1, f_st_max: float = 40.0,
+                             f_st_step: float = 0.01) -> dict[float, dict[str, ShortCircuitResult]]:
+        """
+        Berechnet die Kurzschlusskräfte für eine Reihe von F_st-Werten.
+
+        Args:
+            f_st_min: Untere Grenze in kN.
+            f_st_max: Obere Grenze in kN.
+            f_st_step: Schrittweite in kN.
+        """
+        if f_st_step <= 0:
+            raise ValueError("f_st_step muss groesser als 0 sein.")
+        if f_st_max < f_st_min:
+            raise ValueError("f_st_max muss groesser oder gleich f_st_min sein.")
+
+        results: dict[float, dict[str, ShortCircuitResult]] = {}
+        original_f_st_20 = self.inputs.F_st_20
+        original_f_st_80 = self.inputs.F_st_80
+
+        try:
+            steps = int(round((f_st_max - f_st_min) / f_st_step))
+            for i in range(steps + 1):
+                f_st_value = f_st_min + (i * f_st_step)
+                f_st_internal = f_st_value * 10 ** 3
+                self.inputs.F_st_20 = f_st_internal
+                self.inputs.F_st_80 = f_st_internal
+                results[f_st_value] = self.select_and_run_calculation()
+        finally:
+            self.inputs.F_st_20 = original_f_st_20
+            self.inputs.F_st_80 = original_f_st_80
+
+        return results
+
+    def calculate_sweep_f_st_dataframe(self, f_st_min: float = 0.1, f_st_max: float = 40.0,
+                                       f_st_step: float = 0.01):
+        """
+        Berechnet die Kurzschlusskraefte fuer eine Reihe von F_st-Werten
+        und gibt eine Pandas-DataFrame zurueck.
+
+        Spalten: F_st (kN), F_td_20, F_fd_20, F_pi_d_20, F_td_80, F_fd_80, F_pi_d_80.
+        """
+        if f_st_step <= 0:
+            raise ValueError("f_st_step muss groesser als 0 sein.")
+        if f_st_max < f_st_min:
+            raise ValueError("f_st_max muss groesser oder gleich f_st_min sein.")
+
+        import pandas as pd
+
+        rows = []
+        original_f_st_20 = self.inputs.F_st_20
+        original_f_st_80 = self.inputs.F_st_80
+
+        try:
+            steps = int(round((f_st_max - f_st_min) / f_st_step))
+            for i in range(steps + 1):
+                f_st_value = f_st_min + (i * f_st_step)
+                f_st_internal = f_st_value * 10 ** 3
+                self.inputs.F_st_20 = f_st_internal
+                self.inputs.F_st_80 = f_st_internal
+                calc_result = self.select_and_run_calculation()
+
+                result_20 = calc_result.get("F_st_20")
+                result_80 = calc_result.get("F_st_80")
+
+                rows.append({
+                    "F_st": f_st_value,
+                    "F_st_20": f_st_value,
+                    "F_st_80": f_st_value,
+                    "F_td_20": result_20.F_td if result_20 else None,
+                    "F_fd_20": result_20.F_fd if result_20 else None,
+                    "F_pi_d_20": result_20.F_pi_d if result_20 else None,
+                    "F_td_80": result_80.F_td if result_80 else None,
+                    "F_fd_80": result_80.F_fd if result_80 else None,
+                    "F_pi_d_80": result_80.F_pi_d if result_80 else None,
+                })
+        finally:
+            self.inputs.F_st_20 = original_f_st_20
+            self.inputs.F_st_80 = original_f_st_80
+
+        return pd.DataFrame(rows)
+
     def run_calculation_1_1(self) -> dict[str, ShortCircuitResult]:
         """
         Fall 1.1: Abgespannte Leiterseile ohne Schlaufe, ohne Höhenunterschied
-        
+
         Anwendungsbereich:
         - Leiterseilbefestigung: Abgespannt
         - Schlaufe in Spannfeldmitte: Nein
         - Höhenunterschied >25%: Nein
-        
+
         Norm: SN EN 60865-1:2012 Kapitel 6.2.3
         """
         results = {}
-        
+
         for key, F_st in [('F_st_20', self.inputs.F_st_20), ('F_st_80', self.inputs.F_st_80)]:
             result = ShortCircuitResult()
 
@@ -202,31 +283,31 @@ class ShortCircuitMediator:
             result.m_c = bkskls.m_c(self.inputs.m_c, self.inputs.n, result.l_c)
 
             # Schritt 2: Charakteristischer elektromagnetischer Kraftbelag
-            result.F_a = bkskls.F_a(self.mu0, self.inputs.standardkurzschlussstroeme, 
+            result.F_a = bkskls.F_a(self.mu0, self.inputs.standardkurzschlussstroeme,
                                     self.inputs.l, result.l_c, self.inputs.a)
-        
+
             # Schritt 3: Verhältnis r
             result.r = bkskls.r(result.F_a, self.inputs.n, self.inputs.m_s+result.m_c, self.g)
-        
+
             # Schritt 4: Richtung δ_1
             result.δ_1 = bkskls.δ_1(result.r)
-        
+
             # Schritt 5: Statischer Durchhang
             result.f_es = bkskls.f_es(self.inputs.n, self.inputs.m_s+result.m_c, self.g, self.inputs.l, F_st)
-        
+
             # Schritt 6: Periodendauer
             result.T = bkskls.T(result.f_es, self.g)
-        
+
             # Schritt 7: Resultierende Periodendauer
             result.T_res = bkskls.T_res(result.T, result.r, result.δ_1)
-        
+
             # Schritt 8: Effektiver E-Modul
             result.E_eff = bkskls.E_eff(self.inputs.E, F_st, self.inputs.n, self.inputs.A_s, self.σ_fin)
-        
+
             # Schritt 9: Steifigkeitsnorm
-            result.N = bkskls.N(self.inputs.federkoeffizient, self.inputs.l, 
+            result.N = bkskls.N(self.inputs.federkoeffizient, self.inputs.l,
                                self.inputs.n, result.E_eff, self.inputs.A_s)
-        
+
             # Schritt 10: Beanspruchungsfaktor
             result.ζ = bkskls.ζ(self.inputs.n, self.g, self.inputs.m_s+result.m_c, self.inputs.l, F_st, result.N)
 
@@ -300,7 +381,7 @@ class ShortCircuitMediator:
             result.convert_units()
 
             results[key] = result
-        
+
         return results
 
     def run_calculation_1_2(self) -> dict[str, ShortCircuitResult]:
@@ -492,3 +573,29 @@ def calculate_short_circuit(inputs: Kurschlusskräfte_Input) -> dict[str, ShortC
     """
     mediator = ShortCircuitMediator(inputs)
     return mediator.select_and_run_calculation()
+
+
+def calculate_short_circuit_sweep(inputs, f_st_min: float = 0.1,
+                                  f_st_max: float = 40.0,
+                                  f_st_step: float = 1) -> dict[float, dict[str, ShortCircuitResult]]:
+    """
+    Berechnet Kurzschlusskraefte fuer eine Reihe von F_st-Werten (kN).
+    """
+    mediator = ShortCircuitMediator(inputs)
+    return mediator.calculate_sweep_f_st(f_st_min=f_st_min, f_st_max=f_st_max, f_st_step=f_st_step)
+
+
+def calculate_short_circuit_sweep_df(inputs, f_st_min: float = 0.1,
+                                     f_st_max: float = 40.0,
+                                     f_st_step: float = 0.1):
+    """
+    Berechnet Kurzschlusskraefte fuer eine Reihe von F_st-Werten (kN)
+    und gibt eine Pandas-DataFrame zurueck.
+    """
+    mediator = ShortCircuitMediator(inputs)
+    return mediator.calculate_sweep_f_st_dataframe(f_st_min=f_st_min, f_st_max=f_st_max, f_st_step=f_st_step)
+
+
+
+
+
