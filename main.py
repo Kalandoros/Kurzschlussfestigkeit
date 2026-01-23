@@ -18,12 +18,12 @@ pages = {
 if __name__ == "__main__":
     Gui(pages=pages, css_file="src/css/main.css").run(
         initial_page="Willkommen",
-        use_reloader=True, 
+        #use_reloader=True,
         title="Kurzschlussfestigkeit", 
         favicon="src/assets/Icon.jpg",
         watermark="© Angelo Rusvai", 
         margin="2em", 
         dark_mode=False, 
         debug=True,
-        port="auto"
+        #port="auto"
     )

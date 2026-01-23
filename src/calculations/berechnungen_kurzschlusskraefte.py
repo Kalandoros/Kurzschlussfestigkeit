@@ -16,6 +16,14 @@ g = scipy.constants.g # 9.81 ist auch möglich
 def l_s(l_s_1: float|None = None, l_s_2: float|None = None, l_s_3: float|None = None, l_s_4: float|None = None,
         l_s_5: float|None = None, l_s_6: float|None = None, l_s_7: float|None = None, l_s_8: float|None = None,
         l_s_9: float|None = None, l_s_10: float|None = None) -> float:
+    """
+    Funktion zur Berechnung des gemittelten Abstandes der Abstandhalter l_s im Spannfeld in m nach SN EN 60865-2:2017 Kapitel 8.3.6
+    l_s: Mittenabstand der Zwischenstücke oder Mittenabstand eines Zwischenstücks und des benachbarten Stützpunkts S in m
+    l_s_1: Abstand des Abstandshalters beginnend bei der Abspannung nach der Isolatorkette in m
+    l_s_2...10: Abstand des Abstandshalters zum links neben sich befindlichen Abstandhalter in m
+    Erläuterung zu l_s:
+    Die Summer der für die Berechnung von l_s angebenen Werte muss gleich der Länge l_c oder l_eff sein.
+    """
 
     liste_abstände_abstandshalter: list[float|None] = [l_s_1, l_s_2, l_s_3, l_s_4, l_s_5, l_s_6, l_s_7, l_s_8, l_s_9, l_s_10]
 
@@ -41,7 +49,14 @@ def m_c(m_c: float|None , n: float, l_c: float) -> float:
 
 # Hilfsgleichungen l_v Seilbogen Länge der Schlaufe
 def l_v(h: float, w:float) -> float:
-    # Der Faktor von 1.05 basiert auf dem Mittelwert von Beispielrechnungen.
+    """
+    Funktion zur Berechnung der Seil(bogen)länge der Schlaufe l_v in m
+    l_v: eil(bogen)länge der Schlaufe in m
+    h: Schlaufenhöhe in m
+    w: Schlaufenbreite in m
+    Erläuterung zu l_v:
+    Die Länge der Schlaufe ist ein abgeschätztes Mass, welcher als Mittelwert von Beispielen entnommen wurde
+    """
     l_v: float = (math.sqrt(h**2 + w**2)) * 1.05
     return l_v
 
@@ -68,15 +83,13 @@ def l_c(l: float, l_i: float) -> float:
 # Hilfsgleichungen l_eff bei aufgelegten Seilen
 def l_eff(l: float, l_h_f: float) -> float:
     """
-    Funktion zur Berechnung der Seillänge lc eines Hauptleiters im Spannfeld in m nach SN EN 60865-1:2012 Kapitel 6.2.2
-    l_eff: Seillänge eines Hauptleiters im Spannfeld in m bei aufgelegten Seilen
+    Funktion zur Berechnung der Seillänge l_eff eines Hauptleiters im Spannfeld in m nach SN EN 60865-2:2017 Kapitel 8.3.1
+    l_eff: Seillänge eines Hauptleiters im Spannfeld bei aufgelegten Seilen in m
     l: Mittenabstand der Stützpunkte in m
-    l_h_f: Länge einer Klemme u. Formfaktor in m
-    a: Leitermittenabstand in m
-    Erläuterung zu lc:
-    Bei Feldern mit aufgelegten Seilen, die Stützisolatoren auf Biegung beanspruchen, gilt lc = l. Bei Feldern mit
-    abgespannten Seilen gilt l_c = l − 2 * l_i, dabei ist li die Länge einer Abspann-Isolatorkette.
-    (SN EN 60865-1:2012 Kapitel 6.2.2 Seite 26)
+    l_h_f: Länge einer Klemme und Berücksichtigung des Formfaktors in m
+    Erläuterung zu l_eff:
+    Der Wert l_eff wird angegeben, wenn Klemmstücke am Isolatorkopf oder die Anschlussstelle hinausragen und sich
+    dadurch die effektive Länge verringert.
     """
     if l_h_f not in (None, 0.0, 0):
         l_eff: float = l - (2 * l_h_f)
@@ -464,8 +477,6 @@ def f_ed(C_D: float, C_F: float, f_es: float) -> float:
     return f_ed
 
 
-# Bis hierhin verfiziert
-
 # Grössen ab Kapitel 6.2.5 (Schlaufen in Spannfeldmitte)
 # Gleichung 39
 def δ_ebene_parallel(f_es: float, f_ed: float, l_v: float, h: float, w: float) -> float | None:
@@ -682,6 +693,7 @@ def a_min(a: float, b_h: float) -> float:
     a_min: float = a - (2 * b_h)
     return a_min
 
+
 # Grössen ab Kapitel 6.3
 # Gleichung (50)
 def b_h_mit_verikaler_höhenunterschied_befestigungspunkte(l: float, l_v: float) -> float:
@@ -696,6 +708,7 @@ def b_h_mit_verikaler_höhenunterschied_befestigungspunkte(l: float, l_v: float)
     if l_v >= 2:
         b_h: float = (0.6 * math.sqrt((l_v - l) -1) + (0.44 * ((l_v / l) -1)) - (0.32 * math.log(l_v / l))) * (l_v**2 / l)
         return b_h
+
 
 # Grössen ab Kapitel 6.4.1
 # Gleichung (55)
@@ -843,6 +856,7 @@ def ν_4(j: float, a_s: float, d: float, η: float = None) -> float:
         ν_4_2: float = η * ( (a_s - d) / (a_s - (η * (a_s - d))))
         ν_4 = ν_4_2
         return ν_4
+
 
 # Gleichung (A.7 Bild 9)
 def τ(f: float, κ: float) -> float:
@@ -1295,9 +1309,7 @@ def two_ya_as(η: float, a_s: float, d: float):
     return two_ya_as
 
 
-
-
-# Hauptformeln
+# Hauptformeln der Kräfte
 # Grössen ab Kapitel 4
 # Gleichung (1)
 def F(μ0: float, i_1: float, i_2: float, l: float, a: float) -> float:
@@ -1515,10 +1527,6 @@ def F_pi_d_mit_j(F_st: float, j: float, ν_e: float, ε_st: float, ξ: float = N
         return F_pi_d_mit_j
 
 
-
-
-
-
 def testrechnungen() -> None:
 
     print("Beispielrechnung gemäss Programm IEC 60865 FAU Projekt Riet")
@@ -1705,9 +1713,6 @@ def testrechnungen() -> None:
     print("f_ed (-20°C) = ", f_ed(C_D=1.246, C_F=1.082, f_es=1.346)) # -20°C
     print("f_ed (60°C) = ", f_ed(C_D=1.185, C_F=1.082, f_es=1.555))  # 60°C
     print()
-
-
-
 
 
 if __name__ == "__main__":

@@ -107,7 +107,6 @@ class ShortCircuitResult:
     η: Optional[float] = None
     ν_e: Optional[float] = None
 
-
     def convert_units(self):
         """Konvertiert berechnete Werte in die gewünschten Einheiten """
         if self.F_td is not None:
@@ -176,7 +175,7 @@ class ShortCircuitMediator:
                 f"  • Höhenunterschied >25%: {self.inputs.hoehenunterschied_befestigungspunkte}\n"
                 f"  • Schlaufenebene: {self.inputs.schlaufenebene_parallel_senkrecht or 'nicht relevant'}"
             )
-        
+
         # Führe die ausgewählte Berechnung durch
         return calculation_method()
 
@@ -289,7 +288,7 @@ class ShortCircuitMediator:
                     result.ε_st = bkskls.ε_st(F_st, result.l_c, result.l_s, result.l_eff, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.l_eff, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
-                    # Optional ein If-else einfügen für j=>1 und j<1
+                    # Optional ein If-else einfügen für j=>1 und j<1, aber eigentlich schon Funktion enthalten
                     result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
                     result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, result.η)
@@ -457,7 +456,7 @@ class ShortCircuitMediator:
 
             # Schritt 25: Bündel-Seilzugkraft F_pi_d
             if self.inputs.a_s not in (None, 0) and self.inputs.d not in (None, 0) and self.inputs.n not in (None, 0):
-                if ((self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s and self.inputs.n > 1) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s and self.inputs.n > 1)):
+                if (self.inputs.a_s / self.inputs.d <= 2.0 and result.l_s >= 50 * self.inputs.a_s and self.inputs.n > 1) or (self.inputs.a_s / self.inputs.d <= 2.5 and result.l_s >= 70 * self.inputs.a_s and self.inputs.n > 1):
                     result.F_pi_d = bkskls.F_pi_d_ohne_j(result.F_td, self.inputs.a_s, self.inputs.d, result.l_s)
                 elif self.inputs.n > 1:
                     result.ν_1 = bkskls.ν_1(self.mu0, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, self.inputs.n, self.inputs.m_s, self.inputs.d, self.inputs.f)
@@ -469,7 +468,7 @@ class ShortCircuitMediator:
                     result.ε_st = bkskls.ε_st(F_st, result.l_c, result.l_s, result.l_eff, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.l_eff, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
-                    # Optional ein If-else einfügen für j=>1 und j<1
+                    # Optional ein If-else einfügen für j=>1 und j<1, aber eigentlich schon Funktion enthalten
                     result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
                     result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, result.η)
