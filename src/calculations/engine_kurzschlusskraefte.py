@@ -3,7 +3,10 @@ from typing import Optional, Callable
 import math
 import scipy.constants
 from . import berechnungen_kurzschlusskraefte as bkskls
+import pandas as pd
 
+class CalculationCancelled(Exception):
+    pass
 
 @dataclass(slots=True)
 class Kurschlusskräfte_Input:
@@ -179,53 +182,14 @@ class ShortCircuitMediator:
         # Führe die ausgewählte Berechnung durch
         return calculation_method()
 
-    def calculate_sweep_f_st(self, f_st_min: float = 0.1, f_st_max: float = 40.0,
-                             f_st_step: float = 0.01) -> dict[float, dict[str, ShortCircuitResult]]:
-        """
-        Berechnet die Kurzschlusskräfte für eine Reihe von F_st-Werten.
+    def calculate_sweep_f_st_dataframe(self, f_st_min: float = 0.1, f_st_max: float = 35.0, f_st_step: float = 0.1,
+                                       cancel_check: Optional[Callable[[], bool]] = None):
 
-        Args:
-            f_st_min: Untere Grenze in kN.
-            f_st_max: Obere Grenze in kN.
-            f_st_step: Schrittweite in kN.
-        """
+        # Berechnet die Kurzschlusskräfte für eine Reihe von F_st-Werten und gibt einen DataFrame zurück.
         if f_st_step <= 0:
             raise ValueError("f_st_step muss groesser als 0 sein.")
         if f_st_max < f_st_min:
             raise ValueError("f_st_max muss groesser oder gleich f_st_min sein.")
-
-        results: dict[float, dict[str, ShortCircuitResult]] = {}
-        original_f_st_20 = self.inputs.F_st_20
-        original_f_st_80 = self.inputs.F_st_80
-
-        try:
-            steps = int(round((f_st_max - f_st_min) / f_st_step))
-            for i in range(steps + 1):
-                f_st_value = f_st_min + (i * f_st_step)
-                f_st_internal = f_st_value * 10 ** 3
-                self.inputs.F_st_20 = f_st_internal
-                self.inputs.F_st_80 = f_st_internal
-                results[f_st_value] = self.select_and_run_calculation()
-        finally:
-            self.inputs.F_st_20 = original_f_st_20
-            self.inputs.F_st_80 = original_f_st_80
-
-        return results
-
-    def calculate_sweep_f_st_dataframe(self, f_st_min: float = 0.1, f_st_max: float = 40.0,
-                                       f_st_step: float = 0.01):
-        """
-        Berechnet die Kurzschlusskraefte fuer eine Reihe von F_st-Werten
-        und gibt eine Pandas-DataFrame zurueck.
-
-        Spalten: F_st (kN), F_td_20, F_fd_20, F_pi_d_20, F_td_80, F_fd_80, F_pi_d_80.
-        """
-        if f_st_step <= 0:
-            raise ValueError("f_st_step muss groesser als 0 sein.")
-        if f_st_max < f_st_min:
-            raise ValueError("f_st_max muss groesser oder gleich f_st_min sein.")
-
-        import pandas as pd
 
         rows = []
         original_f_st_20 = self.inputs.F_st_20
@@ -234,25 +198,28 @@ class ShortCircuitMediator:
         try:
             steps = int(round((f_st_max - f_st_min) / f_st_step))
             for i in range(steps + 1):
+                if cancel_check and cancel_check():
+                    raise CalculationCancelled("Berechnung abgebrochen.")
                 f_st_value = f_st_min + (i * f_st_step)
                 f_st_internal = f_st_value * 10 ** 3
                 self.inputs.F_st_20 = f_st_internal
-                self.inputs.F_st_80 = f_st_internal
+                #self.inputs.F_st_80 = f_st_internal
                 calc_result = self.select_and_run_calculation()
 
+                # Die auskommentierten Zeilen sind nicht notwendig, da F_st_20 und F_st_80 in der Schleife gleich sind.
                 result_20 = calc_result.get("F_st_20")
-                result_80 = calc_result.get("F_st_80")
+                #result_80 = calc_result.get("F_st_80")
 
                 rows.append({
                     "F_st": f_st_value,
-                    "F_st_20": f_st_value,
-                    "F_st_80": f_st_value,
-                    "F_td_20": result_20.F_td if result_20 else None,
-                    "F_fd_20": result_20.F_fd if result_20 else None,
-                    "F_pi_d_20": result_20.F_pi_d if result_20 else None,
-                    "F_td_80": result_80.F_td if result_80 else None,
-                    "F_fd_80": result_80.F_fd if result_80 else None,
-                    "F_pi_d_80": result_80.F_pi_d if result_80 else None,
+                    #"F_st_20": f_st_value,
+                    #"F_st_80": f_st_value,
+                    "F_td": result_20.F_td if result_20 else None,
+                    "F_fd": result_20.F_fd if result_20 else None,
+                    "F_pi_d": result_20.F_pi_d if result_20 else None,
+                    #"F_td_80": result_80.F_td if result_80 else None,
+                    #"F_fd_80": result_80.F_fd if result_80 else None,
+                    #"F_pi_d_80": result_80.F_pi_d if result_80 else None,
                 })
         finally:
             self.inputs.F_st_20 = original_f_st_20
@@ -568,32 +535,23 @@ class ShortCircuitMediator:
 def calculate_short_circuit(inputs: Kurschlusskräfte_Input) -> dict[str, ShortCircuitResult]:
     """
     Hauptfunktion zur Berechnung der Kurzschlusskräfte.
-    
     Wählt automatisch die passende Berechnungsmethode basierend auf den Eingabeparametern.
     """
     mediator = ShortCircuitMediator(inputs)
     return mediator.select_and_run_calculation()
 
-
-def calculate_short_circuit_sweep(inputs, f_st_min: float = 0.1,
-                                  f_st_max: float = 40.0,
-                                  f_st_step: float = 1) -> dict[float, dict[str, ShortCircuitResult]]:
+def calculate_short_circuit_sweep_df(inputs, f_st_min: float = 0.1,f_st_max: float = 35.0,f_st_step: float = 0.1,
+                                     cancel_check: Optional[Callable[[], bool]] = None):
     """
-    Berechnet Kurzschlusskraefte fuer eine Reihe von F_st-Werten (kN).
+    Berechnet Kurzschlusskräfte für eine Reihe von F_st-Werten (kN) und gibt eine Pandas-DataFrame zurück.
     """
     mediator = ShortCircuitMediator(inputs)
-    return mediator.calculate_sweep_f_st(f_st_min=f_st_min, f_st_max=f_st_max, f_st_step=f_st_step)
-
-
-def calculate_short_circuit_sweep_df(inputs, f_st_min: float = 0.1,
-                                     f_st_max: float = 40.0,
-                                     f_st_step: float = 0.1):
-    """
-    Berechnet Kurzschlusskraefte fuer eine Reihe von F_st-Werten (kN)
-    und gibt eine Pandas-DataFrame zurueck.
-    """
-    mediator = ShortCircuitMediator(inputs)
-    return mediator.calculate_sweep_f_st_dataframe(f_st_min=f_st_min, f_st_max=f_st_max, f_st_step=f_st_step)
+    return mediator.calculate_sweep_f_st_dataframe(
+        f_st_min=f_st_min,
+        f_st_max=f_st_max,
+        f_st_step=f_st_step,
+        cancel_check=cancel_check,
+    )
 
 
 

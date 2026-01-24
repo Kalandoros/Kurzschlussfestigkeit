@@ -13,7 +13,12 @@ import traceback
 import math
 from src.utils import dataloader, formatter, helper
 from src.calculations.engine_kurzschlusskraefte import calculate_short_circuit_sweep_df
-from src.calculations.engine_kurzschlusskraefte import Kurschlusskräfte_Input, ShortCircuitResult, calculate_short_circuit
+from src.calculations.engine_kurzschlusskraefte import (
+    Kurschlusskräfte_Input,
+    ShortCircuitResult,
+    calculate_short_circuit,
+    CalculationCancelled,
+)
 
 # Configuration for pandas
 pd.set_option('display.max_columns', None)
@@ -117,7 +122,139 @@ a_min_min: None|float|str = ""
 calc_result: None|ShortCircuitResult = None
 calc_result_formatted: None|DataFrame = None
 sweep_calc_df: None|DataFrame = None
+sweep_vline_shapes: list = []
 
+_calc_run_lock = threading.Lock()
+_calc_run_id = 0
+"""
+Die folgenden zwei internen Funktionen sind dafür die Schleife zu der For-Loop zur Erstellung des Diagramms
+zu unterbrechen falls wieder auf Berechnung gedrückt wurde. Damit soll sichergestellt werden, das nicht mehrere 
+Schleifen parallel laufen und sich folgend gegenseitig überschreiben. 
+Bei jedem klick zählt die Funktion _next_calc_run_id() eine neue ID aus und gibt diese zurück. 
+Die Funktion _is_run_cancelled() überprüft ob die aktuelle ID noch gültig ist bzw. übereinstimmen. 
+Wenn nicht wird die Berechnung der For-Loop zur Erstellung des Diagramms abgebrochen und die neue kann ihren job machen.
+"""
+def _next_calc_run_id():
+    global _calc_run_id
+    with _calc_run_lock:
+        _calc_run_id += 1
+        return _calc_run_id
+
+def _is_run_cancelled(run_id):
+    return run_id != _calc_run_id
+
+# Funktion zu Berechnung des höchsten Punktes im Chart bei gegebenem x-Wert
+def _build_vline_shapes(sweep_df, f_st_values):
+    if sweep_df is None or sweep_df.empty:
+        return []
+    if "F_st" not in sweep_df.columns:
+        return []
+
+    sweep_sorted = sweep_df.sort_values("F_st").reset_index(drop=True)
+    f_st_series = sweep_sorted["F_st"]
+    f_st_min = f_st_series.min()
+    f_st_max = f_st_series.max()
+    shapes = []
+
+    for x_value in f_st_values:
+        if x_value in (None, "", NaN):
+            continue
+        try:
+            x_float = float(x_value)
+        except (TypeError, ValueError):
+            continue
+        if x_float < f_st_min or x_float > f_st_max:
+            continue
+
+        if x_float == f_st_series.iloc[0]:
+            row_low = row_high = sweep_sorted.iloc[0]
+            x_low = x_high = f_st_series.iloc[0]
+        elif x_float == f_st_series.iloc[-1]:
+            row_low = row_high = sweep_sorted.iloc[-1]
+            x_low = x_high = f_st_series.iloc[-1]
+        else:
+            idx_upper = f_st_series.searchsorted(x_float, side="left")
+            if idx_upper <= 0 or idx_upper >= len(f_st_series):
+                continue
+            x_low = f_st_series.iloc[idx_upper - 1]
+            x_high = f_st_series.iloc[idx_upper]
+            row_low = sweep_sorted.iloc[idx_upper - 1]
+            row_high = sweep_sorted.iloc[idx_upper]
+
+        y_values = []
+        for col in ["F_td", "F_fd", "F_pi_d"]:
+            if x_low == x_high:
+                y_val = row_low.get(col)
+            else:
+                y_low = row_low.get(col)
+                y_high = row_high.get(col)
+                if y_low in (None, "", NaN) or y_high in (None, "", NaN):
+                    continue
+                if pd.isna(y_low) or pd.isna(y_high):
+                    continue
+                y_val = y_low + (y_high - y_low) * ((x_float - x_low) / (x_high - x_low))
+            if y_val in (None, "", NaN) or pd.isna(y_val):
+                continue
+            y_values.append(y_val)
+
+        if not y_values:
+            continue
+
+        y_top = max(y_values)
+        shapes.append({
+            "type": "line",
+            "xref": "x",
+            "yref": "y",
+            "x0": x_float,
+            "x1": x_float,
+            "y0": 0,
+            "y1": y_top,
+            "line": {"color": "#444444", "width": 1, "dash": "dot"},
+        })
+        shapes.append({
+            "type": "line",
+            "xref": "x",
+            "yref": "y",
+            "x0": 0,
+            "x1": x_float,
+            "y0": y_top,
+            "y1": y_top,
+            "line": {"color": "#444444", "width": 1, "dash": "dot"},
+        })
+
+    return shapes
+
+def _build_sweep_chart_layout(shapes):
+    return {
+        "paper_bgcolor": "white",
+        "plot_bgcolor": "white",
+        "font": {"family": "Arial", "size": 14, "color": "black"},
+        "title": "Kurzschluss-Seilzugkräfte in Abhängigkeit von der statischen Seilzugkraft F<sub>st</sub>",
+        "xaxis": {
+            "title": "statische Seilzugkraft (kN)",
+            "showline": True,
+            "linecolor": "black",
+            "ticks": "outside",
+            "tickcolor": "black",
+            "gridcolor": "#bbbbbb",
+        },
+        "yaxis": {
+            "title": "Kraft (kN)",
+            "rangemode": "tozero",
+            "showline": True,
+            "linecolor": "black",
+            "ticks": "outside",
+            "tickcolor": "black",
+            "gridcolor": "#bbbbbb",
+            "zeroline": True,
+            "zerolinecolor": "black",
+        },
+        "shapes": shapes,
+        "legend": {"title": {"text": "Legende:"}, "orientation": "h", "y": -0.15, "x": 0},
+        "margin": {"l": 60, "r": 20, "t": 60, "b": 60},
+    }
+
+sweep_chart_layout: dict = _build_sweep_chart_layout([])
 
 def on_change_selectable_leiterseiltyp(state):
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
@@ -197,12 +334,13 @@ def on_click_zurücksetzen(state):
     state.calc_result = None
     state.calc_result_formatted = None
     state.sweep_calc_df = None
+    state.sweep_vline_shapes = []
+    state.sweep_chart_layout = _build_sweep_chart_layout([])
 
 
 def on_click_berechnen(state):
-    if not state.leiterseiltyp_selected:
-        notify(state, notification_type="error", message="Bitte Leiterseiltyp auswählen!")
-        return
+    run_id = _next_calc_run_id()
+
 
     required_fields = [
         # Allgemeine Angaben
@@ -229,7 +367,7 @@ def on_click_berechnen(state):
         ('federkoeffizient_selected', 'Federkoeffizient'),
     ]
 
-    # Prüfe alle Pflichtfelder
+    # Prüfe alle minimum Pflichtfelder
     missing = []
     for field, label in required_fields:
         value = getattr(state, field, None)
@@ -240,13 +378,36 @@ def on_click_berechnen(state):
             missing.append(label)
 
     if missing:
-        notify(state, notification_type="warning",
+        notify(state, notification_type="error",
                message=f"Bitte folgende Pflichtfelder ausfüllen: {', '.join(missing)}", duration=15000)
         return
+    if not state.leiterseiltyp_selected:
+        notify(state, notification_type="error",
+               message="Bitte Leiterseiltyp auswählen!", duration=15000)
+        return
+
+    # Auswahlbedingte Überprüfungen
+    if state.teilleiter_selected > 1 and state.a_s in ('', None, '0.0', '0', 0.0, 0):
+        notify(state, notification_type="error",
+               message=f"Bitte folgendes Pflichtfeld ausfüllen: 'a_s', 'Wirksamer Abstand zwischen Teilleitern'", duration=15000)
+        return
+    if state.l > 5 and state.l_s_1 in ('', None, '0.0', '0', 0.0, 0):
+        notify(state, notification_type="warning",
+               message=f"Bitte folgende Eingabefelder überprüfen: 'l_s', 'Abstandshalter'", duration=15000)
+    if state.leiterseilbefestigung_selected == "Abgespannt" and state.l_i in ('', None, '0.0', '0', 0.0, 0):
+        notify(state, notification_type="warning",
+               message=f"Bitte folgendes Eingabefeld überprüfen: 'l_i', 'Länge einer Abspann-Isolatorkette'", duration=15000)
+    if state.leiterseilbefestigung_selected == "Abgespannt" and state.m_c in ('', None, '0.0', '0', 0.0, 0):
+        notify(state, notification_type="warning",
+               message=f"Bitte folgendes Eingabefeld überprüfen: 'm_c', 'Summe konzentrischer Massen im Spannfeld'", duration=15000)
+    if state.leiterseilbefestigung_selected == "Aufgelegt" and state.l_h_f in ('', None, '0.0', '0', 0.0, 0):
+        notify(state, notification_type="warning",
+               message=f"Bitte folgendes Eingabefeld überprüfen: 'l_h_f', 'Länge einer Klemme u. Formfaktor'", duration=15000)
+
 
     # Bereinigen der alten States, damit keine Variablenleichen entstehen, wenn zum Beispiel bei einer Rechnung
     # oder Fall nicht alle Parameter berechnet werden. In so einem Fall dürfen sich die "alten" Variablen nicht mit den
-    # "neuen vermischen"
+    # "neuen vermischen".
     state.F_td_temp_niedrig = None
     state.F_fd_temp_niedrig = None
     state.F_pi_d_temp_niedrig = None
@@ -320,11 +481,17 @@ def on_click_berechnen(state):
 
         # Berechnung über den Mediator
         #print(inputs)
-        state.calc_result = calculate_short_circuit(inputs)
+        calc_result = calculate_short_circuit(inputs)
+
+        # Überprüft, ob das Abbruchkriterium bei mehrfachem Klicken von Berechnen für die For-Loop des Diagramms zutrifft
+        if _is_run_cancelled(run_id):
+            return
+
+        state.calc_result = calc_result
 
         # Darstellung der erweiterten Ergebnisse im Callback:
         #state.calc_result_formatted = formatter.format_numbers_strings_scientific_and_normal(state.calc_result)
-        state.calc_result_formatted = dataloader.create_df_from_calc_results(state.calc_result, state.temperatur_niedrig_selected, state.temperatur_hoch_selected )
+        state.calc_result_formatted = dataloader.create_df_from_calc_results(state.calc_result, state.temperatur_niedrig_selected, state.temperatur_hoch_selected)
 
         # Auf die Ergebnisse zugreifen, um sie in dem Text Widgets darzustellen:
         state.F_td_temp_niedrig = round(state.calc_result['F_st_20'].F_td, 2)  if state.calc_result['F_st_20'].F_td not in (None, 0.0) else None
@@ -361,40 +528,46 @@ def on_click_berechnen(state):
         state.temp_b_h = state.temperatur_hoch_selected if state.b_h_temp_niedrig < state.b_h_temp_hoch else state.temperatur_niedrig_selected
         state.a_min_min = get_min_value(state.a_min_temp_niedrig, state.a_min_temp_hoch)
 
-        notify(state, notification_type="success", message="Berechnung abgeschlossen", duration=5000)
+        notify(state, notification_type="success", message="Berechnung erfolgreich abgeschlossen", duration=5000)
+
+        # Überprüft, ob das Abbruchkriterium bei mehrfachem Klicken von Berechnen für die For-Loop des Diagramms zutrifft
+        if _is_run_cancelled(run_id):
+            return
 
         try:
-            state.sweep_calc_df = calculate_short_circuit_sweep_df(inputs)
-            print("Sweep calc df preview:")
-            print(state.sweep_calc_df.head(10).to_string(index=False))
-            notify(state, notification_type="success", message=f"Diagramm Daten: {len(state.sweep_calc_df)} Zeilen", duration=5000)
-        except Exception as sweep_error:
+            state.sweep_calc_df = calculate_short_circuit_sweep_df(inputs,cancel_check=lambda: _is_run_cancelled(run_id))
+            state.sweep_vline_shapes = _build_vline_shapes(state.sweep_calc_df, [state.F_st_20, state.F_st_80])
+            state.sweep_chart_layout = _build_sweep_chart_layout(state.sweep_vline_shapes)
+            # print("Sweep calc df preview:")
+            # print(state.sweep_calc_df.head(10).to_string(index=False))
+            notify(state, notification_type="success", message=f"Diagramm mit {len(state.sweep_calc_df)} Werten erstellt", duration=5000)
+        except CalculationCancelled:
+            return
+        except Exception as sw:
             state.sweep_calc_df = None
+            state.sweep_vline_shapes = []
+            state.sweep_chart_layout = _build_sweep_chart_layout([])
             notify(state, notification_type="warning",
-                   message=f"Diagramm konnte nicht erstellt werden: {str(sweep_error)}", duration=10000)
+                   message=f"Diagramm konnte nicht erstellt werden: {str(sw)}", duration=10000)
 
     except ValueError as ve:
-        error_msg = helper.format_exception_message(ve, show_chain=True)
+        error_msg = helper.get_exception_message(ve, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ve)}", duration=15000)
 
     except IndexError as ie:
-        error_msg = helper.format_exception_message(ie, show_chain=True)
+        error_msg = helper.get_exception_message(ie, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ie)}", duration=15000)
 
     except NotImplementedError as nie:
         # Behandlung für noch nicht implementierte Fälle
-        notify(state, notification_type="warning",
-               message=f"⚠️ Diese Berechnungsmethode ist noch nicht implementiert:\n{str(nie)}",
-               duration=15000)
+        notify(state, notification_type="warning", message=f"⚠️ Diese Berechnungsmethode ist noch nicht implementiert:\n{str(nie)}", duration=15000)
 
     except Exception as e:
         print(f"Detaillierter Fehler:")
         traceback.print_exc()
         tb = traceback.extract_tb(e.__traceback__)
-        error_msg = helper.format_exception_message(e, show_chain=True)
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(e)}",
-               duration=15000)
-
+        error_msg = helper.get_exception_message(e, show_chain=True)
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(e)}", duration=15000)
 
 def on_click_load_vorlage(state):
     """
@@ -686,30 +859,30 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.text(value="Erweiterte Eingaben", class_name="h6")
             tgb.html("hr")
             with tgb.layout(columns="1", columns__mobile="1"):
-                with tgb.expandable(title="Abstände Phasenabstandshalter", expanded=False, class_name="h6",
+                with tgb.expandable(title="Abstände Abstandshalter", expanded=False, class_name="h6",
                                     hover_text="Abstände beginnend von links vom Ende der Isolatorkette oder dem Anschlusspunkt bei aufgelegten Leiterseilen. \n"
-                                               "Abstände zwischen Phasenabstandshaltern, Gegenkontakte von Trennern zählen ebenfalls als Phasenabstandshalter. \n"
+                                               "Abstände zwischen Abstandshaltern, Gegenkontakte von Trennern zählen ebenfalls als Abstandshalter. \n"
                                                "Die gesamte Seillänge eines Hauptleiters und die Summe der angegebenen Abstände müssen übereinstimmen bzw. gleich sein."):
                     with tgb.layout(columns="1 1 1 1 1", columns__mobile="1 1 1 1 1"):
-                        tgb.number(label="Abstand Phasenabstandshalter 1", value="{l_s_1}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 1", value="{l_s_1}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 2", value="{l_s_2}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 2", value="{l_s_2}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 3", value="{l_s_3}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 3", value="{l_s_3}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 4", value="{l_s_4}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 4", value="{l_s_4}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 5", value="{l_s_5}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 5", value="{l_s_5}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 6", value="{l_s_6}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 6", value="{l_s_6}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 7", value="{l_s_7}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 7", value="{l_s_7}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 8", value="{l_s_8}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 8", value="{l_s_8}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 9", value="{l_s_9}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 9", value="{l_s_9}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
-                        tgb.number(label="Abstand Phasenabstandshalter 10", value="{l_s_10}", min=0.0, step=0.1,
+                        tgb.number(label="Abstandshalter 10", value="{l_s_10}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
@@ -781,36 +954,11 @@ with tgb.Page() as kurzschlusskraefte_page:
             tgb.text(value="Abbildungen", class_name="h6")
             tgb.html("hr")
             with tgb.layout(columns="1", columns__mobile="1"):
-                with tgb.expandable(title="Diagramme", expanded=False):
-                    tgb.chart(data="{sweep_calc_df}", x="F_st_20",
-                              y=["F_td_20", "F_td_80", "F_fd_20", "F_fd_80", "F_pi_d_20", "F_pi_d_80"],
-                              mode="lines", rebuild=True, height="800px",
-                              layout={
-                                  "paper_bgcolor": "white",
-                                  "plot_bgcolor": "white",
-                                  "font": {"family": "Times New Roman", "size": 12, "color": "black"},
-                                  "xaxis": {
-                                      "title": "statische Seilzugkraft (kN)",
-                                      "showline": True,
-                                      "linecolor": "black",
-                                      "ticks": "outside",
-                                      "tickcolor": "black",
-                                      "gridcolor": "#d0d0d0",
-                                  },
-                                  "yaxis": {
-                                      "title": "Kraft (kN)",
-                                      "rangemode": "tozero",
-                                      "showline": True,
-                                      "linecolor": "black",
-                                      "ticks": "outside",
-                                      "tickcolor": "black",
-                                      "gridcolor": "#d0d0d0",
-                                      "zeroline": True,
-                                      "zerolinecolor": "black",
-                                  },
-                                  "legend": {"title": {"text": "Reihen"}, "orientation": "h", "y": -0.2, "x": 0},
-                                  "margin": {"l": 60, "r": 20, "t": 20, "b": 60},
-                              })
+                with tgb.expandable(title="Diagramm", expanded=False):
+                    tgb.chart(data="{sweep_calc_df}", x="F_st",
+                              y=["F_td", "F_fd", "F_pi_d"], name=["F<sub>td</sub>", "F<sub>fd</sub>", "F<sub>pi d</sub>"],
+                              color=["red", "blue", "green"], mode="lines", rebuild=True, height="800px",
+                              layout="{sweep_chart_layout}")
                     #tgb.table(data="{calc_result_formatted}", rebuild=True, show_all=True, number_format="%.3e", size="small", width="35%")
                 #with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
                     #tgb.text(value="{calc_result_formatted}", mode="pre")

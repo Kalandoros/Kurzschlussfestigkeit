@@ -20,7 +20,6 @@ def get_error_location(tb):
             break
     return error_location
 
-
 def get_detailed_error_location(tb, max_frames=10):
     """
     Erstellt vollständige Call-Chain aus Traceback.
@@ -54,14 +53,13 @@ def get_detailed_error_location(tb, max_frames=10):
 
     return ""
 
-
-def format_exception_message(exception, show_chain=True):
+def get_exception_message(exception, show_chain=True):
     """
     Erstellt vollständige Call-Chain aus Traceback.
 
     Args:
-        tb: Traceback-Objekt
-        max_frames: Maximale Anzahl anzuzeigender Frames
+        exception: Traceback-Objekt
+        show_chain: Maximale Anzahl anzuzeigender Frames
 
     Returns:
         str: Call-Chain im Format "datei::funktion() → datei::funktion()
