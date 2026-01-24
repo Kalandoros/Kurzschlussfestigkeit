@@ -393,7 +393,6 @@ def on_click_zurücksetzen(state):
     state.sweep_vline_shapes = []
     state.sweep_chart_layout = _build_sweep_chart_layout([])
 
-
 def on_click_berechnen(state):
     run_id = _next_calc_run_id()
 
@@ -593,6 +592,10 @@ def on_click_load_vorlage(state):
     """
     Lädt Vorlage aus Excel und setzt GUI-Widgets.
     """
+
+    # Reset all fields and results
+    on_click_zurücksetzen(state)
+
     # Check if file_selector has content (it can be a string path or empty)
     file_path = state.content_vorlage
 

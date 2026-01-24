@@ -123,6 +123,7 @@ class ShortCircuitMediator:
     def __init__(self, inputs: Kurschlusskräfte_Input):
         self.inputs = inputs
         self.results = ShortCircuitResult()
+        self.mode = "normal"
         self.mu0 = scipy.constants.mu_0
         self.g = scipy.constants.g
         self.σ_fin = 50 * 10**6
@@ -182,7 +183,33 @@ class ShortCircuitMediator:
         # Führe die ausgewählte Berechnung durch
         return calculation_method()
 
-    def calculate_sweep_f_st_dataframe(self, f_st_min: float = 0.1, f_st_max: float = 35.0, f_st_step: float = 0.1,
+    def mode_call(self, func_name, *args, **kwargs):
+        # 1. Modus ermitteln
+        mode = getattr(self, "mode", "normal")
+
+        try:
+            # 2. Pfad wählen
+            if mode == "loop-mode":
+                # Direkt zur numerischen Funktion
+                func = getattr(bkskls, f"{func_name}_numerisch")
+                return func(*args, **kwargs)
+            else:
+                # Standard-Kaskade: Symbolisch probieren, sonst numerisch
+                try:
+                    func_sym = getattr(bkskls, f"{func_name}_symbolisch")
+                    return func_sym(*args, **kwargs)
+                except (AttributeError, Exception):
+                    # Fallback auf numerisch, falls symbolisch nicht geht
+                    func_num = getattr(bkskls, f"{func_name}_numerisch")
+                    return func_num(*args, **kwargs)
+
+        except Exception as e:
+            # HIER ist der entscheidende Punkt:
+            # Wir fangen den Fehler ab und hängen die Info an, in welchem
+            # Modus die Engine gerade war, bevor wir den Fehler weiterwerfen.
+            raise RuntimeError(f"Fehler in '{func_name}' während {mode}: {str(e)}") from e
+
+    def calculate_sweep_f_st_dataframe(self, f_st_min: float = 0.1, f_st_max: float = 35.0, f_st_step: float = 0.01,
                                        cancel_check: Optional[Callable[[], bool]] = None):
 
         # Berechnet die Kurzschlusskräfte für eine Reihe von F_st-Werten und gibt einen DataFrame zurück.
@@ -196,6 +223,7 @@ class ShortCircuitMediator:
         original_f_st_80 = self.inputs.F_st_80
 
         try:
+            self.mode = "loop-mode"
             steps = int(round((f_st_max - f_st_min) / f_st_step))
             for i in range(steps + 1):
                 if cancel_check and cancel_check():
@@ -224,6 +252,7 @@ class ShortCircuitMediator:
         finally:
             self.inputs.F_st_20 = original_f_st_20
             self.inputs.F_st_80 = original_f_st_80
+            self.mode = "normal"
 
         return pd.DataFrame(rows)
 
@@ -288,7 +317,8 @@ class ShortCircuitMediator:
             result.φ = bkskls.φ_ohne_schlaufe(self.inputs.t_k, result.T_res, result.r, result.δ_end)
 
             # Schritt 14: Lastparameter ψ
-            result.ψ = bkskls.ψ_ohne_schlaufe(result.φ, result.ζ)
+            result.ψ = self.mode_call(func_name="ψ_ohne_schlaufe", φ=result.φ, ζ=result.ζ)
+            # result.ψ = bkskls.ψ_ohne_schlaufe(result.φ, result.ζ)
 
             # Schritt 15: Kurzschluss-Seilzugkraft F_td
             result.F_td = bkskls.F_td_ohne_schlaufe_spannfeldmitte(F_st, result.φ, result.ψ)
@@ -337,7 +367,8 @@ class ShortCircuitMediator:
                     result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.l_eff, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
                     # Optional ein If-else einfügen für j=>1 und j<1, aber eigentlich schon Funktion enthalten
-                    result.ξ = bkskls.ξ(result.j, result.ε_st)
+                    result.ξ = self.mode_call(func_name="ξ", j=result.j, ε_st=result.ε_st)
+                    #result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
                     result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, result.η)
                     result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
@@ -467,7 +498,8 @@ class ShortCircuitMediator:
             result.φ = bkskls.φ_ohne_schlaufe(self.inputs.t_k, result.T_res, result.r, result.δ_end)
 
             # Schritt 14: Lastparameter ψ
-            result.ψ = bkskls.ψ_ohne_schlaufe(result.φ, result.ζ)
+            result.ψ = self.mode_call(func_name="ψ_ohne_schlaufe", φ=result.φ, ζ=result.ζ)
+            #result.ψ = bkskls.ψ_ohne_schlaufe(result.φ, result.ζ)
 
             # Schritt 15: Kurzschluss-Seilzugkraft F_td
             result.F_td = bkskls.F_td_ohne_schlaufe_spannfeldmitte(F_st, result.φ, result.ψ)
@@ -517,7 +549,8 @@ class ShortCircuitMediator:
                     result.ε_pi = bkskls.ε_pi(result.F_v, result.l_c, result.l_s, result.l_eff, result.N, self.inputs.a_s, self.inputs.n, self.inputs.d)
                     result.j = bkskls.j(result.ε_st, result.ε_pi)
                     # Optional ein If-else einfügen für j=>1 und j<1, aber eigentlich schon Funktion enthalten
-                    result.ξ = bkskls.ξ(result.j, result.ε_st)
+                    result.ξ = self.mode_call(func_name="ξ", j=result.j, ε_st=result.ε_st)
+                    # result.ξ = bkskls.ξ(result.j, result.ε_st)
                     result.η = bkskls.η(result.ε_st, result.j, result.ν_3, self.inputs.n, self.inputs.a_s, self.inputs.d)
                     result.ν_4 = bkskls.ν_4(result.j, self.inputs.a_s, self.inputs.d, result.η)
                     result.ν_e = bkskls.ν_e(self.mu0, result.j, self.inputs.standardkurzschlussstroeme, self.inputs.a_s, result.N,
@@ -540,7 +573,7 @@ def calculate_short_circuit(inputs: Kurschlusskräfte_Input) -> dict[str, ShortC
     mediator = ShortCircuitMediator(inputs)
     return mediator.select_and_run_calculation()
 
-def calculate_short_circuit_sweep_df(inputs, f_st_min: float = 0.1,f_st_max: float = 35.0,f_st_step: float = 0.1,
+def calculate_short_circuit_sweep_df(inputs, f_st_min: float = 0.1,f_st_max: float = 35.0,f_st_step: float = 0.01,
                                      cancel_check: Optional[Callable[[], bool]] = None):
     """
     Berechnet Kurzschlusskräfte für eine Reihe von F_st-Werten (kN) und gibt eine Pandas-DataFrame zurück.

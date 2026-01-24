@@ -305,7 +305,71 @@ def φ_ohne_schlaufe(T_k1: float, T_res: float, r: float, δ_end: float) -> floa
         φ: float = φ_2
         return φ
 
-def ψ_ohne_schlaufe(φ: float, ζ: float) -> float:
+def ψ_ohne_schlaufe_symbolisch(φ: float, ζ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
+    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
+    """
+    Berechnung ψ (SN EN 60865-1:2012) im Mehrstufenverfahren:
+    1. Symbolische Methode (Exakte Lösung) 
+    2. Brent's Methode (Garantierte Intervallsuche)
+    3. fsolve (Allgemeiner numerischer Ansatz)
+    """
+    #1. Symbolische Methode (Exakte Lösung)
+    try:
+        ψ_sym = sympy.symbols('ψ', real=True)
+        polynom_sym = (ψ_sym**3 * φ**2) + ((φ * (2 + ζ)) * (ψ_sym**2)) + (ψ_sym * (1 + (2 * ζ))) - (ζ * (2 + φ))
+        solutions = sympy.solve(polynom_sym, ψ_sym)
+
+        valid_sols = [float(s) for s in solutions if 0 <= s <= 1]
+        if valid_sols:
+            return valid_sols[0]
+    except:
+        pass
+    return None
+
+def ψ_ohne_schlaufe_numerisch(φ: float, ζ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
+    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
+    """
+    Berechnung ψ (SN EN 60865-1:2012) im Mehrstufenverfahren:
+    1. Symbolische Methode (Exakte Lösung) 
+    2. Brent's Methode (Garantierte Intervallsuche)
+    3. fsolve (Allgemeiner numerischer Ansatz)
+    """
+    # Definiere die Polynomfunktion für numerische Methoden
+    def f(ψ):
+        return (ψ**3 * φ**2) + ((φ * (2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ * (2 + φ))
+
+    # 2. Brents's Methode (Präferierte numerische Methode)
+    try:
+        # Überprüfen Sie, ob die Zeichen an den Grenzen unterschiedlich sind (erforderlich für Brentq).
+        if f(0) * f(1) <= 0:
+            return brentq(f, 0, 1, xtol=1e-12)
+    except:
+        pass
+    # 3. FSOLVE (Notfallebene mit stabilen Ergebnissen)
+    for start in [0.1, 0.5, 0.9]:
+        try:
+            sol, info, ier, msg = fsolve(f, x0=start, full_output=True)
+            if ier == 1 and 0 <= sol[0] <= 1:
+                return float(sol[0])
+        except:
+            continue
+    return None
+
+def ψ_ohne_schlaufe_backup(φ: float, ζ: float) -> float:
     """
     Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
     (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
@@ -351,61 +415,6 @@ def ψ_ohne_schlaufe(φ: float, ζ: float) -> float:
         except:
             continue
     return None
-
-
-def ψ_ohne_schlaufe_backup_1(φ: float, ζ: float) -> float:
-    """
-    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
-    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
-    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
-    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
-    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
-    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
-    """
-    def polynom(ψ):
-        return (ψ**3 * φ**2) + ((φ * (2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ * (2 + φ))
-
-    # Suche nach Nullstellen mit verschiedenen Startwerten im Bereich [0, 1]
-    candidates = []
-    for start_value in [0.1, 0.5, 0.9]:
-        try:
-            solution = fsolve(polynom, x0=start_value, full_output=True)
-            ψ_val = solution[0][0]
-            info = solution[1]
-
-            # Prüfen, ob die Lösung konvergiert ist und im gültigen Bereich liegt
-            if info['fvec'][0]**2 < 1e-10 and 0 <= ψ_val <= 1:
-                candidates.append(ψ_val)
-        except:
-            continue
-
-    if candidates:
-        # Wähle die Lösung, die am nächsten zur physikalisch erwarteten liegt
-        return float(candidates[0])
-    else:
-        return None
-
-def ψ_ohne_schlaufe_backup_2(φ: float, ζ: float) -> float:
-    """
-    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
-    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
-    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
-    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
-    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
-    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
-    """
-    ψ = sympy.symbols(names='ψ', real=True)
-    polynom = (ψ**3 * φ**2) + ((φ * ( 2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ*(2 + φ))
-    gl_Psi = sympy.solve(polynom, ψ)
-
-    list_sol: [list] = []
-    for i in gl_Psi:
-        if  0 <= i <= 1:
-            list_sol.append(i)
-        else:
-            return None
-    return list_sol[0]
-    #return gl_Psi[0]
 
 
 # Grössen ab Kapitel 6.2.4
@@ -508,6 +517,7 @@ def δ_ebene_parallel(f_es: float, f_ed: float, l_v: float, h: float, w: float) 
         δ_ebene_parallel: float = arccos(((h +f_es)**2 + f_ed**2 - (l_v**2 - w**2)) / (2 * f_ed * (h +f_es)))
         return δ_ebene_parallel
 
+
 # Grössen ab Kapitel 6.2.5 (Schlaufen in Spannfeldmitte)
 # Gleichung 39
 def δ_ebene_senkrecht(f_es: float, f_ed: float, l_v: float, h: float, w: float) -> float | None:
@@ -561,7 +571,71 @@ def φ_mit_schlaufe(T_k1: float, T_kres: float, r: float, δ_end: float, δ:floa
             φ: float = φ_4
             return φ
 
-def ψ_mit_schlaufe(φ: float, ζ: float) -> float:
+def ψ_mit_schlaufe_symbolisch(φ: float, ζ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
+    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
+    """
+       Berechnung ψ (SN EN 60865-1:2012) im Mehrstufenverfahren:
+       1. Symbolische Methode (Exakte Lösung) 
+       2. Brent's Methode (Garantierte Intervallsuche)
+       3. fsolve (Allgemeiner numerischer Ansatz)
+       """
+    # 1. Symbolische Methode (Exakte Lösung)
+    try:
+        ψ_sym = sympy.symbols('ψ', real=True)
+        polynom_sym = (ψ_sym**3 * φ**2) + ((φ * (2 + ζ)) * (ψ_sym**2)) + (ψ_sym * (1 + (2 * ζ))) - (ζ * (2 + φ))
+        solutions = sympy.solve(polynom_sym, ψ_sym)
+
+        valid_sols = [float(s) for s in solutions if 0 <= s <= 1]
+        if valid_sols:
+            return valid_sols[0]
+    except:
+        pass  # Fallen zurück auf numerisch
+    return None
+
+def ψ_mit_schlaufe_numerisch(φ: float, ζ: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
+    ψ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    φ: Faktoren für die Berechnung der Zugkraft in Leiterseilen (dimensionslos)
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen 0 und 1 eingegeben.
+    """
+    """
+       Berechnung ψ (SN EN 60865-1:2012) im Mehrstufenverfahren:
+       1. Symbolische Methode (Exakte Lösung) 
+       2. Brent's Methode (Garantierte Intervallsuche)
+       3. fsolve (Allgemeiner numerischer Ansatz)
+       """
+    # Definiere die Polynomfunktion für numerische Methoden
+    def f(ψ):
+        return (ψ**3 * φ**2) + ((φ * (2 + ζ)) * (ψ**2)) + (ψ * (1 + (2 * ζ))) - (ζ * (2 + φ))
+
+    # 2. Brents's Methode (Präferierte numerische Methode)
+    try:
+        # Überprüfen Sie, ob die Zeichen an den Grenzen unterschiedlich sind (erforderlich für Brentq).
+        if f(0) * f(1) <= 0:
+            return brentq(f, 0, 1, xtol=1e-12)
+    except:
+        pass
+    # 3. FSOLVE (Notfallebene mit stabilen Ergebnissen)
+    for start in [0.1, 0.5, 0.9]:
+        try:
+            sol, info, ier, msg = fsolve(f, x0=start, full_output=True)
+            if ier == 1 and 0 <= sol[0] <= 1:
+                return float(sol[0])
+        except:
+            continue
+    return None
+
+def ψ_mit_schlaufe_backup(φ: float, ζ: float) -> float:
     """
     Funktion zur Berechnung des Faktors ψ zur Berechnung Faktoren für die Berechnung der Zugkraft in Leiterseilen
     (dimensionslos) nach SN EN 60865-1:2012 Kapitel 6.2.3
@@ -1061,7 +1135,86 @@ def ν_3(a_s: float, d: float, n: float = None) -> float:
     return ν_3
 
 # Gleichung (A.9 Bild 11)
-def ξ(j: float, ε_st: float) -> float:
+def ξ_symbolisch(j: float, ε_st: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ζ zur Berechnung des Beanspruchungsfaktors des Hauptleiters in Seilanordnungen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
+    """
+    """
+    Berechnet den Faktor ξ nach SN EN 60865-1:2012.
+    Gleichung: ξ³ + ε_st * ξ² - j² * (1 + ε_st) = 0
+    Gültigkeitsbereich: j >= 1, gesuchte Wurzel ξ liegt zwischen j^(2/3) und j.
+    """
+    if j < 1:
+        return None
+
+    # Untere und obere Grenze für die physikalische Lösung
+    lower_bound = j**(2 / 3)
+    upper_bound = j
+
+    # Symbolisch (SymPy) ---
+    try:
+        xi_sym = sympy.symbols('xi', real=True)
+        polynom = (xi_sym**3) + (ε_st * xi_sym**2) - (j**2 * (1 + ε_st))
+        gl_Zeta = sympy.solve(polynom, xi_sym)
+
+        # Filter: Wir suchen die Wurzel im Bereich [j^(2/3), j]
+        valid_sols = [float(s) for s in gl_Zeta if lower_bound - 1e-7 <= s <= upper_bound + 1e-7]
+        if valid_sols:
+            return float(valid_sols[0])
+    except:
+        pass
+    return None
+
+def ξ_numerisch(j: float, ε_st: float) -> float:
+    """
+    Funktion zur Berechnung des Faktors ζ zur Berechnung des Beanspruchungsfaktors des Hauptleiters in Seilanordnungen
+    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
+    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
+    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
+    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
+    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
+    """
+    """
+    Berechnet den Faktor ξ nach SN EN 60865-1:2012.
+    Gleichung: ξ³ + ε_st * ξ² - j² * (1 + ε_st) = 0
+    Gültigkeitsbereich: j >= 1, gesuchte Wurzel ξ liegt zwischen j^(2/3) und j.
+    """
+    if j < 1:
+        return None
+
+    # Untere und obere Grenze für die physikalische Lösung
+    lower_bound = j**(2 / 3)
+    upper_bound = j
+
+    # Die Funktion für numerische Verfahren
+    def f(xi_val):
+        return (xi_val**3) + (ε_st * xi_val**2) - (j**2 * (1 + ε_st))
+
+    # Brent's Methode (Sicher im Intervall) ---
+    try:
+        # Bei j >= 1 ist f(lower_bound) <= 0 und f(upper_bound) >= 0
+        # Das garantiert eine Lösung im Intervall.
+        return float(brentq(f, lower_bound, upper_bound, xtol=1e-12))
+    except ValueError:
+        pass
+
+    # FSOLVE (Notfall-Fallback) ---
+    # Startwerte: Mitte des Intervalls und die Grenzen
+    for start in [(lower_bound + upper_bound) / 2, lower_bound, upper_bound]:
+        try:
+            sol, info, ier, msg = fsolve(f, x0=np.array([start]), full_output=True)
+            if ier == 1 and lower_bound - 1e-7 <= sol[0] <= upper_bound + 1e-7:
+                return float(sol[0])
+        except:
+            continue
+    return None
+
+def ξ_backup(j: float, ε_st: float) -> float:
     """
     Funktion zur Berechnung des Faktors ζ zur Berechnung des Beanspruchungsfaktors des Hauptleiters in Seilanordnungen
     (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
@@ -1117,31 +1270,6 @@ def ξ(j: float, ε_st: float) -> float:
         except:
             continue
     return None
-
-def ξ_backup(j: float, ε_st: float) -> float:
-    """
-    Funktion zur Berechnung des Faktors ζ zur Berechnung des Beanspruchungsfaktors des Hauptleiters in Seilanordnungen
-    (dimensionslos) nach SN EN 60865-1:2012 Kapitel A.9
-    ζ: Beanspruchungsfaktor des Hauptleiters in Seilanordnungen (dimensionslos)
-    j: Parameter, der die Lage der Bündelleiter während des Kurzschlussstrom-Flusses angibt (dimensionslos)
-    ε_st: Dehnungsfaktoren bei der Kontraktion eines Seilbündels (dimensionslos)
-    Hinweis: Es werden nur reale Zahlen und Zahlen zwischen j**(2/3) und j eingegeben.
-    """
-    if j >= 1:
-        ξ = sympy.symbols(names='ξ', real=True)
-        polynom = (ξ**3) + (ε_st * ξ**2) - ((j**2)*(1 + ε_st))
-        gl_Zeta = sympy.solve(polynom, ξ)
-
-        list_sol: [list] = []
-        for i in gl_Zeta:
-            if  j**(2/3) <= i <= j:
-                list_sol.append(i)
-            else:
-                break
-        return list_sol[0] # if len(list_sol) >= 1 else None
-        return gl_Zeta
-    else:
-        return None
 
 # Gleichung (A.10 Bild 12)
 def η(ε_st: float, j: float, v_3: float, n: float, a_s: float, d: float) -> float:
@@ -1728,17 +1856,17 @@ def testrechnungen() -> None:
 
 if __name__ == "__main__":
     testrechnungen()
-    print(ψ_ohne_schlaufe(φ= 3.29, ζ= 0.19))
-    print(ψ_ohne_schlaufe(φ= 3.29, ζ= 0.3))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 3.29, ζ= 0.19))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 3.29, ζ= 0.3))
 
-    print(ψ_ohne_schlaufe(φ= 13.86, ζ= 0.0))
-    print(ψ_ohne_schlaufe(φ= 13.86, ζ= 0.1))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 13.86, ζ= 0.0))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 13.86, ζ= 0.1))
 
-    print(ψ_ohne_schlaufe(φ= 5.78, ζ= 1.7))
-    print(ψ_ohne_schlaufe(φ= 5.78, ζ= 3.9))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 5.78, ζ= 1.7))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 5.78, ζ= 3.9))
 
-    print(ψ_ohne_schlaufe(φ= 1.57, ζ= 1.1))
-    print(ψ_ohne_schlaufe(φ= 1.57, ζ= 2.7))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 1.57, ζ= 1.1))
+    print(ψ_ohne_schlaufe_symbolisch(φ= 1.57, ζ= 2.7))
 
 
 
