@@ -1,3 +1,4 @@
+import threading
 from dataclasses import asdict
 
 from pandas import DataFrame
@@ -144,7 +145,7 @@ def _is_run_cancelled(run_id):
     return run_id != _calc_run_id
 
 # Funktion zu Berechnung des höchsten Punktes im Chart bei gegebenem x-Wert
-def _build_vline_shapes(sweep_df, f_st_values):
+def _build_vline_shapes(sweep_df, f_st_values) -> dict:
     if sweep_df is None or sweep_df.empty:
         return []
     if "F_st" not in sweep_df.columns:
@@ -224,7 +225,7 @@ def _build_vline_shapes(sweep_df, f_st_values):
 
     return shapes
 
-def _build_sweep_chart_layout(shapes):
+def _build_sweep_chart_layout(shapes) -> dict:
     return {
         "paper_bgcolor": "white",
         "plot_bgcolor": "white",
@@ -255,6 +256,61 @@ def _build_sweep_chart_layout(shapes):
     }
 
 sweep_chart_layout: dict = _build_sweep_chart_layout([])
+
+def display_results(state) -> None:
+    # Darstellung der erweiterten Ergebnisse im Callback:
+    # state.calc_result_formatted = formatter.format_numbers_strings_scientific_and_normal(state.calc_result)
+    state.calc_result_formatted = dataloader.create_df_from_calc_results(state.calc_result,
+                                                                         state.temperatur_niedrig_selected,
+                                                                         state.temperatur_hoch_selected)
+
+    # Auf die Ergebnisse zugreifen, um sie in dem Text Widgets darzustellen:
+    state.F_td_temp_niedrig = round(state.calc_result['F_st_20'].F_td, 2) if state.calc_result['F_st_20'].F_td not in (
+        None, 0.0) else None
+    state.F_td_temp_hoch = round(state.calc_result['F_st_80'].F_td, 2) if state.calc_result['F_st_80'].F_td not in (
+        None, 0.0) else None
+    state.F_fd_temp_niedrig = round(state.calc_result['F_st_20'].F_fd, 2) if state.calc_result['F_st_20'].F_fd not in (
+        None, 0.0) else None
+    state.F_fd_temp_hoch = round(state.calc_result['F_st_80'].F_fd, 2) if state.calc_result['F_st_80'].F_fd not in (
+        None, 0.0) else None
+    state.F_pi_d_temp_niedrig = round(state.calc_result['F_st_20'].F_pi_d, 2) if state.calc_result[
+                                                                                     'F_st_20'].F_pi_d not in (None,
+                                                                                                               0.0) else None
+    state.F_pi_d_temp_hoch = round(state.calc_result['F_st_80'].F_pi_d, 2) if state.calc_result[
+                                                                                  'F_st_80'].F_pi_d not in (None,
+                                                                                                            0.0) else None
+    state.b_h_temp_niedrig = round(state.calc_result['F_st_20'].b_h, 2) if state.calc_result['F_st_20'].b_h not in (
+        None, 0.0) else None
+    state.b_h_temp_hoch = round(state.calc_result['F_st_80'].b_h, 2) if state.calc_result['F_st_80'].b_h not in (None,
+                                                                                                                 0.0) else None
+    state.a_min_temp_niedrig = round(state.calc_result['F_st_20'].a_min, 2) if state.calc_result[
+                                                                                   'F_st_20'].a_min not in (None,
+                                                                                                            0.0) else None
+    state.a_min_temp_hoch = round(state.calc_result['F_st_80'].a_min, 2) if state.calc_result['F_st_80'].a_min not in (
+        None, 0.0) else None
+
+    # Bestimme maximale (massgebende) Werte
+    def get_max_value(val1, val2, val3=None):
+        values = [v for v in [val1, val2, val3] if v not in (None, "", NaN)]
+        return max(values) if values else ""
+
+    # Bestimme minimale (massgebende) Werte
+    def get_min_value(val1, val2):
+        values = [v for v in [val1, val2] if v not in (None, "")]
+        return min(values) if values else ""
+
+    state.F_td_massg = get_max_value(state.F_td_temp_niedrig, state.F_td_temp_hoch)
+    state.temp_F_td_massg = state.temperatur_hoch_selected if state.F_td_temp_hoch > state.F_td_temp_niedrig else state.temperatur_niedrig_selected
+    state.F_fd_massg = get_max_value(state.F_fd_temp_niedrig, state.F_fd_temp_hoch)
+    state.temp_F_fd_massg = state.temperatur_hoch_selected if state.F_fd_temp_hoch > state.F_fd_temp_niedrig else state.temperatur_niedrig_selected
+    state.F_pi_d_massg = get_max_value(state.F_pi_d_temp_niedrig, state.F_pi_d_temp_hoch)
+    if state.F_pi_d_temp_hoch not in (None, 0.0) and state.F_pi_d_temp_niedrig not in (None, 0.0):
+        state.temp_F_pi_d_massg = state.temperatur_hoch_selected if state.F_pi_d_temp_hoch > state.F_pi_d_temp_niedrig else state.temperatur_niedrig_selected
+    state.F_td_fd_pi_d_massg_1 = round(get_max_value(state.F_td_massg * 1.5, state.F_fd_massg, state.F_pi_d_massg), 2)
+    state.F_td_fd_pi_d_massg_2 = get_max_value(state.F_td_massg, state.F_fd_massg, state.F_pi_d_massg)
+    state.b_h_max = get_max_value(state.b_h_temp_niedrig, state.b_h_temp_hoch)
+    state.temp_b_h = state.temperatur_hoch_selected if state.b_h_temp_niedrig < state.b_h_temp_hoch else state.temperatur_niedrig_selected
+    state.a_min_min = get_min_value(state.a_min_temp_niedrig, state.a_min_temp_hoch)
 
 def on_change_selectable_leiterseiltyp(state):
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
@@ -340,7 +396,6 @@ def on_click_zurücksetzen(state):
 
 def on_click_berechnen(state):
     run_id = _next_calc_run_id()
-
 
     required_fields = [
         # Allgemeine Angaben
@@ -487,46 +542,11 @@ def on_click_berechnen(state):
         if _is_run_cancelled(run_id):
             return
 
+        # Übertragung der berechneten Werte an den state
         state.calc_result = calc_result
 
-        # Darstellung der erweiterten Ergebnisse im Callback:
-        #state.calc_result_formatted = formatter.format_numbers_strings_scientific_and_normal(state.calc_result)
-        state.calc_result_formatted = dataloader.create_df_from_calc_results(state.calc_result, state.temperatur_niedrig_selected, state.temperatur_hoch_selected)
-
-        # Auf die Ergebnisse zugreifen, um sie in dem Text Widgets darzustellen:
-        state.F_td_temp_niedrig = round(state.calc_result['F_st_20'].F_td, 2)  if state.calc_result['F_st_20'].F_td not in (None, 0.0) else None
-        state.F_td_temp_hoch = round(state.calc_result['F_st_80'].F_td, 2) if state.calc_result['F_st_80'].F_td not in (None, 0.0) else None
-        state.F_fd_temp_niedrig = round(state.calc_result['F_st_20'].F_fd, 2) if state.calc_result['F_st_20'].F_fd not in (None, 0.0) else None
-        state.F_fd_temp_hoch = round(state.calc_result['F_st_80'].F_fd, 2) if state.calc_result['F_st_80'].F_fd not in (None, 0.0) else None
-        state.F_pi_d_temp_niedrig = round(state.calc_result['F_st_20'].F_pi_d, 2) if state.calc_result['F_st_20'].F_pi_d not in (None, 0.0) else None
-        state.F_pi_d_temp_hoch = round(state.calc_result['F_st_80'].F_pi_d, 2) if state.calc_result['F_st_80'].F_pi_d not in (None, 0.0) else None
-        state.b_h_temp_niedrig = round(state.calc_result['F_st_20'].b_h, 2) if state.calc_result['F_st_20'].b_h not in (None, 0.0) else None
-        state.b_h_temp_hoch = round(state.calc_result['F_st_80'].b_h, 2) if state.calc_result['F_st_80'].b_h not in (None, 0.0) else None
-        state.a_min_temp_niedrig = round(state.calc_result['F_st_20'].a_min, 2) if state.calc_result['F_st_20'].a_min not in (None, 0.0) else None
-        state.a_min_temp_hoch = round(state.calc_result['F_st_80'].a_min, 2) if state.calc_result['F_st_80'].a_min not in (None, 0.0) else None
-
-        # Bestimme maximale (massgebende) Werte
-        def get_max_value(val1, val2, val3=None):
-            values = [v for v in [val1, val2, val3] if v not in (None, "", NaN)]
-            return max(values) if values else ""
-
-        # Bestimme minimale (massgebende) Werte
-        def get_min_value(val1, val2):
-            values = [v for v in [val1, val2] if v not in (None, "")]
-            return min(values) if values else ""
-
-        state.F_td_massg = get_max_value(state.F_td_temp_niedrig, state.F_td_temp_hoch)
-        state.temp_F_td_massg = state.temperatur_hoch_selected if state.F_td_temp_hoch > state.F_td_temp_niedrig else state.temperatur_niedrig_selected
-        state.F_fd_massg = get_max_value(state.F_fd_temp_niedrig, state.F_fd_temp_hoch)
-        state.temp_F_fd_massg = state.temperatur_hoch_selected if state.F_fd_temp_hoch > state.F_fd_temp_niedrig else state.temperatur_niedrig_selected
-        state.F_pi_d_massg = get_max_value(state.F_pi_d_temp_niedrig, state.F_pi_d_temp_hoch)
-        if state.F_pi_d_temp_hoch not in (None, 0.0) and state.F_pi_d_temp_niedrig not in (None, 0.0):
-            state.temp_F_pi_d_massg = state.temperatur_hoch_selected if state.F_pi_d_temp_hoch > state.F_pi_d_temp_niedrig else state.temperatur_niedrig_selected
-        state.F_td_fd_pi_d_massg_1 = round(get_max_value(state.F_td_massg*1.5, state.F_fd_massg, state.F_pi_d_massg), 2)
-        state.F_td_fd_pi_d_massg_2 = get_max_value(state.F_td_massg, state.F_fd_massg, state.F_pi_d_massg)
-        state.b_h_max = get_max_value(state.b_h_temp_niedrig, state.b_h_temp_hoch)
-        state.temp_b_h = state.temperatur_hoch_selected if state.b_h_temp_niedrig < state.b_h_temp_hoch else state.temperatur_niedrig_selected
-        state.a_min_min = get_min_value(state.a_min_temp_niedrig, state.a_min_temp_hoch)
+        # Darstellung und Auswertung der Ergebnisse
+        display_results(state)
 
         notify(state, notification_type="success", message="Berechnung erfolgreich abgeschlossen", duration=5000)
 
