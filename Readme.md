@@ -1,5 +1,12 @@
 <img width="1925" height="1029" alt="The-Mechanical-Effects-Of-Short-circuit-Currents-In-Open-Air-Substations_staus" src="https://github.com/user-attachments/assets/83d87454-5e75-470b-97e6-8cc11ada1e85" />
 
+Geltungsbereich
+Die Applikation ist nach [3] und [4] aufgebaut und entsprechen dessen Prinzipien.
+Wie in [3] beschrieben, gelten die Berechnungen bei horizontal angeordneten Hauptleitern für Spannfeldlängen
+bis ca. 120 m und für einen Durchhang von 8% in Bezug auf die Spannfeldlänge.<br>
+Haben die Befestigungspunkte einen Höhenunterschied von > 25% bezogen auf die Spannfeldlänge ist die Berechnung
+als Schlaufe, im Sinne von vertikal verlaufenden Leiterseilen, durchzuführen.
+
 ## Seilzugkraft $F_{f,d}$ nach dem Kurzschluss durch das Fallen (Fall-Seilzugkraft) 
 Nach dem Ausschalten des Kurzschlusses pendelt das Seil oder es fällt in seine Ruhelage zurück. Der 
 Höchstwert $F_{f,d}$ der am Ende des Falles auftretenden Seilzugkraft ist nur zu berücksichtigen bei $r > 0,6$, 
@@ -40,9 +47,10 @@ Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Ha
 verwendet. Dieser Ansatz wurde mit dem Programm IEC865D verifiziert.
 
 ## Einzellasten
-Bei der Berechnung der Seilzugkräfte durch Ausschwingen $F_{t,d}$ und Fallen $F_{f,d}$ des Spannfeldes werden
-die Einzellasten gleichmässig auf die Seillänge verteilt, jedch bei der Berechnung der Seilzugkraft durch
-Bündelkontraktion bleiben sie unberücksichtigt. [2], [3]
+Bei der Berechnung der Seilzugkräfte bei Kurzschluss durch Ausschwingen $F_{t,d}$ und Fallen $F_{f,d}$ des Spannfeldes
+sowie bei der Seilauslenkung $b_{h}$ werden die Einzellasten gleichmässig auf die Seillänge verteilt. Sie werden dem 
+Massenbelag des Leitersiles als zustätzlicher Massenbelag addiert. Bei der Berechnung der Seilzugkraft durch 
+Bündelkontraktion bleibt der zustätzliche Massenbelag unberücksichtigt. [2], [3]
 Die Masse der Seilschlaufe in Spannfeldmitte und ihrer Befestigung wird nicht berücksichtigt. [3]
 
 Bei der Ermittlung der statischen Seilzugkraft $F_{st}$ und des statischen Durchhangs $f_{st}$ sollte der Beitrag 
