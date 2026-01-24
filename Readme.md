@@ -41,9 +41,9 @@ verwendet. Dieser Ansatz wurde mit dem Programm IEC865D verifiziert.
 
 ## Einzellasten
 Bei der Berechnung der Seilzugkräfte durch Ausschwingen $F_{t,d}$ und Fallen $F_{f,d}$ des Spannfeldes werden
-die Einzellasten gleichmässig auf die Seillänge verteilt, jodch bei der Berechnung der Seilzugkraft durch
+die Einzellasten gleichmässig auf die Seillänge verteilt, jedch bei der Berechnung der Seilzugkraft durch
 Bündelkontraktion bleiben sie unberücksichtigt. [2], [3]
-Die Masse der Seilschlaufe in Spannfeldmitte und ihrer Befestigung wird jedoch nicht berücksichtigt. [3]
+Die Masse der Seilschlaufe in Spannfeldmitte und ihrer Befestigung wird nicht berücksichtigt. [3]
 
 Bei der Ermittlung der statischen Seilzugkraft $F_{st}$ und des statischen Durchhangs $f_{st}$ sollte der Beitrag 
 konzentrierter Massen im Spannfeld, z. B. durch Abstandshalter, Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt 
