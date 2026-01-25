@@ -1,7 +1,18 @@
 <img width="1925" height="1029" alt="The-Mechanical-Effects-Of-Short-circuit-Currents-In-Open-Air-Substations_staus" src="https://github.com/user-attachments/assets/83d87454-5e75-470b-97e6-8cc11ada1e85" />
 
-Geltungsbereich
-Die Applikation ist nach [3] und [4] aufgebaut und entsprechen dessen Prinzipien.
+## Funktionen der Applikation
+**Integrierte Funktionen:**
+- Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile
+- Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal aufgelagte Leiterseile
+
+**Nicht integrierte Funktionen:**
+- Berechnung der Seilzugkräfte im Kurzschlussfall für Unterschlaufungen
+- Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile mit Schlaufen in Spannfeldmitte
+- Berechnung der Seilzugkräfte im Kurzschlussfall für vertikal verlaufende Leiterseile
+- Berechnung der Seilzugkräfte im Kurzschlussfall für Schlaufen am Spannfeldende
+
+## Geltungsbereich der Ergebnisse
+Die Applikation ist nach [3] und [4] aufgebaut und entspricht dessen Prinzipien.
 Wie in [3] beschrieben, gelten die Berechnungen bei horizontal angeordneten Hauptleitern für Spannfeldlängen
 bis ca. 120 m und für einen Durchhang von 8% in Bezug auf die Spannfeldlänge.<br>
 Haben die Befestigungspunkte einen Höhenunterschied von > 25% bezogen auf die Spannfeldlänge ist die Berechnung
@@ -74,7 +85,7 @@ aufgrund fehlender Angaben in [3] und [4], sowie der weiterführenden Literatur,
 Hinweis: Die Schlaufenebene wird nur bei Schlaufen in Spannfeldmitte berücksichtigt.
 
 ## Unterschlaufungen
-Unterschlaufungen verbinden zwei Felder mit abgespannten Leitungsseilen. 
+Bei Unterschlaufungen handelt es sich um Verbindungen zwischen zwei Feldern mit abgespannten Leitungsseilen. 
 Versuche haben gezeigt, dass die Schlaufe als eingespannt in den Seilklemmen betrachtet werden kann, und
 der tiefste Punkt der Schlaufe sich auf einer Kreisbahn um einen Punkt unterhalb der Verbindungslinie
 der Seilklemmen bewegt. [1]
