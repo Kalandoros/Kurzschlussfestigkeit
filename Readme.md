@@ -5,7 +5,7 @@
 - Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile
 - Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal aufgelagte Leiterseile
 
-**Nicht integrierte Funktionen:**
+**Nicht integrierte Funktionen (vorerst):**
 - Berechnung der Seilzugkräfte im Kurzschlussfall für Unterschlaufungen
 - Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile mit Schlaufen in Spannfeldmitte
 - Berechnung der Seilzugkräfte im Kurzschlussfall für vertikal verlaufende Leiterseile
