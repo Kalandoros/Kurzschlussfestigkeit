@@ -8,9 +8,10 @@ def on_menu_action(state, id, payload):
         navigate(state, to=page_id)
 
 menu_lov = [("Willkommen", "Willkommen"),
-            ("Kurzschlusskraefte", "Kurzschlusskräfte")]
-
+            ("Kurzschlusskraefte", "Kurzschlusskraefte")]
 with tgb.Page() as root_page:
     tgb.toggle(theme=True, class_name="h1 text-center pb2")
     tgb.menu(label="Menu", lov=menu_lov, on_action=on_menu_action)
     tgb.content()
+
+

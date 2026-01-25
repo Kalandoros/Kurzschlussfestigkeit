@@ -1,6 +1,6 @@
-import taipy.gui.builder as tgb
 from taipy.gui import Gui
-from src.pages import kurzschlusskraefte_page, root_page, on_menu_action
+import taipy.gui.builder as tgb
+from src.pages import (kurzschlusskraefte_doc_page, kurzschlusskraefte_calc_page, on_menu_action, root_page)
 
 # Importiere das komplette Modul, damit Taipy die Variablen findet
 from src.pages.kurzschlusskraefte import content_vorlage
@@ -12,7 +12,9 @@ with tgb.Page() as home_page:
 pages = {
     "/": root_page,
     "Willkommen": home_page,
-    "Kurzschlusskraefte": kurzschlusskraefte_page
+    "Kurzschlusskraefte": kurzschlusskraefte_calc_page,
+    "Applikation": kurzschlusskraefte_calc_page,
+    "Dokumentation": kurzschlusskraefte_doc_page,
 }
 
 if __name__ == "__main__":
@@ -25,5 +27,5 @@ if __name__ == "__main__":
         margin="2em", 
         dark_mode=False, 
         debug=True,
-        #port="auto"
+        port="auto"
     )

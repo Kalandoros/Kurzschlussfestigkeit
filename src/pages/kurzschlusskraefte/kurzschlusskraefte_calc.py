@@ -14,6 +14,7 @@ import traceback
 import math
 from src.utils import dataloader, formatter, helper
 from src.calculations.engine_kurzschlusskraefte import calculate_short_circuit_sweep_df
+from .root import build_navbar
 from src.calculations.engine_kurzschlusskraefte import (
     Kurschlusskräfte_Input,
     ShortCircuitResult,
@@ -768,9 +769,10 @@ def on_click_export_vorlage(state):
         traceback.print_exc()
         notify(state, notification_type="error", message=f"Fehler beim Export: {str(e)}", duration=15000)
 
-with tgb.Page() as kurzschlusskraefte_page:
-    tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
+with tgb.Page() as kurzschlusskraefte_calc_page:
+    build_navbar()
     tgb.html("br")
+    tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
     with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
         with tgb.part(class_name="card"):
             tgb.text(value="Eingaben", class_name="h2")

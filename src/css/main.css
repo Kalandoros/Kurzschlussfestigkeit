@@ -166,3 +166,36 @@
     margin-top: 15px !important;
     margin-bottom: 2px !important;
 }
+
+/* -------------------------------------------------------- */
+
+/* --- 9. Reduced width of Markdown html --- */
+/* Keep documentation content compact and scale images consistently. */
+.doc-card {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0px !important;
+}
+
+.doc-card img {
+    max-width: 80%;
+    height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 900px) {
+    .doc-card {
+        width: 100%;
+    }
+
+    .doc-card img {
+        max-width: 100%;
+    }
+}
+
+/* -------------------------------------------------------- */
+
+/* -------------------------------------------------------- */
