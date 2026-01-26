@@ -330,7 +330,9 @@ def ψ_ohne_schlaufe_symbolisch(φ: float, ζ: float) -> float:
         if valid_sols:
             return valid_sols[0]
     except:
-        pass
+        raise
+    finally:
+        return ψ_ohne_schlaufe_numerisch(φ=φ, ζ=ζ)
     return None
 
 def ψ_ohne_schlaufe_numerisch(φ: float, ζ: float) -> float:
@@ -597,6 +599,8 @@ def ψ_mit_schlaufe_symbolisch(φ: float, ζ: float) -> float:
             return valid_sols[0]
     except:
         pass  # Fallen zurück auf numerisch
+    finally:
+        return ψ_mit_schlaufe_numerisch(φ=φ, ζ=ζ)
     return None
 
 def ψ_mit_schlaufe_numerisch(φ: float, ζ: float) -> float:
@@ -1168,6 +1172,8 @@ def ξ_symbolisch(j: float, ε_st: float) -> float:
             return float(valid_sols[0])
     except:
         pass
+    finally:
+        return ξ_numerisch(j=j, ε_st=ε_st)
     return None
 
 def ξ_numerisch(j: float, ε_st: float) -> float:

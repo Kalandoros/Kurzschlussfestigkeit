@@ -31,7 +31,7 @@ pd.options.display.float_format = '{:12.3e}'.format
 leiterseilbefestigung_lov: list[str] = ["Abgespannt", "Aufgelegt", "Unterschlaufung", "Schlaufe am Spannfeldende"]
 leiterseilbefestigung_selected: None|str = None
 
-schlaufe_in_spannfeldmitte_lov: list[str] = ["Ja", "Nein"]
+schlaufe_in_spannfeldmitte_lov: list[str] = ["Nein", "Ja"]
 schlaufe_in_spannfeldmitte_selected: None|str = None
 
 standardkurzschlussstroeme_lov: list[str] = ["10", "12.5", "16",  "20", "25", "31.5", "40", "50", "63", "80"]
@@ -40,7 +40,7 @@ standardkurzschlussstroeme_selected: None|str = None
 frequenz_des_netzes_lov: list[str] = ["50", "16.66"]
 frequenz_des_netzes_selected: None|str = None
 
-hoehenunterschied_befestigungspunkte_lov: list[str] = ["Ja", "Nein"]
+hoehenunterschied_befestigungspunkte_lov: list[str] = ["Nein", "Ja"]
 hoehenunterschied_befestigungspunkte_selected: None|str = None
 
 schlaufenebene_parallel_senkrecht_lov: list[str] = ["Ebene senkrecht", "Ebene parallel"]
@@ -252,7 +252,7 @@ def _build_sweep_chart_layout(shapes) -> dict:
             "zerolinecolor": "black",
         },
         "shapes": shapes,
-        "legend": {"title": {"text": "Legende:"}, "orientation": "h", "y": -0.15, "x": 0},
+        "legend": {"title": {"text": "Legende:"}, "orientation": "h", "y": -0.15, "x": 0, "bgcolor": "transparent"},
         "margin": {"l": 60, "r": 20, "t": 60, "b": 60},
     }
 
@@ -442,20 +442,23 @@ def on_click_berechnen(state):
         return
 
     # Auswahlbedingte Überprüfungen
-    if state.teilleiter_selected > 1 and state.a_s in ('', None, '0.0', '0', 0.0, 0):
+    if state.teilleiter_selected in (None, 0.0, 0, '', '0.0', '0'):
+        notify(state, notification_type="error",
+               message=f"Bitte folgendes Pflichtfeld ausfüllen: 'n', 'Anzahl der Teilleiter eines Hauptleiters'", duration=15000)
+    if int(state.teilleiter_selected) > 1 and state.a_s in (None, 0.0, 0, '', '0.0', '0'):
         notify(state, notification_type="error",
                message=f"Bitte folgendes Pflichtfeld ausfüllen: 'a_s', 'Wirksamer Abstand zwischen Teilleitern'", duration=15000)
         return
-    if state.l > 5 and state.l_s_1 in ('', None, '0.0', '0', 0.0, 0):
+    if float(state.l) > 5 and state.l_s_1 in (None, 0.0, 0, '', '0.0', '0'):
         notify(state, notification_type="warning",
                message=f"Bitte folgende Eingabefelder überprüfen: 'l_s', 'Abstandshalter'", duration=15000)
-    if state.leiterseilbefestigung_selected == "Abgespannt" and state.l_i in ('', None, '0.0', '0', 0.0, 0):
+    if state.leiterseilbefestigung_selected == "Abgespannt" and state.l_i in (None, 0.0, 0, '', '0.0', '0'):
         notify(state, notification_type="warning",
                message=f"Bitte folgendes Eingabefeld überprüfen: 'l_i', 'Länge einer Abspann-Isolatorkette'", duration=15000)
-    if state.leiterseilbefestigung_selected == "Abgespannt" and state.m_c in ('', None, '0.0', '0', 0.0, 0):
+    if state.leiterseilbefestigung_selected == "Abgespannt" and state.m_c in (None, 0.0, 0, '', '0.0', '0'):
         notify(state, notification_type="warning",
                message=f"Bitte folgendes Eingabefeld überprüfen: 'm_c', 'Summe konzentrischer Massen im Spannfeld'", duration=15000)
-    if state.leiterseilbefestigung_selected == "Aufgelegt" and state.l_h_f in ('', None, '0.0', '0', 0.0, 0):
+    if state.leiterseilbefestigung_selected == "Aufgelegt" and state.l_h_f in (None, 0.0, 0, '', '0.0', '0'):
         notify(state, notification_type="warning",
                message=f"Bitte folgendes Eingabefeld überprüfen: 'l_h_f', 'Länge einer Klemme u. Formfaktor'", duration=15000)
 
@@ -513,25 +516,25 @@ def on_click_berechnen(state):
             E=float(state.leiterseiltyp["Elastizitätsmodul"].values[0]),
             c_th=float(state.leiterseiltyp["Kurzzeitstromdichte"].values[0]),
             n=int(state.teilleiter_selected),
-            m_c=float(state.m_c) if state.m_c not in (None, 0.0) else None,
+            m_c=float(state.m_c) if state.m_c not in (None, 0.0, 0, '', '0.0', '0') else None,
             l=float(state.l),
-            l_i=float(state.l_i) if state.l_i not in (None, 0.0)  else None,
-            l_h_f= float(state.l_h_f) if state.l_h_f not in (None, 0.0)  else None,
+            l_i=float(state.l_i) if state.l_i not in (None, 0.0, 0, '', '0.0', '0')  else None,
+            l_h_f= float(state.l_h_f) if state.l_h_f not in (None, 0.0, 0, '', '0.0', '0')  else None,
             a=float(state.a),
-            a_s=float(state.a_s) if state.a_s not in (None, 0.0) else None,
+            a_s=float(state.a_s) if state.a_s not in (None, 0.0, 0, '', '0.0', '0') else None,
             F_st_20=float(state.F_st_20),
             F_st_80=float(state.F_st_80),
             federkoeffizient=int(state.federkoeffizient_selected),
-            l_s_1=float(state.l_s_1) if state.l_s_1 not in (None, 0.0) else None,
-            l_s_2=float(state.l_s_2) if state.l_s_2 not in (None, 0.0) else None,
-            l_s_3=float(state.l_s_3) if state.l_s_3 not in (None, 0.0) else None,
-            l_s_4=float(state.l_s_4) if state.l_s_4 not in (None, 0.0) else None,
-            l_s_5=float(state.l_s_5) if state.l_s_5 not in (None, 0.0) else None,
-            l_s_6=float(state.l_s_6) if state.l_s_6 not in (None, 0.0) else None,
-            l_s_7=float(state.l_s_7) if state.l_s_7 not in (None, 0.0) else None,
-            l_s_8=float(state.l_s_8) if state.l_s_8 not in (None, 0.0) else None,
-            l_s_9=float(state.l_s_9) if state.l_s_9 not in (None, 0.0) else None,
-            l_s_10=float(state.l_s_10) if state.l_s_10 not in (None, 0.0) else None
+            l_s_1=float(state.l_s_1) if state.l_s_1 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_2=float(state.l_s_2) if state.l_s_2 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_3=float(state.l_s_3) if state.l_s_3 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_4=float(state.l_s_4) if state.l_s_4 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_5=float(state.l_s_5) if state.l_s_5 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_6=float(state.l_s_6) if state.l_s_6 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_7=float(state.l_s_7) if state.l_s_7 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_8=float(state.l_s_8) if state.l_s_8 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_9=float(state.l_s_9) if state.l_s_9 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_s_10=float(state.l_s_10) if state.l_s_10 not in (None, 0.0, 0, '', '0.0', '0') else None
         )
 
         # Berechnung über den Mediator
