@@ -776,7 +776,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
     build_navbar()
     tgb.html("br")
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
-    with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1 1"):
+    with tgb.layout(columns="1 1", class_name="p1", columns__mobile="1"):
         with tgb.part(class_name="card"):
             tgb.text(value="Eingaben", class_name="h2")
             tgb.html("br")
@@ -786,18 +786,20 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
                 tgb.input(label="Name der Leiterseilverbindung", value="{name_der_verbindung}",
                       hover_text="Angabe des Projekts, Feldes und der Verbindung.",
                       class_name="input-with-unit --unit; mb1")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1"):
                 tgb.selector(label="Art der Leiterseilbefestigung", value="{leiterseilbefestigung_selected}",
                              lov="{leiterseilbefestigung_lov}", dropdown=True)
                 tgb.selector(label="Schlaufe in Spannfeldmitte",
                              value="{schlaufe_in_spannfeldmitte_selected}", lov="{schlaufe_in_spannfeldmitte_lov}",
-                             dropdown=True, hover_text="Ja, wenn der obere Befestigungspunkt der Schlaufe bis "
-                                                       "zu 10 % der Länge des Hauptleiters von der Mitte entfernt ist.")
+                             dropdown=True,
+                             hover_text="Ja, wenn der obere Befestigungspunkt der Schlaufe bis "
+                                        "zu 10 % der Länge des Hauptleiters von der Mitte entfernt ist.")
                 tgb.selector(label="Höhenunterschied der Befestigungspunkte mehr als 25%",
                              value="{hoehenunterschied_befestigungspunkte_selected}",
                              lov="{hoehenunterschied_befestigungspunkte_lov}",
-                             dropdown=True, hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte "
-                                                       "mehr als 25 % der Spannfeldlänge beträgt.")
+                             dropdown=True,
+                             hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte "
+                                        "mehr als 25 % der Spannfeldlänge beträgt.")
                 tgb.selector(label="Schlaufebene bei Schlaufen in Spannfeldmitte",
                              value="{schlaufenebene_parallel_senkrecht_selected}",
                              lov="{schlaufenebene_parallel_senkrecht_lov}",
@@ -821,7 +823,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
             tgb.html("br")
             tgb.text(value="Elektrische Werte", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1 1 1", columns__mobile="1 1 1 1", class_name=""):
+            with tgb.layout(columns="1 1 1 1", columns__mobile="1", class_name=""):
                 tgb.selector(label="I''k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)",
                              value="{standardkurzschlussstroeme_selected}", lov="{standardkurzschlussstroeme_lov}",
                              dropdown=True, class_name="input-with-unit A-unit")
@@ -835,7 +837,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
             tgb.html("br")
             tgb.text(value="Leiterseilkonfiguration", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1"):
                 tgb.selector(label="Leiterseiltyp", value="{leiterseiltyp_selected}", lov="{leiterseiltyp_lov}",
                              dropdown=True, on_change=on_change_selectable_leiterseiltyp)
                 tgb.selector(label="n Anzahl der Teilleiter eines Hauptleiters",
@@ -846,7 +848,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
             tgb.html("br")
             tgb.text(value="Abstände", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1"):
                 tgb.number(label="l Mittenabstand der Stützpunkte", value="{l}", min=0.0, max=150.0, step=0.1,
                            class_name="input-with-unit m-unit Mui-focused")
                 tgb.number(label="l_i Länge einer Abspann-Isolatorkette", value="{l_i}", min=0.0, max=20.0,
@@ -867,7 +869,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
             tgb.html("br")
             tgb.text(value="Mechanische Kraftwerte", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1"):
                 tgb.number(label="Fst-20 statische Seilzugkraft in einem Hauptleiter", value="{F_st_20}", min=0.0,
                            step=0.1,
                            hover_text="Bei der Ermittlung der statischen Seilzugkraft Fst sollte der Beitrag \n"
@@ -891,7 +893,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
                                     hover_text="Abstände beginnend von links vom Ende der Isolatorkette oder dem Anschlusspunkt bei aufgelegten Leiterseilen. \n"
                                                "Abstände zwischen Abstandshaltern, Gegenkontakte von Trennern zählen ebenfalls als Abstandshalter. \n"
                                                "Die gesamte Seillänge eines Hauptleiters und die Summe der angegebenen Abstände müssen übereinstimmen bzw. gleich sein."):
-                    with tgb.layout(columns="1 1 1 1 1", columns__mobile="1 1 1 1 1"):
+                    with tgb.layout(columns="1 1 1 1 1", columns__mobile="1"):
                         tgb.number(label="Abstandshalter 1", value="{l_s_1}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
                         tgb.number(label="Abstandshalter 2", value="{l_s_2}", min=0.0, step=0.1,
@@ -914,12 +916,12 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
                                    class_name="input-with-unit m-unit Mui-focused")
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
             tgb.html("br")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p0"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1", class_name="p0"):
                 tgb.button(label="Berechnen", on_action=on_click_berechnen, class_name="fullwidth")
                 tgb.button(label="Alles zurücksetzen", on_action=on_click_zurücksetzen, class_name="fullwidth")
                 tgb.button(label="Leiterseiltyp aufheben", on_action=on_click_leiterseiltyp_zurücksetzen, class_name="fullwidth")
             tgb.html("br")
-            with tgb.layout(columns="1 1 1 1", columns__mobile="1 1 1 1", class_name="p0"):
+            with tgb.layout(columns="1 1 1 1", columns__mobile="1", class_name="p0"):
                 tgb.file_selector(content="{content_vorlage}", label="Vorlage auswählen", extensions=".xlsx",
                                   drop_message="Drop Message", class_name="fullwidth")
                 tgb.button(label="Vorlage laden", on_action=on_click_load_vorlage, class_name="fullwidth")
@@ -929,7 +931,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
         with tgb.part(class_name="card"):
             tgb.text(value="Ergebnisse", class_name="h2")
             tgb.html("br")
-            with tgb.layout(columns="1 1 1", columns__mobile="1 1 1", class_name="p0"):
+            with tgb.layout(columns="1 1 1", columns__mobile="1", class_name="p0"):
                 with tgb.part():
                     tgb.text(value="Massgebende Seilzugkräfte bei {temperatur_niedrig_selected}/{temperatur_hoch_selected} °C", class_name="h6")
                     tgb.html("hr")
@@ -951,7 +953,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
                     tgb.text(value="Ff,d bei {temperatur_hoch_selected} °C: {F_fd_temp_hoch} kN", class_name="mb-4")
                     tgb.text(value="Fpi,d bei {temperatur_hoch_selected} °C: {F_pi_d_temp_hoch} kN", class_name="mb-4")
                     tgb.html("br")
-            with tgb.layout(columns="1 1", columns__mobile="1 1", class_name="p0"):
+            with tgb.layout(columns="1 1", columns__mobile="1", class_name="p0"):
                 with tgb.part():
                     tgb.text(value="Seilauslenkung und Abstand", class_name="h6")
                     tgb.html("hr")
