@@ -1,3 +1,5 @@
+import sys
+import tomllib
 from collections import defaultdict
 from pathlib import Path
 import pandas as pd
@@ -14,9 +16,30 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.precision', 3)
 
+TOML_FILE = "project.toml"
 DIRECTORY_NAME = "data"
 FILE_NAME = "Leiterseildaten.csv"
 EXCEL_INPUT_FILE = "Eingaben.xlsx"
+
+
+def get_app_version():
+    toml_path = Path(get_project_root(), TOML_FILE)
+
+    try:
+        with open(toml_path, "rb") as f:
+            data = tomllib.load(f)
+            version = data.get("project", {}).get("version")
+            return version
+
+    except FileNotFoundError:
+        sys.stderr.write(f"Warning: Configuration file not found at {toml_path}\n")
+        return "dev-local"
+    except tomllib.TOMLDecodeError as e:
+        sys.stderr.write(f"Error: pyproject.toml has invalid TOML syntax: {e}\n")
+        return "error-syntax"
+    except Exception as e:
+        sys.stderr.write(f"Unexpected error loading version: {e}\n")
+        return None
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent.parent

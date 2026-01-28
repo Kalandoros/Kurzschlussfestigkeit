@@ -6,7 +6,7 @@ from src.pages import (kurzschlusskraefte_doc_page, kurzschlusskraefte_calc_page
 from src.pages.kurzschlusskraefte import content_vorlage
 
 with tgb.Page() as home_page:
-    tgb.text(value="# Willkommen", mode="md")
+    tgb.text(value="# Willkommen bei UWclac", mode="md")
     tgb.image(content="src/assets/Icon.jpg", width="10%")
 
 pages = {
@@ -27,5 +27,6 @@ if __name__ == "__main__":
         margin="2em", 
         dark_mode=False, 
         debug=True,
-        port="auto"
+        port="auto",
+        libraries=["katex"]
     )
