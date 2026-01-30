@@ -173,8 +173,7 @@
 /* Keep documentation content compact and scale images consistently. */
 .doc-card {
     width: 80%;
-    margin-left: auto;
-    margin-right: auto;
+    padding-top: 0px;
     margin-top: 0px !important;
 }
 
@@ -198,4 +197,19 @@
 
 /* -------------------------------------------------------- */
 
+/* --- 10. Pins the version to the bottom right --- */
+.version-watermark {
+    position: fixed !important;
+    bottom: 5em !important;
+    opacity: 0.4 !important;
+    color: gray !important;
+    right: 0% !important;
+    transform: translateX(-50%) !important;;
+    font-size: 0.1em !important;
+}
+
+
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
+
+
