@@ -1,3 +1,5 @@
+<img width="1925" height="1029" alt="The-Mechanical-Effects-Of-Short-circuit-Currents-In-Open-Air-Substations_staus" src="https://github.com/user-attachments/assets/83d87454-5e75-470b-97e6-8cc11ada1e85" />
+
 ## Funktionen der Applikation
 **Integrierte Funktionen:**
 - Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile
@@ -47,8 +49,8 @@ Dies führt zu einer konservativen und damit sicherheitsgerichteten Auslegung. D
 mit dem Programm IEC865D verfiziert.
 
 Es gibt zwei Pfade:<br>
-$j ≥ 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. Hier wird das berechnete $\eta$ (Gleichung A.10 Bild 12) verwendet. <br>
-$j < 1.0$: Die Leiter schlagen zusammen. Es wird die Formel mit dem Faktor $\xi$ (Gleichung A.9 Bild 11) verwendet.
+A: $j ≥ 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. Hier wird das berechnete $\eta$ (Gleichung A.10 Bild 12) verwendet. <br>
+B: $j < 1.0$: Die Leiter schlagen zusammen. Es wird die Formel mit dem Faktor $\xi$ (Gleichung A.9 Bild 11) verwendet.
 
 In Abweichung von der Norm [3]  wird  unterschieden, ob Abstandhalter vorhanden sind oder nicht. 
 Sind Abstandhalter vorhanden, wird gemäss Norm mit den gemittelten Abständen l_s der Abstandshalter nach [4] gerechnet. 

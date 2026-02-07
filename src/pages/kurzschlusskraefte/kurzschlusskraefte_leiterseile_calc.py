@@ -769,7 +769,7 @@ def on_click_export_vorlage(state):
         traceback.print_exc()
         notify(state, notification_type="error", message=f"Fehler beim Export: {str(e)}", duration=15000)
 
-with tgb.Page() as kurzschlusskraefte_calc_page:
+with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:
     build_navbar()
     tgb.html("br")
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
