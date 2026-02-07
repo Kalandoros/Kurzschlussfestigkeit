@@ -28,5 +28,4 @@ if __name__ == "__main__":
         dark_mode=False, 
         debug=True,
         port="auto",
-        libraries=["katex"]
     )

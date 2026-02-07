@@ -1,15 +1,15 @@
 ﻿from dataclasses import dataclass
 from typing import Optional, Callable
-import math
 import scipy.constants
-from . import berechnungen_kurzschlusskraefte as bkskls
+from src.calculations import berechnungen_kurzschlusskraefte_leiterseile as bkskls
 import pandas as pd
 
 class CalculationCancelled(Exception):
     pass
 
+
 @dataclass(slots=True)
-class Kurschlusskräfte_Input:
+class KurschlusskräfteLeiterseileInput:
     # Allgemeine Angaben
     leiterseilbefestigung: str
     schlaufe_in_spannfeldmitte: str
@@ -66,8 +66,9 @@ class Kurschlusskräfte_Input:
         self.F_st_20 = self.F_st_20 * 10 ** 3
         self.F_st_80 = self.F_st_80 * 10 ** 3
 
+
 @dataclass(slots=True)
-class ShortCircuitResult:
+class KurschlusskräfteLeiterseileResult:
     l_c: Optional[float] = None
     l_eff: Optional[float] = None
     m_c: Optional[float] = None
@@ -119,10 +120,11 @@ class ShortCircuitResult:
         if self.F_pi_d is not None:
             self.F_pi_d = self.F_pi_d / 1000
 
-class ShortCircuitMediator:
-    def __init__(self, inputs: Kurschlusskräfte_Input):
+
+class KurschlusskräfteLeiterseileMediator:
+    def __init__(self, inputs: KurschlusskräfteLeiterseileInput):
         self.inputs = inputs
-        self.results = ShortCircuitResult()
+        self.results = KurschlusskräfteLeiterseileResult()
         self.mode = "normal"
         self.mu0 = scipy.constants.mu_0
         self.g = scipy.constants.g
@@ -144,10 +146,9 @@ class ShortCircuitMediator:
             # Weitere Kombinationen hier ergänzen ...
         }
     
-    def select_and_run_calculation(self) -> dict[str, ShortCircuitResult]:
+    def select_and_run_calculation(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
-        Wählt die passende Berechnungsmethode basierend auf den Eingabeparametern
-        und führt die Berechnung aus.
+        Wählt die passende Berechnungsmethode basierend auf den Eingabeparametern und führt die Berechnung aus.
         
         Returns:
             Dictionary mit Ergebnissen für F_st_20 und F_st_80
@@ -256,7 +257,7 @@ class ShortCircuitMediator:
 
         return pd.DataFrame(rows)
 
-    def run_calculation_1_1(self) -> dict[str, ShortCircuitResult]:
+    def run_calculation_1_1(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
         Fall 1.1: Abgespannte Leiterseile ohne Schlaufe, ohne Höhenunterschied
 
@@ -270,7 +271,7 @@ class ShortCircuitMediator:
         results = {}
 
         for key, F_st in [('F_st_20', self.inputs.F_st_20), ('F_st_80', self.inputs.F_st_80)]:
-            result = ShortCircuitResult()
+            result = KurschlusskräfteLeiterseileResult()
 
             # Schritt 1: Effektive Seillänge
             result.l_c = bkskls.l_c(self.inputs.l, self.inputs.l_i)
@@ -382,7 +383,7 @@ class ShortCircuitMediator:
 
         return results
 
-    def run_calculation_1_2(self) -> dict[str, ShortCircuitResult]:
+    def run_calculation_1_2(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
         Fall 1.2: Abgespannte Leiterseile ohne Schlaufe, mit Höhenunterschied >25%
         
@@ -396,7 +397,7 @@ class ShortCircuitMediator:
         # TODO: Implementierung für Fall 1.2
         raise NotImplementedError("Fall 1.2 noch nicht implementiert")
 
-    def run_calculation_2_1(self) -> dict[str, ShortCircuitResult]:
+    def run_calculation_2_1(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
         Fall 2.1: Abgespannte Leiterseile mit Schlaufe (Ebene parallel)
         
@@ -410,7 +411,7 @@ class ShortCircuitMediator:
         # TODO: Implementierung für Fall 2.1
         raise NotImplementedError("Fall 2.1 noch nicht implementiert")
 
-    def run_calculation_2_2(self) -> dict[str, ShortCircuitResult]:
+    def run_calculation_2_2(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
         Fall 2.2: Abgespannte Leiterseile mit Schlaufe (Ebene senkrecht)
         
@@ -424,21 +425,21 @@ class ShortCircuitMediator:
         # TODO: Implementierung für Fall 2.2
         raise NotImplementedError("Fall 2.2 noch nicht implementiert")
 
-    def run_calculation_2_3(self) -> dict[str, ShortCircuitResult]:
+    def run_calculation_2_3(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
         Fall 2.3: Abgespannte Leiterseile mit Schlaufe und Höhenunterschied (Ebene parallel)
         """
         # TODO: Implementierung für Fall 2.3
         raise NotImplementedError("Fall 2.3 noch nicht implementiert")
 
-    def run_calculation_2_4(self) -> dict[str, ShortCircuitResult]:
+    def run_calculation_2_4(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
         Fall 2.4: Abgespannte Leiterseile mit Schlaufe und Höhenunterschied (Ebene senkrecht)
         """
         # TODO: Implementierung für Fall 2.4
         raise NotImplementedError("Fall 2.4 noch nicht implementiert")
 
-    def run_calculation_3_1(self) -> dict[str, ShortCircuitResult]:
+    def run_calculation_3_1(self) -> dict[str, KurschlusskräfteLeiterseileResult]:
         """
         Fall 3.1: Aufgelegte Leiterseile ohne Schlaufe
         
@@ -453,7 +454,7 @@ class ShortCircuitMediator:
         results = {}
 
         for key, F_st in [('F_st_20', self.inputs.F_st_20), ('F_st_80', self.inputs.F_st_80)]:
-            result = ShortCircuitResult()
+            result = KurschlusskräfteLeiterseileResult()
 
             # Schritt 1: Effektive Seillänge
             result.l_eff = bkskls.l_eff(self.inputs.l, self.inputs.l_h_f)
@@ -565,20 +566,20 @@ class ShortCircuitMediator:
         return results
 
 
-def calculate_short_circuit(inputs: Kurschlusskräfte_Input) -> dict[str, ShortCircuitResult]:
+def calculate_kurschlusskräfte_leiterseile(inputs: KurschlusskräfteLeiterseileInput) -> dict[str, KurschlusskräfteLeiterseileResult]:
     """
     Hauptfunktion zur Berechnung der Kurzschlusskräfte.
     Wählt automatisch die passende Berechnungsmethode basierend auf den Eingabeparametern.
     """
-    mediator = ShortCircuitMediator(inputs)
+    mediator = KurschlusskräfteLeiterseileMediator(inputs)
     return mediator.select_and_run_calculation()
 
-def calculate_short_circuit_sweep_df(inputs, f_st_min: float = 0.1,f_st_max: float = 35.0,f_st_step: float = 0.01,
-                                     cancel_check: Optional[Callable[[], bool]] = None):
+def calculate_kurschlusskräfte_leiterseile_sweep_df(inputs, f_st_min: float = 0.1, f_st_max: float = 35.0,
+                                                    f_st_step: float = 0.01, cancel_check: Optional[Callable[[], bool]] = None):
     """
     Berechnet Kurzschlusskräfte für eine Reihe von F_st-Werten (kN) und gibt eine Pandas-DataFrame zurück.
     """
-    mediator = ShortCircuitMediator(inputs)
+    mediator = KurschlusskräfteLeiterseileMediator(inputs)
     return mediator.calculate_sweep_f_st_dataframe(
         f_st_min=f_st_min,
         f_st_max=f_st_max,

@@ -1,8 +1,6 @@
 import threading
-from dataclasses import asdict
 
 from pandas import DataFrame
-from pandas.io.clipboard import init_windows_clipboard
 from sympy.core.numbers import NaN
 from taipy.gui import notify, download
 import taipy.gui.builder as tgb
@@ -11,14 +9,13 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 import traceback
-import math
-from src.utils import dataloader, formatter, helper
-from src.calculations.engine_kurzschlusskraefte import calculate_short_circuit_sweep_df
+from src.utils import dataloader, helper
+from src.engines.engine_kurzschlusskraefte_leiterseile import calculate_kurschlusskräfte_leiterseile_sweep_df
 from .root import build_navbar
-from src.calculations.engine_kurzschlusskraefte import (
-    Kurschlusskräfte_Input,
-    ShortCircuitResult,
-    calculate_short_circuit,
+from src.engines.engine_kurzschlusskraefte_leiterseile import (
+    KurschlusskräfteLeiterseileInput,
+    KurschlusskräfteLeiterseileResult,
+    calculate_kurschlusskräfte_leiterseile,
     CalculationCancelled,
 )
 
@@ -121,7 +118,7 @@ a_min_temp_niedrig: None|float|str = ""
 a_min_temp_hoch: None|float|str = ""
 a_min_min: None|float|str = ""
 
-calc_result: None|ShortCircuitResult = None
+calc_result: None | KurschlusskräfteLeiterseileResult = None
 calc_result_formatted: None|DataFrame = None
 sweep_calc_df: None|DataFrame = None
 sweep_vline_shapes: list = []
@@ -498,7 +495,7 @@ def on_click_berechnen(state):
 
     try:
         # Erstellung des Input-Objekts für den Mediator
-        inputs = Kurschlusskräfte_Input(
+        inputs = KurschlusskräfteLeiterseileInput(
             leiterseilbefestigung=str(state.leiterseilbefestigung_selected),
             schlaufe_in_spannfeldmitte=str(state.schlaufe_in_spannfeldmitte_selected),
             hoehenunterschied_befestigungspunkte=str(state.hoehenunterschied_befestigungspunkte_selected),
@@ -539,7 +536,7 @@ def on_click_berechnen(state):
 
         # Berechnung über den Mediator
         #print(inputs)
-        calc_result = calculate_short_circuit(inputs)
+        calc_result = calculate_kurschlusskräfte_leiterseile(inputs)
 
         # Überprüft, ob das Abbruchkriterium bei mehrfachem Klicken von Berechnen für die For-Loop des Diagramms zutrifft
         if _is_run_cancelled(run_id):
@@ -558,7 +555,7 @@ def on_click_berechnen(state):
             return
 
         try:
-            state.sweep_calc_df = calculate_short_circuit_sweep_df(inputs,cancel_check=lambda: _is_run_cancelled(run_id))
+            state.sweep_calc_df = calculate_kurschlusskräfte_leiterseile_sweep_df(inputs, cancel_check=lambda: _is_run_cancelled(run_id))
             state.sweep_vline_shapes = _build_vline_shapes(state.sweep_calc_df, [state.F_st_20, state.F_st_80])
             state.sweep_chart_layout = _build_sweep_chart_layout(state.sweep_vline_shapes)
             # print("Sweep calc df preview:")
@@ -697,7 +694,7 @@ def on_click_export_vorlage(state):
             template_path = Path(state.content_vorlage)
         else:
             # Verwende Standard-Vorlage
-            template_path = Path(dataloader.get_project_root()) / "data" / "Export Vorlage.xlsx"
+            template_path = Path(dataloader.get_project_root()) / "src" / "templates" / "Export Vorlage Kurzschlusskraft Leiterseile.xlsx"
 
         if not template_path.exists():
             notify(state, notification_type="error", message="Keine Vorlage gefunden. Bitte erst eine Datei auswählen.",
@@ -989,7 +986,7 @@ with tgb.Page() as kurzschlusskraefte_calc_page:
                               y=["F_td", "F_fd", "F_pi_d"], name=["F<sub>td</sub>", "F<sub>fd</sub>", "F<sub>pi d</sub>"],
                               color=["red", "blue", "green"], mode="lines", rebuild=True, height="800px",
                               layout="{sweep_chart_layout}")
-                    #tgb.table(data="{calc_result_formatted}", rebuild=True, show_all=True, number_format="%.3e", size="small", width="35%")
+                    #tgb.table(examples="{calc_result_formatted}", rebuild=True, show_all=True, number_format="%.3e", size="small", width="35%")
                 #with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
                     #tgb.text(value="{calc_result_formatted}", mode="pre")
     with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):

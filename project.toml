@@ -5,7 +5,7 @@ description = "Auslegung der Kurzschlussfestigkeit von Betriebsmitteln"
 authors = [{name = "Kalandoros", email = "info@uwcalc.ch"}]
 readme = "README.md"
 requires-python = ">=3.11"
-keywords = ["electrical-engineering", "short-circuit", "taipy", "engineering-calc"]
+keywords = ["engineering", "electrical-engineering", "short-circuit", "taipy", "engineering-calc"]
 dependencies = [
     "numpy==2.3.3",
     "openpyxl==3.1.2",

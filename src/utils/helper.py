@@ -12,10 +12,10 @@ def get_error_location(tb):
     """
     error_location = ""
     for frame in tb:
-        if "berechnungen_kurzschlusskraefte.py" in frame.filename:
+        if "berechnungen_kurzschlusskraefte_leiterseile.py" in frame.filename:
             error_location = f" in Funktion '{frame.name}' (Zeile {frame.lineno})"
             break
-        elif "engine_kurzschlusskraefte.py" in frame.filename:
+        elif "engine_kurzschlusskraefte_leiterseile.py" in frame.filename:
             error_location = f" in '{frame.name}' (Zeile {frame.lineno})"
             break
     return error_location
@@ -32,7 +32,7 @@ def get_detailed_error_location(tb, max_frames=10):
         str: Call-Chain im Format "datei::funktion() → datei::funktion()
     """
     error_locations = []
-    relevant_files = ["berechnungen_kurzschlusskraefte.py", "engine_kurzschlusskraefte.py",
+    relevant_files = ["berechnungen_kurzschlusskraefte_leiterseile.py", "engine_kurzschlusskraefte_leiterseile.py",
                       "berechnungen_kurzschlussgroessen.py", "betriebsmittel.py"]
 
     # Sammle alle relevanten Frames

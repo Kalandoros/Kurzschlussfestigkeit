@@ -197,6 +197,42 @@
 
 /* -------------------------------------------------------- */
 
+/* --- 9b. Third-party iframe Taipy style --- */
+.third-party-iframe-taipy-style {
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.third-party-iframe-taipy-style iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    outline: 0 !important;
+    display: block !important;
+    background: var(--color-paper) !important;
+    color: inherit !important;
+    font-family: Lato, Arial, sans-serif !important;
+    line-height: 1.5 !important;
+}
+
+/* -------------------------------------------------------- */
+
+/* --- 9c. Strip default iframe borders for Taipy user content --- */
+iframe[src*="taipy-user-content"] {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    display: block !important;
+}
+
+
+/* -------------------------------------------------------- */
+
 /* --- 10. Pins the version to the bottom right --- */
 .version-watermark {
     position: fixed !important;

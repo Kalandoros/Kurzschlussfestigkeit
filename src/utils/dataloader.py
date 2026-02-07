@@ -17,7 +17,8 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.precision', 3)
 
 TOML_FILE = "project.toml"
-DIRECTORY_NAME = "data"
+TEMPLATE_DIRECTORY_NAME = "src/templates"
+DATA_DIRECTORY = "src/data"
 FILE_NAME = "Leiterseildaten.csv"
 EXCEL_INPUT_FILE = "Eingaben.xlsx"
 
@@ -45,15 +46,12 @@ def get_project_root() -> Path:
     return Path(__file__).parent.parent.parent
 
 def load_csv_to_df() -> pd.DataFrame:
-    file = Path(get_project_root(), DIRECTORY_NAME, FILE_NAME)
-    if file:
-        raw_data = pd.read_csv(file, header=0, delimiter=";", na_filter=False)
-        df = pd.DataFrame(raw_data)
-    else:
-        print(f"Datei {FILE_NAME} im Dateiordner {DIRECTORY_NAME} konnte nicht gefunden oder geladen werden. Prüfe "
-              f"den Pfad {file}!")
-        df = pd.DataFrame()
-    return df
+    print(get_project_root(),DATA_DIRECTORY,FILE_NAME)
+    file = Path(get_project_root(), DATA_DIRECTORY, FILE_NAME)
+    if file is None:
+        raise FileNotFoundError(f"Datei {FILE_NAME} nicht gefunden werden!")
+    raw_data = pd.read_csv(file, header=0, delimiter=";", na_filter=False)
+    return pd.DataFrame(raw_data)
 
 def convert_df_to_dict(df: pd.DataFrame) -> list[dict]:
     dictionary = df.to_dict(orient='records')
@@ -73,7 +71,7 @@ def load_excel_to_df(file_path: str | Path = None) -> pd.DataFrame:
         DataFrame mit den geladenen Daten (keine Header-Zeile)
     """
     if file_path is None:
-        file_path = Path(get_project_root(), DIRECTORY_NAME, EXCEL_INPUT_FILE)
+        file_path = Path(get_project_root(), TEMPLATE_DIRECTORY_NAME, EXCEL_INPUT_FILE)
     else:
         file_path = Path(file_path)
 
