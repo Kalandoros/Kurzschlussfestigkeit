@@ -1,7 +1,7 @@
 ﻿from dataclasses import dataclass
 from typing import Optional, Callable
 import scipy.constants
-from src.calculations import berechnungen_kurzschlusskraefte_leiterseile as bkskls
+from src.calculations import kurzschlusskraefte_leiterseile_berechnungen as bkskls
 import pandas as pd
 
 class CalculationCancelled(Exception):

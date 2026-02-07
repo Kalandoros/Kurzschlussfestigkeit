@@ -10,9 +10,9 @@ from datetime import datetime
 import tempfile
 import traceback
 from src.utils import dataloader, helper
-from src.engines.engine_kurzschlusskraefte_leiterseile import calculate_kurschlusskräfte_leiterseile_sweep_df
+from src.engines.kurzschlusskraefte_leiterseile_engine import calculate_kurschlusskräfte_leiterseile_sweep_df
 from .root import build_navbar
-from src.engines.engine_kurzschlusskraefte_leiterseile import (
+from src.engines.kurzschlusskraefte_leiterseile_engine import (
     KurschlusskräfteLeiterseileInput,
     KurschlusskräfteLeiterseileResult,
     calculate_kurschlusskräfte_leiterseile,

@@ -10,7 +10,7 @@ raw_text = DOC_PATH.read_text(encoding="utf-8") if DOC_PATH.exists() else "## Er
 
 content = third_party.MaTex(raw_text)
 
-with tgb.Page() as kurzschlusskraefte_leiterseile_doc_page:
+with tgb.Page() as kurzschlusskraefte_leiterseile_docu_page:
     build_navbar()
     tgb.html("br")
     tgb.text(value="Kurzschlussfestigkeit bei Leiterseilen", class_name="h1")
