@@ -172,8 +172,8 @@
 /* --- 9. Reduced width of Markdown html --- */
 /* Keep documentation content compact and scale images consistently. */
 .doc-card {
-    width: 80%;
-    padding-top: 0px;
+    /* width: 80%; */
+    /* padding-top: 0px; */
     margin-top: 0px !important;
 }
 
@@ -201,23 +201,17 @@
 .third-party-iframe-taipy-style {
     border: 0 !important;
     box-shadow: none !important;
-    padding: 0 !important;
     background: transparent !important;
+    overflow: hidden !important; /* Wichtig: Taipy-Container darf NICHT scrollen */
+    padding: 0px;
 }
 
 .third-party-iframe-taipy-style iframe {
     width: 100% !important;
     height: 100% !important;
-    border: 0 !important;
-    border-width: 0 !important;
-    border-style: none !important;
-    border-color: transparent !important;
-    outline: 0 !important;
+    border: none !important;
     display: block !important;
-    background: var(--color-paper) !important;
-    color: inherit !important;
-    font-family: Lato, Arial, sans-serif !important;
-    line-height: 1.5 !important;
+    /* Hier keine Hintergrundfarben setzen, das macht der Iframe selbst! */
 }
 
 /* -------------------------------------------------------- */
@@ -232,6 +226,24 @@ iframe[src*="taipy-user-content"] {
     box-shadow: none !important;
     display: block !important;
 }
+
+.iframe[src*="taipy-user-content"] img {
+    max-width: 80%;
+    height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 900px) {
+    .doc-card {
+        width: 100%;
+    }
+
+    .doc-card img {
+        max-width: 100%;
+    }}
+
 
 /* -------------------------------------------------------- */
 

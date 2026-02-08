@@ -19,7 +19,7 @@ pages = {
 }
 
 if __name__ == "__main__":
-    gui = Gui(pages=pages, css_file="src\css\main.css")
+    gui = Gui(pages=pages, css_file="src/css/main.css")
     gui.register_content_provider(third_party.MaTex, third_party.render_matex)
     gui.run(initial_page="Willkommen", #use_reloader=True,
             title="Kurzschlussfestigkeit", favicon="src/assets/Icon.jpg", watermark="© Angelo Rusvai",margin="2em",

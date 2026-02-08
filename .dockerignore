@@ -10,6 +10,7 @@ __pycache__/
 *.log
 *.tmp
 *.bak
+*.bat
 .env
 .venv
 venv/
@@ -18,4 +19,5 @@ build/
 dist/
 coverage/
 docs/
+examples/
 *.sqlite
