@@ -12,7 +12,7 @@ import warnings
 import pandas as pd
 from openpyxl import load_workbook
 
-from src.utils import formatter, traceback_detail
+from src.utils import formatter, traceback_detail, mappings
 
 pd.options.display.float_format = '{:12.3e}'.format
 pd.set_option('display.max_columns', None)
@@ -227,7 +227,7 @@ def convert_excel_to_dict_kurzschlusskreafte_leiterseile(df: pd.DataFrame) -> tu
 
     return input_dict, loaded_fields, skipped_fields
 
-def export_dict_to_excel_kurzschlusskreafte_leiterseile(input_dict: dict[str, Any], template_path: str | Path, output_path: str | Path) -> bool:
+def export_dict_to_excel_with_mapping(input_dict: dict[str, Any], template_path: str | Path, output_path: str | Path) -> bool:
     """
     Exportiert Dictionary in Excel-Datei basierend auf Vorlage.
 
@@ -246,39 +246,7 @@ def export_dict_to_excel_kurzschlusskreafte_leiterseile(input_dict: dict[str, An
         print(f"Vorlage nicht gefunden: {template_path}")
         return False
 
-    reverse_field_mapping: dict[str, str] = {
-        'leiterseilbefestigung_selected': 'Art der Leiterseilbefestigung',
-        'schlaufe_in_spannfeldmitte_selected': 'Schlaufe in Spannfeldmitte',
-        'hoehenunterschied_befestigungspunkte_selected': 'Höhenunterschied der Befestigungspunkte mehr als 25%',
-        'schlaufenebene_parallel_senkrecht_selected': 'Schlaufebene bei Schlaufen in Spannfeldmitte',
-        'temperatur_niedrig_selected': 'ϑ_l Niedrigste Temperatur',
-        'temperatur_hoch_selected': 'ϑ_h Höchste Temperatur',
-        'standardkurzschlussstroeme_selected': 'I\'\'k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)',
-        'kappa': 'κ Sossfaktor',
-        't_k': 'Tk Kurzschlussdauer',
-        'frequenz_des_netzes_selected': 'f Frequenz des Netzes',
-        'leiterseiltyp_selected': 'Leiterseiltyp',
-        'teilleiter_selected': 'n Anzahl der Teilleiter eines Hauptleiters',
-        'm_c': 'm_c Summe konzentrischer Massen im Spannfeld',
-        'l': 'l Mittenabstand der Stützpunkte',
-        'l_i': 'l_i Länge einer Abspann-Isolatorkette',
-        'l_h_f': 'l_h_f Länge einer Klemme u. Formfaktor',
-        'a': 'a Leitermittenabstand',
-        'a_s': 'a_s wirksamer Abstand zwischen Teilleitern',
-        'F_st_20': 'Fst-20 statische Seilzugkraft in einem Hauptleiter',
-        'F_st_80': 'Fst80 statische Seilzugkraft in einem Hauptleiter',
-        'federkoeffizient_selected': 'S resultierender Federkoeffizient beider Stützpunkte im Spannfeld',
-        'l_s_1': 'Abstand Phasenabstandshalter 1',
-        'l_s_2': 'Abstand Phasenabstandshalter 2',
-        'l_s_3': 'Abstand Phasenabstandshalter 3',
-        'l_s_4': 'Abstand Phasenabstandshalter 4',
-        'l_s_5': 'Abstand Phasenabstandshalter 5',
-        'l_s_6': 'Abstand Phasenabstandshalter 6',
-        'l_s_7': 'Abstand Phasenabstandshalter 7',
-        'l_s_8': 'Abstand Phasenabstandshalter 8',
-        'l_s_9': 'Abstand Phasenabstandshalter 9',
-        'l_s_10': 'Abstand Phasenabstandshalter 10',
-    }
+    reverse_field_mapping = mappings.get_reverse_mapping(template_path)
 
     # Kopiere die Vorlage zur Ausgabedatei (um Formatierung zu erhalten)
     shutil.copy(template_path, output_path)

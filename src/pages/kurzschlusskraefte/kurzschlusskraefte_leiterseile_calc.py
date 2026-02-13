@@ -12,7 +12,7 @@ import taipy.gui.builder as tgb
 import pandas as pd
 
 from .root import build_navbar
-from src.utils import dataloader, traceback_detail
+from src.utils import dataloader, traceback_detail, mappings
 from src.engines.kurzschlusskraefte_leiterseile_engine import calculate_kurschlusskräfte_leiterseile_sweep_df
 from src.engines.kurzschlusskraefte_leiterseile_engine import (
     KurschlusskräfteLeiterseileInput,
@@ -755,7 +755,7 @@ def on_click_export_vorlage(state):
         output_path = Path(temp_dir) / filename
 
         # Exportiere zu Excel mit Vorlage
-        success = dataloader.export_dict_to_excel_kurzschlusskreafte_leiterseile(export_dict, template_path, output_path)
+        success = dataloader.export_dict_to_excel_with_mapping(export_dict, template_path, output_path)
 
         if success:
             # Lese die erstellte Datei und trigger Download mit Datum-Zeit-Dateinamen
