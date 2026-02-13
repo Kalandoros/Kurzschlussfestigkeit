@@ -1,7 +1,6 @@
 import markdown2
 from typing import Any
 
-
 class MaTex:
     def __init__(self, text: str) -> None:
         """
@@ -11,7 +10,6 @@ class MaTex:
             text (str): Der Markdown/LaTeX-Inhalt der Dokumentation.
         """
         self.text: str = text
-
 
 def render_matex(obj: Any) -> str:
     """
@@ -86,8 +84,8 @@ def render_matex(obj: Any) -> str:
             const isDark = parentBody.classList.contains('taipy-dark-mode');
             const suffix = isDark ? '-dark' : '-light';
 
-            // Wir mappen NUR die absolut notwendigen Farben
-            // Basierend auf deinem Konsolen-Screenshot:
+            // Mappen der nur absolut notwendigen Farben
+            // Basierend auf der Browser Konsole:
             myRoot.style.setProperty('--color-paper', parentStyle.getPropertyValue('--color-paper' + suffix));
             myRoot.style.setProperty('--sidebar-bg', parentStyle.getPropertyValue('--color-background' + suffix));
             myRoot.style.setProperty('--color-primary', parentStyle.getPropertyValue('--color-primary'));
@@ -108,10 +106,10 @@ def render_matex(obj: Any) -> str:
 
     function init() {
         updateTheme();
-        // Wir beobachten den Body des Elternfensters auf Attribut-Änderungen (Classes)
+        // Beobachten des Body des Elternfensters auf Attribut-Änderungen (Classes)
         observer.observe(window.parent.document.body, { attributes: true });
 
-        // TOC Generierung (wie bisher)
+        // TOC Generierung
         const sidebarList = document.getElementById('toc-list');
         const headers = document.querySelectorAll('.content-area h1, .content-area h2, .content-area h3');
         headers.forEach((header, index) => {
@@ -136,4 +134,3 @@ def render_matex(obj: Any) -> str:
     return (f'{mathjax_script}{style}{sync_script}'
             f'<div class="content-area">{safe_html}</div>'
             f'<div class="sidebar"><h3>Inhalt</h3><ul id="toc-list"></ul></div>')
-

@@ -1,17 +1,19 @@
+import sys
+from pathlib import Path
+from datetime import datetime
 import threading
+import tempfile
+import traceback
 
 from pandas import DataFrame
 from sympy.core.numbers import NaN
 from taipy.gui import notify, download
 import taipy.gui.builder as tgb
 import pandas as pd
-from pathlib import Path
-from datetime import datetime
-import tempfile
-import traceback
+
+from .root import build_navbar
 from src.utils import dataloader, traceback_detail
 from src.engines.kurzschlusskraefte_leiterseile_engine import calculate_kurschlusskräfte_leiterseile_sweep_df
-from .root import build_navbar
 from src.engines.kurzschlusskraefte_leiterseile_engine import (
     KurschlusskräfteLeiterseileInput,
     KurschlusskräfteLeiterseileResult,
@@ -61,7 +63,7 @@ Auswahl der Leiterseiltypen:
 2. Selektierung der ersten Spalte mit "Bezeichnung" als List of values für das Dropdown, 
 3. Parameter für das initiale Laden und die spätere Auswahl
 """
-leiterseiltyp: pd.DataFrame = dataloader.load_csv_to_df()
+leiterseiltyp: pd.DataFrame = dataloader.load_csv_to_df("Leiterseildaten.csv")
 leiterseiltyp_lov: list[str] = list(leiterseiltyp["Bezeichnung"])
 leiterseiltyp_selected: None|str = None
 
@@ -142,7 +144,7 @@ def _next_calc_run_id():
 def _is_run_cancelled(run_id):
     return run_id != _calc_run_id
 
-# Funktion zu Berechnung des höchsten Punktes im Chart bei gegebenem x-Wert
+# Funktion zur Berechnung des höchsten Punktes im Chart bei gegebenem x-Wert
 def _build_vline_shapes(sweep_df, f_st_values) -> dict:
     if sweep_df is None or sweep_df.empty:
         return []
@@ -258,9 +260,9 @@ sweep_chart_layout: dict = _build_sweep_chart_layout([])
 def display_results(state) -> None:
     # Darstellung der erweiterten Ergebnisse im Callback:
     # state.calc_result_formatted = formatter.format_numbers_nice_to_str_for_cli(state.calc_result)
-    state.calc_result_formatted = dataloader.create_df_from_calc_results(state.calc_result,
-                                                                         state.temperatur_niedrig_selected,
-                                                                         state.temperatur_hoch_selected)
+    state.calc_result_formatted = dataloader.create_df_from_calc_results_kurzschlusskreafte_leiterseile(state.calc_result,
+                                                                                                        state.temperatur_niedrig_selected,
+                                                                                                        state.temperatur_hoch_selected)
 
     # Auf die Ergebnisse zugreifen, um sie in dem Text Widgets darzustellen:
     state.F_td_temp_niedrig = round(state.calc_result['F_st_20'].F_td, 2) if state.calc_result['F_st_20'].F_td not in (
@@ -317,7 +319,7 @@ def on_change_selectable_leiterseiltyp(state):
     #print(state.leiterseiltyp["Dauerstrombelastbarkeit"].values[0])
 
 def on_click_leiterseiltyp_zurücksetzen(state):
-    state.leiterseiltyp = dataloader.load_csv_to_df()
+    state.leiterseiltyp = dataloader.load_csv_to_df("Leiterseildaten.csv")
     state.leiterseiltyp_selected = None
     #state.leiterseiltyp_lov = list(state.leiterseiltyp.keys())
     notify(state, notification_type="info", message="Auswahl aufgehoben")
@@ -567,45 +569,45 @@ def on_click_berechnen(state):
             state.sweep_calc_df = None
             state.sweep_vline_shapes = []
             state.sweep_chart_layout = _build_sweep_chart_layout([])
-            notify(state, notification_type="warning",
-                   message=f"Diagramm konnte nicht erstellt werden: {str(sw)}", duration=10000)
+            notify(state, notification_type="warning", message=f"Diagramm konnte nicht erstellt werden: {str(sw)}", duration=10000)
+            traceback.print_exc(limit=10, file=sys.stdout, chain=True)
 
     except ValueError as ve:
         error_msg = traceback_detail.get_exception_message(ve, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ve)}", duration=15000)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
 
     except IndexError as ie:
         error_msg = traceback_detail.get_exception_message(ie, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ie)}", duration=15000)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
 
     except NotImplementedError as nie:
         # Behandlung für noch nicht implementierte Fälle
         notify(state, notification_type="warning", message=f"⚠️ Diese Berechnungsmethode ist noch nicht implementiert:\n{str(nie)}", duration=15000)
 
     except Exception as e:
-        print(f"Detaillierter Fehler:")
-        traceback.print_exc()
-        tb = traceback.extract_tb(e.__traceback__)
         error_msg = traceback_detail.get_exception_message(e, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(e)}", duration=15000)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
 
 def on_click_load_vorlage(state):
     """
     Lädt Vorlage aus Excel und setzt GUI-Widgets.
     """
 
-    # Reset all fields and results
+    # Setzt alle Felder und Ergebnisse zurück um zu Bereinigen
     on_click_zurücksetzen(state)
 
-    # Check if file_selector has content (it can be a string path or empty)
+    # Überprüfe, ob der file_selector einen Inhalt besitzt
     file_path = state.content_vorlage
 
-    # Check if a file path exists and is valid
+    # Überprüfe, ob der Dateipfad vorhanden und gültig ist
     if not file_path or file_path == '' or file_path is None:
         notify(state, notification_type="warning", message="Bitte erst eine Datei auswählen")
         return
 
-    # Additional check: verify the file path is a string (not during upload transition)
+    # Überprüfe, ob der Dateipfad ein String ist
     if not isinstance(file_path, str):
         notify(state, notification_type="warning", message="Ungültiger Dateipfad. Bitte Datei erneut auswählen.")
         return
@@ -619,7 +621,7 @@ def on_click_load_vorlage(state):
             return
 
         # Konvertiere DataFrame zu Dictionary mit den State-Variablen
-        input_dict, loaded_fields, skipped_fields = dataloader.convert_excel_to_input_dict(df)
+        input_dict, loaded_fields, skipped_fields = dataloader.convert_excel_to_dict_kurzschlusskreafte_leiterseile(df)
 
         if not input_dict:
             notify(state, notification_type="error", message="Keine gültigen Eingabedaten in der Datei gefunden")
@@ -655,7 +657,9 @@ def on_click_load_vorlage(state):
         state.content_vorlage = None
 
     except Exception as e:
-        notify(state, notification_type="error", message=f"Fehler beim Laden der Datei: {str(e)}")
+        error_msg = traceback_detail.get_exception_message(e)
+        notify(state, notification_type="error", message=f"Fehler beim Laden der Datei {error_msg}: {str(e)}", duration=15000)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         # Setze auch bei Fehler zurück
         state.content_vorlage = None
 
@@ -680,7 +684,9 @@ def on_click_undo_vorlage(state):
         notify(state, notification_type="info", message="Vorherige Werte wiederhergestellt")
 
     except Exception as e:
-        notify(state, notification_type="error", message=f"Fehler beim Wiederherstellen: {str(e)}")
+        error_msg = traceback_detail.get_exception_message(e)
+        notify(state, notification_type="error", message=f"Fehler beim Wiederherstellen {error_msg}: {str(e)}", duration=15000)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
 
 def on_click_export_vorlage(state):
     """
@@ -697,8 +703,7 @@ def on_click_export_vorlage(state):
             template_path = Path(dataloader.get_project_root()) / "src" / "templates" / "Export Vorlage Kurzschlusskraft Leiterseile.xlsx"
 
         if not template_path.exists():
-            notify(state, notification_type="error", message="Keine Vorlage gefunden. Bitte erst eine Datei auswählen.",
-                   duration=15000)
+            notify(state, notification_type="error", message="Keine Vorlage gefunden. Bitte erst eine Datei auswählen.", duration=15000)
             return
 
         # Sammle alle aktuellen State-Werte
@@ -750,24 +755,23 @@ def on_click_export_vorlage(state):
         output_path = Path(temp_dir) / filename
 
         # Exportiere zu Excel mit Vorlage
-        success = dataloader.export_input_dict_to_excel(export_dict, template_path, output_path)
+        success = dataloader.export_dict_to_excel_kurzschlusskreafte_leiterseile(export_dict, template_path, output_path)
 
         if success:
-            # Lese die erstellte Datei und trigger Download mit richtigem Namen
+            # Lese die erstellte Datei und trigger Download mit Datum-Zeit-Dateinamen
             with open(output_path, 'rb') as f:
                 file_content = f.read()
 
-            # Nutze download() Funktion für korrekten Dateinamen
+            # Nutze download() Funktion für Datum-Zeit-Dateinamen
             download(state, content=file_content, name=filename)
-            notify(state, notification_type="success", message=f"Download gestartet: {filename}",
-                   duration=5000)
+            notify(state, notification_type="success", message=f"Download gestartet: {filename}", duration=5000)
         else:
             notify(state, notification_type="error", message="Fehler beim Erstellen der Excel-Datei.", duration=15000)
 
     except Exception as e:
-        print(f"Detaillierter Fehler beim Export:")
-        traceback.print_exc()
-        notify(state, notification_type="error", message=f"Fehler beim Export: {str(e)}", duration=15000)
+        error_msg = traceback_detail.get_exception_message(e)
+        notify(state, notification_type="error", message=f"Fehler beim Export{error_msg}: {str(e)}", duration=15000)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
 
 with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:
     build_navbar()

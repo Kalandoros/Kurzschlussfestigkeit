@@ -14,7 +14,7 @@ g = scipy.constants.g # 9.81 ist auch möglich
 
 
 # Hilfsgleichung l_s Abstände Abstandshalter
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def l_s(l_s_1: float|None = None, l_s_2: float|None = None, l_s_3: float|None = None, l_s_4: float|None = None,
         l_s_5: float|None = None, l_s_6: float|None = None, l_s_7: float|None = None, l_s_8: float|None = None,
         l_s_9: float|None = None, l_s_10: float|None = None) -> float:
@@ -43,7 +43,7 @@ def l_s(l_s_1: float|None = None, l_s_2: float|None = None, l_s_3: float|None = 
     return l_s
 
 # Hilfsgleichungen m_c Masse konzentrischer Massen
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def m_c(m_c: float|None , n: float, l_c: float) -> float:
     if m_c not in (None, 0.0, 0):
         m_c: float = m_c / (n * l_c)
@@ -51,7 +51,7 @@ def m_c(m_c: float|None , n: float, l_c: float) -> float:
     return 0.0
 
 # Hilfsgleichungen l_v Seilbogen Länge der Schlaufe
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def l_v(h: float, w:float) -> float:
     """
     Funktion zur Berechnung der Seil(bogen)länge der Schlaufe l_v in m
@@ -65,7 +65,7 @@ def l_v(h: float, w:float) -> float:
     return l_v
 
 # Grössen ab Kapitel 6.2.2
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def l_c(l: float, l_i: float) -> float:
     """
     Funktion zur Berechnung der Seillänge lc eines Hauptleiters im Spannfeld in m nach SN EN 60865-1:2012 Kapitel 6.2.2
@@ -86,7 +86,7 @@ def l_c(l: float, l_i: float) -> float:
         return l_c
 
 # Hilfsgleichungen l_eff bei aufgelegten Seilen
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def l_eff(l: float, l_h_f: float) -> float:
     """
     Funktion zur Berechnung der Seillänge l_eff eines Hauptleiters im Spannfeld in m nach SN EN 60865-2:2017 Kapitel 8.3.1
@@ -105,7 +105,7 @@ def l_eff(l: float, l_h_f: float) -> float:
         return l_eff
 
 # Gleichung (20)
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def r(F_: float, n: float, m_s: float, g: float) -> float:
     """
     Funktion zur Berechnung Verhältnisses r der elektromagnetischen Kraft auf ein Leiterseil bei Kurzschluss zur
@@ -120,7 +120,7 @@ def r(F_: float, n: float, m_s: float, g: float) -> float:
     return r
 
 # Gleichung (21)
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def δ_1(r: float) -> float:
     """
     Funktion zur Berechnung der Richtung δ1 der resultierenden Kraft in ° nach SN EN 60865-1:2012 Kapitel 6.2.2

@@ -1,63 +1,110 @@
 import sys
+import traceback
 import tomllib
 from collections import defaultdict
+from collections.abc import Hashable
+from dataclasses import asdict
 from pathlib import Path
+import shutil
+from typing import Any, Optional
+import warnings
+
 import pandas as pd
 from openpyxl import load_workbook
-import shutil
-import warnings
-from dataclasses import asdict
+
+from src.utils import formatter, traceback_detail
 
 pd.options.display.float_format = '{:12.3e}'.format
-
-from src.utils import formatter_number
-
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.precision', 3)
 
 TOML_FILE = "project.toml"
+
 TEMPLATE_DIRECTORY_NAME = "src/templates"
+EXCEL_EXPORT_FILE_KURZSCHLUSSKRAFT_LEITERSEILE = "Export Vorlage Kurzschlusskraft Leiterseile.xlsx"
+
 DATA_DIRECTORY = "src/data"
-FILE_NAME = "Leiterseildaten.csv"
-EXCEL_INPUT_FILE = "Eingaben.xlsx"
+FILE_NAME_LEITERSEILDATEN = "Leiterseildaten.csv"
 
-
-def get_app_version():
+def get_app_version() -> Optional[str]:
+    """Liest die App-Version aus der project.toml."""
     toml_path = Path(get_project_root(), TOML_FILE)
 
     try:
+        # TOML laden und Version auslesen
         with open(toml_path, "rb") as f:
-            data = tomllib.load(f)
+            data: dict[str, Any] = tomllib.load(f)
             version = data.get("project", {}).get("version")
             return version
 
-    except FileNotFoundError:
+    except FileNotFoundError as fnfe:
         sys.stderr.write(f"Warning: Configuration file not found at {toml_path}\n")
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return "dev-local"
     except tomllib.TOMLDecodeError as e:
         sys.stderr.write(f"Error: pyproject.toml has invalid TOML syntax: {e}\n")
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return "error-syntax"
     except Exception as e:
         sys.stderr.write(f"Unexpected error loading version: {e}\n")
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return None
 
 def get_project_root() -> Path:
+    """Gibt das Projekt-Root-Verzeichnis zurück."""
+    # Aufbau: .../src/utils/dataloader.py -> Root
     return Path(__file__).parent.parent.parent
 
-def load_csv_to_df() -> pd.DataFrame:
-    print(get_project_root(),DATA_DIRECTORY,FILE_NAME)
-    file = Path(get_project_root(), DATA_DIRECTORY, FILE_NAME)
+def _convert_value_for_excel(value: Any) -> Any:
+    """
+    Konvertiert einen Wert in den passenden Typ für Excel-Export.
+
+    Args:
+        value: Zu konvertierender Wert
+
+    Returns:
+        Konvertierter Wert (str, int, float oder '')
+    """
+    # Prüfe auf leere Werte
+    # Werte fuer den Excel-Export normalisieren
+    if value is None or value in ('0', 0):
+        return ''
+
+    # Wenn bereits eine Zahl, direkt zurückgeben
+    if isinstance(value, (int, float)):
+        return value
+
+    # String-Konvertierung versuchen
+    if isinstance(value, str):
+        try:
+            # Float wenn Dezimaltrennzeichen vorhanden
+            if '.' in value or ',' in value:
+                return float(value.replace(',', '.'))
+            # Ansonsten Integer
+            return int(value)
+        except (ValueError, AttributeError):
+            # Bei Fehler String beibehalten
+            return value
+
+    return value
+
+def load_csv_to_df(file_name) -> pd.DataFrame:
+    """Lädt die CSV-Daten und gibt einen DataFrame zurück."""
+    # print(get_project_root(),DATA_DIRECTORY,file_name)
+    # CSV-Pfad aus dem Projekt-Root bauen
+    file = Path(get_project_root(), DATA_DIRECTORY, file_name)
     if file is None:
-        raise FileNotFoundError(f"Datei {FILE_NAME} nicht gefunden werden!")
+        raise FileNotFoundError(f"Datei {file_name} konnte nicht gefunden werden!")
     raw_data = pd.read_csv(file, header=0, delimiter=";", na_filter=False)
     return pd.DataFrame(raw_data)
 
-def convert_df_to_dict(df: pd.DataFrame) -> list[dict]:
+def convert_df_to_dict(df: pd.DataFrame) -> list[dict[Hashable, Any]]:
+    """Lädt einen DataFrame und gibt ein Dictionary zurück."""
     dictionary = df.to_dict(orient='records')
     return dictionary
 
-def load_excel_to_df(file_path: str | Path = None) -> pd.DataFrame:
+def load_excel_to_df(file_path: Optional[str | Path] = None) -> pd.DataFrame:
     """
     Lädt eine Excel-Datei und gibt sie als DataFrame zurück.
     Die Excel-Datei hat eine vertikale Struktur:
@@ -71,37 +118,37 @@ def load_excel_to_df(file_path: str | Path = None) -> pd.DataFrame:
         DataFrame mit den geladenen Daten (keine Header-Zeile)
     """
     if file_path is None:
-        file_path = Path(get_project_root(), TEMPLATE_DIRECTORY_NAME, EXCEL_INPUT_FILE)
+        raise TypeError("Kein Dateipfad zum Laden vorhanden!")
     else:
         file_path = Path(file_path)
 
-    if not file_path.exists():
-        print(f"Datei {file_path} konnte nicht gefunden werden!")
-        return pd.DataFrame()
-
     try:
-        # Verwende Context Manager für automatisches Schließen
+        # Verwende Context Manager für das automatische schliessen
         with pd.ExcelFile(file_path, engine='openpyxl') as xlsx:
             raw_data = pd.read_excel(xlsx, header=None, na_filter=False)
             df = pd.DataFrame(raw_data)
         return df
 
-    except FileNotFoundError as e:
-        print(f"Excel-Datei nicht gefunden: {e}")
+    except FileNotFoundError as fnfe:
+        traceback_detail.get_exception_message(fnfe)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return pd.DataFrame()
-    except PermissionError as e:
-        print(f"Keine Leseberechtigung für Excel-Datei: {e}")
+    except PermissionError as pe:
+        traceback_detail.get_exception_message(pe)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return pd.DataFrame()
-    except ValueError as e:
-        print(f"Ungültiges Excel-Format oder fehlerhafte Daten: {e}")
+    except ValueError as ve:
+        traceback_detail.get_exception_message(ve)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return pd.DataFrame()
     except Exception as e:
-        print(f"Unerwarteter Fehler beim Laden der Excel-Datei {file_path}: {e}")
+        traceback_detail.get_exception_message(e)
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return pd.DataFrame()
 
-def convert_excel_to_input_dict(df: pd.DataFrame) -> tuple[dict, list[str], list[str]]:
+def convert_excel_to_dict_kurzschlusskreafte_leiterseile(df: pd.DataFrame) -> tuple[dict[str, Any], list[str], list[str]]:
     """
-    Konvertiert einen DataFrame aus der Excel-Eingabedatei in ein Dictionary,
+    Konvertierung in einen DataFrame aus der Excel-Eingabedatei in ein Dictionary,
     das direkt zum Setzen der Taipy GUI Widgets verwendet werden kann.
 
     Die Excel-Datei hat eine vertikale Struktur:
@@ -121,7 +168,7 @@ def convert_excel_to_input_dict(df: pd.DataFrame) -> tuple[dict, list[str], list
         return {}, [], []
 
     # Erstelle ein Dictionary aus den Zeilen: Spalte 0 = Key, Spalte 1 = Value
-    excel_data = {}
+    excel_data: dict[str, Any] = {}
     for idx, row in df.iterrows():
         if pd.notna(row[0]) and row[0] != '':
             key = str(row[0]).strip()
@@ -130,12 +177,12 @@ def convert_excel_to_input_dict(df: pd.DataFrame) -> tuple[dict, list[str], list
                 excel_data[key] = value
 
     # Erstelle ein Dictionary mit allen relevanten Feldern
-    input_dict = {}
-    loaded_fields = []
-    skipped_fields = []
+    input_dict: dict[str, Any] = {}
+    loaded_fields: list[str] = []
+    skipped_fields: list[str] = []
 
     # Mapping der Excel-Zeilennamen zu den State-Variablennamen
-    field_mapping = {
+    field_mapping: dict[str, str] = {
         'Art der Leiterseilbefestigung': 'leiterseilbefestigung_selected',
         'Schlaufe in Spannfeldmitte': 'schlaufe_in_spannfeldmitte_selected',
         'Höhenunterschied der Befestigungspunkte mehr als 25%': 'hoehenunterschied_befestigungspunkte_selected',
@@ -180,40 +227,7 @@ def convert_excel_to_input_dict(df: pd.DataFrame) -> tuple[dict, list[str], list
 
     return input_dict, loaded_fields, skipped_fields
 
-def _convert_value(value):
-    """
-    Konvertiert einen Wert in den passenden Typ für Excel-Export.
-
-    Args:
-        value: Zu konvertierender Wert
-
-    Returns:
-        Konvertierter Wert (str, int, float oder '')
-    """
-    # Prüfe auf leere Werte
-    if value is None or value in ('0', 0):
-        return ''
-
-    # Wenn bereits eine Zahl, direkt zurückgeben
-    if isinstance(value, (int, float)):
-        return value
-
-    # String-Konvertierung versuchen
-    if isinstance(value, str):
-        try:
-            # Float wenn Dezimaltrennzeichen vorhanden
-            if '.' in value or ',' in value:
-                return float(value.replace(',', '.'))
-            # Ansonsten Integer
-            return int(value)
-        except (ValueError, AttributeError):
-            # Bei Fehler String beibehalten
-            return value
-
-    return value
-
-
-def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, output_path: str | Path) -> bool:
+def export_dict_to_excel_kurzschlusskreafte_leiterseile(input_dict: dict[str, Any], template_path: str | Path, output_path: str | Path) -> bool:
     """
     Exportiert Dictionary in Excel-Datei basierend auf Vorlage.
 
@@ -232,7 +246,7 @@ def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, outp
         print(f"Vorlage nicht gefunden: {template_path}")
         return False
 
-    reverse_field_mapping = {
+    reverse_field_mapping: dict[str, str] = {
         'leiterseilbefestigung_selected': 'Art der Leiterseilbefestigung',
         'schlaufe_in_spannfeldmitte_selected': 'Schlaufe in Spannfeldmitte',
         'hoehenunterschied_befestigungspunkte_selected': 'Höhenunterschied der Befestigungspunkte mehr als 25%',
@@ -291,13 +305,13 @@ def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, outp
                         if value is None or value == '0' or value == 0:
                             value = ''
                         elif isinstance(value, str):
-                            # Versuche String in Zahl zu konvertieren wenn möglich
+                            # Versuche String in Zahl zu konvertieren, wenn möglich
                             try:
                                 # Versuche zuerst Float
                                 if '.' in value or ',' in value:
                                     value = float(value.replace(',', '.'))
                                 else:
-                                    # Versuche Int
+                                    # Versuche Int zu konvertieren
                                     value = int(value)
                             except (ValueError, AttributeError):
                                 # Wenn nicht konvertierbar, behalte String
@@ -312,15 +326,14 @@ def export_input_dict_to_excel(input_dict: dict, template_path: str | Path, outp
         return True
     except Exception as e:
         print(f"Fehler beim Exportieren der Excel-Datei: {e}")
-        import traceback
-        traceback.print_exc()
+        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
         return False
     finally:
         # Stelle sicher, dass die Datei geschlossen wird, auch bei Fehler
         if wb is not None:
             wb.close()
 
-def create_df_from_calc_results(calc_result: dict, temp_low: str, temp_high: str) -> pd.DataFrame:
+def create_df_from_calc_results_kurzschlusskreafte_leiterseile(calc_result: dict[str, Any], temp_low: str, temp_high: str) -> pd.DataFrame:
     """
     Erstellt einen formatierten DataFrame aus den Berechnungsergebnissen.
 
@@ -363,8 +376,8 @@ def create_df_from_calc_results(calc_result: dict, temp_low: str, temp_high: str
                 val_80 = float(val_80)
 
             # Formatiere mit der Formatter-Funktion
-            val_20_formatted = formatter_number.format_number_nice_to_string_for_repr(val_20)
-            val_80_formatted = formatter_number.format_number_nice_to_string_for_repr(val_80)
+            val_20_formatted = formatter.format_number_nice_to_string_for_repr(val_20)
+            val_80_formatted = formatter.format_number_nice_to_string_for_repr(val_80)
 
             data.append({
                 'Parameter': param_name,
@@ -376,7 +389,8 @@ def create_df_from_calc_results(calc_result: dict, temp_low: str, temp_high: str
     # Erstelle DataFrame
     df = pd.DataFrame(data)
 
-    # Unindent this part and the part above if for numerical export needed
+    # Entfernen Sie die Einrückung dieses Teils und des darüber liegenden Teils, wenn ein numerischer Export
+    # erforderlich ist
     """
         if not df.empty:
             df['Parameter'] = df['Parameter'].astype(str)
@@ -387,26 +401,25 @@ def create_df_from_calc_results(calc_result: dict, temp_low: str, temp_high: str
     return df
 
 
-
-
 if __name__ == "__main__":
+    pass
     # Liefert alle Werte einer Spalte zurück
-    #print(load_csv_to_df()["Bezeichnung"])
+    # print(load_csv_to_df()["Bezeichnung"])
 
     # Liefert die Bezeichnung eines speziellen Indexes zurück
-    #print(load_csv_to_df().at[2, "Bezeichnung"])
+    # print(load_csv_to_df().at[2, "Bezeichnung"])
 
     # Liefert den Wert einer Spalte basierend auf dem Index zurück
-    #print(load_csv_to_df().iloc[2]["Querschnitt eines Teilleiters"])
+    # print(load_csv_to_df().iloc[2]["Querschnitt eines Teilleiters"])
 
-    #print(load_csv_to_df())
+    # print(load_csv_to_df())
 
-    print(convert_df_to_dict(load_csv_to_df()))
-    list_dict_leiterseile = convert_df_to_dict(load_csv_to_df())
-    print(list_dict_leiterseile[0])
-    dict_leiterseile = list_dict_leiterseile[0]
+    # print(convert_df_to_dict(load_csv_to_df()))
+    # list_dict_leiterseile = convert_df_to_dict(load_csv_to_df())
+    # print(list_dict_leiterseile[0])
+    # dict_leiterseile = list_dict_leiterseile[0]
 
-    #print(list(dict_leiterseile.keys()))
-    #print(list(dict_leiterseile.values()))
-    print(dict_leiterseile.get("Bezeichnung"))
-    #print(dict_leiterseile["Bezeichnung"])
+    # print(list(dict_leiterseile.keys()))
+    # print(list(dict_leiterseile.values()))
+    # print(dict_leiterseile.get("Bezeichnung"))
+    # print(dict_leiterseile["Bezeichnung"])
