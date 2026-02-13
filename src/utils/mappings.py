@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Reverses Mapping für den Excel Export
 REVERSE_FIELD_MAPPINGS = {
     "Export Vorlage Kurzschlusskraft Leiterseile.xlsx": {
         'leiterseilbefestigung_selected': 'Art der Leiterseilbefestigung',
@@ -37,9 +38,11 @@ REVERSE_FIELD_MAPPINGS = {
     "Other Template.xlsx": {...},
 }
 
-def get_reverse_mapping(template_path):
+def get_reverse_mapping(template_path: str | Path) -> dict[str, str]:
+    # Wählt den key aus dem Dateinamen des Template-Pfades
     key = Path(template_path).name
     try:
+        # Gibt das Reverse Mapping auf Basis des Keys zurück
         return REVERSE_FIELD_MAPPINGS[key]
     except KeyError as e:
         raise ValueError(f"No mapping for template: {key}") from e
