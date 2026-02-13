@@ -1,31 +1,60 @@
 import math
 from dataclasses import asdict
 
-def format_numbers_strings_scientific_and_normal(calc_result):
-    """Formatiert Ergebnisse in zwei Spalten nebeneinander"""
+def format_number_nice_to_string_for_repr(number: float, threshold_low=0.001, threshold_high=1000) -> str:
+    """
+    Hilfsfunktion: Formatiert einen einzelnen Zahl anschaulich für die Darstellung
 
+    Args:
+        number: Zu formatierende Zahl
+        threshold_low: Untere Schwelle für wissenschaftliche Notation
+        threshold_high: Obere Schwelle für wissenschaftliche Notation
+
+    Returns:
+        Formatierter String
+    """
+    if number == 0:
+        return "0.00"
+
+    abs_number = abs(number)
+
+    # Verwende wissenschaftliche Notation nur für sehr kleine oder grosse Zahlen
+    if abs_number < threshold_low or abs_number > threshold_high:
+        exponent = int(math.floor(math.log10(abs_number)))
+        mantissa = number / (10**exponent)
+        # Verwende Unicode-Zeichen für Hochstellung
+        exp_str = str(exponent).translate(str.maketrans('0123456789-', '⁰¹²³⁴⁵⁶⁷⁸⁹⁻'))
+        return f"{mantissa:.3f}×10{exp_str}"
+    else:
+        # Normale Formatierung für "vernünftige" Zahl
+        return f"{number:.3f}"
+
+def format_numbers_nice_to_str_for_cli(calc_result: dict) -> str:
+    """
+    Formatiert Ergebnisse in zwei Spalten nebeneinander.
+    Wird nur für Programmierzwecke, Debugging und Ausgabe in der CLI verwendet.
+    """
     # Hilfsfunktion für intelligente Formatierung
-    def format_scientific(value, threshold_low=0.001, threshold_high=1000):
+    def format_scientific(number: float, threshold_low=0.001, threshold_high=1000) -> str:
         """
-        Formatiert Werte intelligent:
-        - Wissenschaftliche Notation für sehr kleine/große Werte
-        - Normal für Werte zwischen threshold_low und threshold_high
+        Formatiert Werte in wissenschaftlicher Notation für sehr kleine/große Werte und
+        Normal für Werte zwischen threshold_low und threshold_high
         """
-        if value == 0:
+        if number == 0:
             return "0.00"
 
-        abs_value = abs(value)
+        abs_number = abs(number)
 
         # Verwende wissenschaftliche Notation nur für sehr kleine oder große Werte
-        if abs_value < threshold_low or abs_value > threshold_high:
-            exponent = int(math.floor(math.log10(abs_value)))
-            mantissa = value / (10 ** exponent)
+        if abs_number < threshold_low or abs_number > threshold_high:
+            exponent = int(math.floor(math.log10(abs_number)))
+            mantissa = number / (10**exponent)
             # Verwende Unicode-Zeichen für Hochstellung
             exp_str = str(exponent).translate(str.maketrans('0123456789-', '⁰¹²³⁴⁵⁶⁷⁸⁹⁻'))
             return f"{mantissa:.3f}×10{exp_str}"
         else:
             # Normale Formatierung für "vernünftige" Werte
-            return f"{value:.3f}"
+            return f"{number:.3f}"
 
     # Hole beide Ergebnisse
     result_20 = calc_result.get('F_st_20')
@@ -43,13 +72,13 @@ def format_numbers_strings_scientific_and_normal(calc_result):
     col2_width = 20  # -20°C Werte
     col3_width = 20  # 80°C Werte
 
-    # Erstelle Header
+    # Erstellt Header
     lines = []
     lines.append(f"┌─{'─' * col1_width}─┬─{'─' * col2_width}─┬─{'─' * col3_width}─┐")
     lines.append(f"│ {'Parameter':<{col1_width}} │ {'-20°C':^{col2_width}} │ {'80°C':^{col3_width}} │")
     lines.append(f"├─{'─' * col1_width}─┼─{'─' * col2_width}─┼─{'─' * col3_width}─┤")
 
-    # Iteriere durch alle Felder
+    # Iteriert durch alle Felder
     for param_name in dict_20.keys():
         val_20 = dict_20[param_name]
         val_80 = dict_80[param_name]
@@ -66,31 +95,3 @@ def format_numbers_strings_scientific_and_normal(calc_result):
 
     return "\n".join(lines)
 
-def format_value_smart(value, threshold_low=0.001, threshold_high=1000):
-    """
-    Hilfsfunktion: Formatiert einen einzelnen Wert intelligent.
-    Identisch zur Logik in formatter.py, aber als eigenständige Funktion.
-
-    Args:
-        value: Zu formatierender Wert
-        threshold_low: Untere Schwelle für wissenschaftliche Notation
-        threshold_high: Obere Schwelle für wissenschaftliche Notation
-
-    Returns:
-        Formatierter String
-    """
-    if value == 0:
-        return "0.00"
-
-    abs_value = abs(value)
-
-    # Verwende wissenschaftliche Notation nur für sehr kleine oder große Werte
-    if abs_value < threshold_low or abs_value > threshold_high:
-        exponent = int(math.floor(math.log10(abs_value)))
-        mantissa = value / (10 ** exponent)
-        # Verwende Unicode-Zeichen für Hochstellung
-        exp_str = str(exponent).translate(str.maketrans('0123456789-', '⁰¹²³⁴⁵⁶⁷⁸⁹⁻'))
-        return f"{mantissa:.3f}×10{exp_str}"
-    else:
-        # Normale Formatierung für "vernünftige" Werte
-        return f"{value:.3f}"

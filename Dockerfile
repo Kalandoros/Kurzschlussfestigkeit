@@ -12,7 +12,10 @@ RUN python -m pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN chown -R default_user:default_user /app
+# Nur bei Bedarf anwenden!!! In dem Fall hat der User auch Schreibrechte auf die App.
+# RUN chown -R default_user:default_user /app
+RUN chown -R root:root /app && \
+    chmod -R 755 /app
 
 EXPOSE 5000
 

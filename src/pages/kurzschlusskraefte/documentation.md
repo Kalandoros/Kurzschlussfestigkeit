@@ -1,15 +1,17 @@
-<img width="1925" height="1029" alt="The-Mechanical-Effects-Of-Short-circuit-Currents-In-Open-Air-Substations_staus" src="https://github.com/user-attachments/assets/83d87454-5e75-470b-97e6-8cc11ada1e85" />
-
 ## Funktionen der Applikation
-**Integrierte Funktionen:**<br>
-- Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile<br>
-- Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal aufgelagte Leiterseile<br>
+**Integrierte Funktionen:**
 
-**Nicht integrierte Funktionen (vorerst):**<br>
-- Berechnung der Seilzugkräfte im Kurzschlussfall für Unterschlaufungen<br>
-- Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile mit Schlaufen in Spannfeldmitte<br>
-- Berechnung der Seilzugkräfte im Kurzschlussfall für vertikal verlaufende Leiterseile<br>
-- Berechnung der Seilzugkräfte im Kurzschlussfall für Schlaufen am Spannfeldende<br>
+* Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile
+* Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal aufgelagte Leiterseile
+
+**Nicht integrierte Funktionen (vorerst):**
+
+* Berechnung der Seilzugkräfte im Kurzschlussfall für Unterschlaufungen
+* Berechnung der Seilzugkräfte im Kurzschlussfall für horizontal abgespannte Leiterseile mit Schlaufen in Spannfeldmitte
+* Berechnung der Seilzugkräfte im Kurzschlussfall für vertikal verlaufende Leiterseile
+* Berechnung der Seilzugkräfte im Kurzschlussfall für Schlaufen am Spannfeldende
+
+![Übersicht_Berechnungsfälle.png](/src/assets/kurzschlusskraefte_leiterseile/%C3%9Cbersicht_Berechnungsf%C3%A4lle.png)
 
 ## Geltungsbereich der Ergebnisse
 Die Applikation ist nach [3] und [4] aufgebaut und entspricht deren Prinzipien.
@@ -18,49 +20,79 @@ bis ca. 120 m und für einen Durchhang von 8% in Bezug auf die Spannfeldlänge.<
 Haben die Befestigungspunkte einen Höhenunterschied von > 25% bezogen auf die Spannfeldlänge ist die Berechnung
 als Schlaufe, im Sinne von vertikal verlaufenden Leiterseilen, durchzuführen.
 
+## Seilzugkraft $F_{t,d}$ während des Kurzschlusses durch das Ausschwingen (Kurzschluss-Seilzugkraft)
+Während eines mehrphasigen Kurzschlusses fliessen die Ströme in den betroffenen Leitern in entgegengesetzter Richtung, 
+was eine gegenseitige Abstossung der Hauptleiter bewirkt. Diese elektromagnetische Kurzschlusskraft versetzt das Leiterseil in eine 
+Schwingbewegung, wobei diese Bewegung als mechanisches Pendel beschrieben werden kann.
+Die Kurzschluss-Seilzugkraft $F_{t,d}$ ist dabei die Überlagerung der elektromagnetischen Kurzschlusskraft, der 
+Gewichtskraft des Seiles und der Zentrifugalkraft des sich bewegenden Leiterseils.
+
+![Kurzschluss-Seilkraft.png](/src/assets/kurzschlusskraefte_leiterseile/Kurzschluss-Seilkraft.png)
+
+Gemäss [2] wird die Kurzschluss-Seilzugkraft massgeblich durch das Kraftverhältnis $r$ (Verhältnis der 
+elektromagnetischen Kraft auf ein Leiterseil zur Eigengewichtskraft) bestimmt. Der Höchstwert der 
+Kurzschluss-Seilzugkraft tritt am äußeren Umkehrpunkt der ersten Schwingbewegung (Ausschwingmaximum) auf, 
+sofern der Kurzschluss bis zu diesem Zeitpunkt anhält. 
+
 ## Seilzugkraft $F_{f,d}$ nach dem Kurzschluss durch das Fallen (Fall-Seilzugkraft) 
 Nach dem Ausschalten des Kurzschlusses pendelt das Seil oder es fällt in seine Ruhelage zurück. Der 
-Höchstwert $F_{f,d}$ der am Ende des Falles auftretenden Seilzugkraft ist nur zu berücksichtigen bei $r > 0,6$, 
-wenn $δmax ≥ 70°$, und mit einer Schlaufe in Spannfeldmitte, wenn $δ ≥ 60°$.
+Höchstwert $F_{f,d}$ der am Ende des Falles auftretenden Seilzugkraft ist nur bei $r > 0,6$ und $δ_{max} ≥ 70°$,
+und bei einer Schlaufe in Spannfeldmitte, wenn $δ ≥ 60°$, zu berücksichtigen. Das bedeutet zusammengefasst:
 
-Unter berücksichtigung von [4] Beipiel Kapitel 9.3.2.5 wird die Fall-Seilzugkraft nur als unbedeutend angenommen,
-wenn die Berechnung der Kurzschluss-Seilzugkraft $F_{t,d}$ nach [3] Kapitel 6.2.5 erfolgt ist.
+* Fall-Seilzugkraft $F_{f,d}$ ohne Schlaufe in Spannfeldmitte zu berücksichtigen, wenn: $r > 0,6$ und $δ_{max} ≥ 70°$ 
+ansonsten, wenn nicht beide Bedingungen zutreffen, ist die Fall-Seilzugkraft $F_{f,d}$ als unbedeutend anzunehmen
+* Fall-Seilzugkraft $F_{f,d}$ mit Schlaufe in Spannfeldmitte zu berücksichtigen, wenn: $r > 0,6$ und $δ_{max} ≥ 70°$ und $δ ≥ 60°$
+ansonsten, wenn nicht alle drei Bedingungen zutreffen, ist die Fall-Seilzugkraft $F_{f,d}$ als unbedeutend anzunehmen
+
+In [4] Beispiel Kapitel 9.3.2.5 können diese Bedingungen nachvollzogen werden. Sind die Bedingungen erfüllt, also muss
+die Fall-Seilzugkraft $F_{f,d}$ berücksichtigt werden, wird davon ausgegangen, das die Auslenkung derart ausgeprägt ist,
+das sich die Leiterseile überschlagen. 
 
 Bei kurzen Spannfeldern vermindert die Biegesteifigkeit der Seile den Leiterseilfall. Deshalb wird die Fall-Seilzugkraft
-zu groß berechnet, wenn die Spannfeldlänge den etwa 100-fachen Durchmesser des Einzelseils 
-unterschreitet, d. h. $l < 100 d$. 
+zu gross berechnet, wenn die Spannfeldlänge den etwa 100-fachen Durchmesser des Einzelseils unterschreitet,
+d.h. $l < 100 d$ ist. 
 
 ## Seilzugkraft $F_{pi,d}$ beim Kurzschluss durch Zusammenziehen der Teilleiter (Bündel-Seilzugkraft) 
+In Bündelleitern fliesst der Kurzschlussstrom gleichphasig in den Teilleitern, was ein Zusammenziehen und Annähern
+der Teilleiter zur Folge hat. Durch die horizontale Annäherung der Teilleiter und erhöht sich die Seilzugkraft an den 
+Hauptleiterbefestigungen steigen. Durch das Zusammenschlagen der Teilleiter wird eine weitere Kontraktion der Teilleiter
+mit Auswirkungen auf die Seilzugkräfte an den Hauptleiterbefestigungen verhindert, sodass eine Vergrösserung des
+Kurzschlussstromes keine bedeutende Vergrösserung der Bündel-Seilzugkraft zur Folge hätte. Werden Abstandshalter zur 
+Fixierung der Teilleiter eingebaut, ist das Zusammenschlagen erst bei Kurzschlussströmen möglich, was zu einer entsprechend 
+hohen Bündel-Seilzugkraft führt.
 
-Dieses Programm löst die analytische Gleichung A.10 exakt inklusive des Dehnungsterms $(1 + \varepsilon_{st})$. 
-Die grafischen Näherungen in den Bildern 12a-c vernachlässigen diesen Term zur Vereinfachung, weshalb dieses Programm 
-bei hohen Seildehnungen konservativere (sicherere) Werte liefert. Würde man den Term $(1 + \varepsilon_{st})$ in die 
-Diagramme einbauen, wäre für jedes $a_s/d$ nicht nur ein Diagramm nötig, sondern ein ganzes Buch voll, weil die 
-Kurven sich je nach Dehnung verschieben würden. Mathematisch führt die Kombination aus Gleichung (58) und (A.10) dazu, 
-dass sich die Dehnung $\varepsilon_{st}$ im Lastterm neutralisiert. 
+Bei regelmässigen Bündelleiteranordnungen bis einschliesslich vier Teilleitern wird die Bündel-Seilzugkraft
+mit $F_{pi,d}= 1,1 F_{t,d}$ berechnet, wenn einer der beiden folgenden Bedingungen erfüllt ist und damit nachgewiesen ist, 
+das die Teilleiter wirksam zusammenschlagen.
 
-In den Diagrammen werden verschiedene Kurven gezeigt, um den Einfluss der Seildehnung sichtbarer zu machen. 
-In der Formel nach (A.10) wird dieser Einfluss jedoch direkt über den Parameter $j$ mitberücksichtigt, weshalb 
-die grafische Aufteilung im Programm nicht erforderlich ist.
-Die Berechnung folgt strikt der analytischen Methode nach IEC 60865-1, Anhang A.10. Die beobachteten Abweichungen zu den 
-Bildern 12a-c resultieren aus der numerischen Exaktheit der Gleichung, die im Gegensatz zur grafischen Darstellung keine 
-Linearisierungen zwischen den Verhältnissen von $a_s/d$ in den angegebenen Bereichen vornimmt. 
-Dies führt zu einer konservativen und damit sicherheitsgerichteten Auslegung. Die resultierenden Werte für $\eta$wurden 
-mit dem Programm IEC865D verifiziert.
+* $a_s /d ≤ 2,0$ und $l_s /d ≥ 50 a_s$
+* $a_s /d ≤ 2,5$ und $l_s /d ≥ 70 a_s$
 
-Es gibt zwei Pfade:<br>
-A: $j ≥ 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. Hier wird das berechnete $\eta$ (Gleichung A.10 Bild 12) verwendet. <br>
-B: $j < 1.0$: Die Leiter schlagen zusammen. Es wird die Formel mit dem Faktor $\xi$ (Gleichung A.9 Bild 11) verwendet.
+In den Diagrammen von [2] Bilder 12a-c werden verschiedene Kurven gezeigt, um den Einfluss der Seildehnung sichtbarer zu machen. 
+Die Berechnung folgt strikt der analytischen Methode nach [2] Anhang A.10. Die beobachteten Abweichungen der
+Berechnungen zu den Bildern 12a-c aus [2] resultieren aus der numerischen Exaktheit der Gleichung, die im Gegensatz 
+zur grafischen Darstellung keine Linearisierungen zwischen den Verhältnissen von $a_s/d$ in den angegebenen Bereichen vornimmt. 
+Die resultierenden Werte für $\eta$ wurden mit dem Programm IEC865D verifiziert.
+
+Schlagen die Teilleiter während des Kurzschlusses nicht wirksam zusammen, gibt es zwei mögliche Berechnungspfade:
+
+* $j ≥ 1.0$: Die Leiter schlagen zusammen bzw. berühren sich. Es wird die Formel mit dem Faktor $\xi$ (Gleichung A.9 Bild 11) verwendet.
+* $j < 1.0$: Die Leiter nähern sich an, schlagen aber nicht zusammen. Hier wird das berechnete $\eta$ (Gleichung A.10 Bild 12) verwendet.
+
+Je nach zutreffender Bedingung wird die Bündel-Seilzugkraft weiter nach [2] Kapitel 6.4.2 oder 6.4.3 berechnet. 
+Folgend sind die drei möglichen Fälle Teilleiterseilkontraktionen aufgezeigt, welche den verschiedenen Berechnungswegen 
+zugrunde liegen:
+![Zusammenschlagen_Teilleiter.png](/src/assets/kurzschlusskraefte_leiterseile/Zusammenschlagen_Teilleiter.png)
 
 In Abweichung von der Norm [3] wird unterschieden, ob Abstandhalter vorhanden sind oder nicht. 
-Sind Abstandhalter vorhanden, wird nach [4] mit den gemittelten Abständen l_s der Abstandshalter gerechnet. 
-Falls keine Abstandhalter vorhanden sind, wird l_c, also die Seillänge eines Hauptleiters im Spannfeld
+Sind Abstandhalter vorhanden, wird nach [4] mit den gemittelten Abständen $l_s$ der Abstandshalter gerechnet. 
+Falls keine Abstandhalter vorhanden sind, wird $l_c$, also die Seillänge eines Hauptleiters im Spannfeld
 verwendet. Dieser Ansatz wurde mit dem Programm IEC865D verifiziert.
 
 ## Einzellasten
 Bei der Berechnung der Seilzugkräfte bei Kurzschluss durch Ausschwingen $F_{t,d}$ und Fallen $F_{f,d}$ des Spannfeldes
 sowie bei der Seilauslenkung $b_{h}$ werden die Einzellasten gleichmässig auf die Seillänge verteilt. Sie werden dem 
-Massenbelag des Leiterseiles als zusätzlicher Massenbelag addiert. Bei der Berechnung der Seilzugkraft durch 
+Massenbelag des Leiterseiles als zusätzlicher Massenbelag hinzugefügt. Bei der Berechnung der Seilzugkraft durch 
 Bündelkontraktion bleibt der zusätzliche Massenbelag unberücksichtigt. [2], [3]
 Die Masse der Seilschlaufe in Spannfeldmitte und ihrer Befestigung wird nicht berücksichtigt. [3]
 
@@ -69,39 +101,104 @@ konzentrierter Massen im Spannfeld, wie z.B. durch Abstandshalter, Klemmen, Schl
 werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden. [3]
 
 ## Schlaufen
-Schlaufen in der Nähe der Hauptleiterbefestigungen haben geringen Einfluss auf die Seilzugkräfte und die Bewegung des Hauptleiters. 
-Es wird empfohlen, in diesem Fall die Berechnung ohne Schlaufe in Spannfeldmitte (In der Applikation "Schlaufe in Spannfeldmitte" mit 
-Auswahl "Nein") durchzuführen. [3] Als Richtlinie soll gelten, das Schlaufen als in der Nähe der Hauptleiterbefestigungen betrachtet
-werden, wenn sich diese im Bereich von 10% in Bezug auf die Spannfeldlänge an den äusseren Enden der Spannfeldlänge befinden.
+Schlaufen in der Nähe der Hauptleiterbefestigungen (Hochgerüsten) haben geringen Einfluss auf die Seilzugkräfte beim Kurzschluss 
+und die Bewegung des Hauptleiters. In solchen Fällen ist die Berechnung ohne Schlaufe in Spannfeldmitte (in der Applikation 
+"Schlaufe in Spannfeldmitte" mit Auswahl "Nein") durchzuführen. [3] Als Richtlinie soll gelten, das Schlaufen als in der 
+Nähe der Hauptleiterbefestigungen betrachtet werden, wenn sich diese im Bereich von 10% in Bezug auf die Spannfeldlänge 
+an den äusseren Enden der Spannfeldlänge befinden.
+
+Schlaufen in Spannfeldmitte werden berücksichtigt, wenn der obere Befestigungspunkt der Schlaufe bis zu 10% bezogen 
+auf die Spannfeldlänge von der Mitte entfernt ist. D.h. für Schlaufen im Bereich der zentralen 20% der Spannfeldlänge 
+wird eine Berechnung unter Berücksichtigung von Schlaufen in Spannfeldmitte (in der Applikation "Schlaufe in Spannfeldmitte" mit 
+Auswahl "Ja") durchgeführt. 
+
+Welche Berechnungsart (mit oder ohne Schlaufe in Spannfeldmitte) für die verbleibenden 60% der Spannfeldlänge 
+angewendet wird, ist der Norm, den Beispielen zur Norm und der Literatur nicht zu entnehmen. Es wird in solchen Fällen
+empfohlen, die Berechnung ohne Schlaufe in Spannfeldmitte durchzuführen. Üblicherweise ist der Einfluss der Schlaufen 
+auf die Seilzugkräfte beim Kurzschluss gering [1]. Da der Einfluss der Schlaufe auf die Seilzugkräfte beim Kurzschluss 
+und die daraus resultierenden Bewegungen des Hauptleiters mit zunehmender Entfernung von der Spannfeldmitte noch geringer 
+werden, werden diese als unbedeutend angenommen. Dazu wird auf die Anmerkung 1 und 2 in Kapitel 6.2.5 in [3] verwiesen. 
+
+Ebenso werden Schlaufen in Spannfeldmitte nicht berücksichtigt, wenn nach die Bedingungen nach [3] 
+Kapitel 6.2.5 $l_v ≥ \sqrt{(h + f_{es} + f_{ed})^2 + w^2}$ bei parallel angeordneten Schlaufenebenen 
+oder $l_v ≥ \sqrt{(h + f_{es} + f_{ed})^2 + w^2} +f_{ed}$ bei senkrecht angeordneten Schlaufenebenen erfüllt werden.
+Ist eine der beiden genannten Bedingungen erfüllt, wird die Schlaufe in Spannfeldmitte nicht berücksichtigt, da der 
+schräge Durchhang der Schlaufe zu gross ist, um die Seilzugkräfte beim Kurzschluss und die Bewegungen des Hauptleiters
+dämpfend zu beeinflussen.
+
+Für die Berechnung der Seilzugkräfte beim Kurzschluss mit Schlaufe in Spannfeldmitte werden die folgend 
+aufgezeigten Kurzschlussstrompfade B und C berechnet und das Maximum der jeweiligen Seilzugkräfte ausgegeben um beide 
+Szenarien zu berücksichtigen. 
+
+![Kurzschlusstrompfade.png](/src/assets/kurzschlusskraefte_leiterseile/Kurzschlusstrompfade.png)
 
 ## Schlaufenebenen
-Die Schlaufenebenen können parallel oder senkrecht zu den Hauptleitern sein. Der tatsächliche Ausschwing-
-winkel infolge der Begrenzung der Ausschwingbewegung wird durch die Anordnung der Schlaufe zu den Hauptleitern selbst beeinflusst.
-Zur Unterscheidung von Schlaufen mit paralleler und senkrechter Anordnung zu den Hauptleitern wird 
-aufgrund fehlender Angaben in [3] und [4], sowie in der weiterführenden Literatur, folgendes definiert:
-- Parallel: Schlaufe verläuft hauptsächlich horizontal (Winkel zwischen oberem und unterem Anschlusspunkt < 45°).
-- Senkrecht: Schlaufe verläuft hauptsächlich vertikal (Winkel zwischen oberem und unterem Anschlusspunkt > 45°).
+Die Schlaufenebenen können parallel oder senkrecht zu den Hauptleitern angeordnet sein. Der tatsächliche Ausschwing-
+winkel infolge der Begrenzung der Ausschwingbewegung wird durch die Anordnung der Schlaufe zu den Hauptleitern 
+selbst beeinflusst. Es wird zwischen Schlaufen mit paralleler und senkrechter Anordnung zu den Hauptleitern unterschieden.
+Aufgrund fehlender Konkretisierungen in [3] und [4], sowie in der weiterführenden Literatur, werden diese Anordnungen 
+folgend näher erläutert:
 
-Hinweis: Die Schlaufenebene wird nur bei Schlaufen in Spannfeldmitte berücksichtigt.
+* Ebene parallel: Die Schlaufe verläuft, aus der Draufsicht des Spannfeldes betrachtet, hauptsächlich in Richtung 
+des Hauptleiters, also entlang der Hauptleiterachse. Der Winkel zwischen dem oberen und unteren Anschlusspunkt, 
+aus der Draufsicht des Spannfeldes betrachtet, ist < 45°.
+
+* Ebene senkrecht: Die Schlaufe verläuft, aus der Draufsicht des Spannfeldes betrachtet, hauptsächlich senkrecht zum Hauptleiter, 
+quer zu den Hauptleitern. Der Winkel zwischen dem oberen und unteren Anschlusspunkt, aus der Draufsicht des Spannfeldes 
+betrachtet, ist ≥ 45°.
+
+Zur besseren Vorstellung von der Anordnung der Schlaufenebenen werden diese in der folgenden Abbildung dargestellt. 
+Dabei ist blau die parallel zum Hauptleiter angeordnete Schlaufenebene, grün die senkrecht angeordnete Schlaufenebene 
+und orange der Verlauf des Grenzwinkels von 45°. Rot sind die Positionen der Hochspannungsapparate bei paralleler und
+senkrechter Anordnung der Schlaufenebenen dargestellt.
+
+![Schlaufenebenen.png](/src/assets/kurzschlusskraefte_leiterseile/Schlaufenebenen.png)
+
+Hinweis: Die Anordnung auf Schlaufenebene wird nur bei Berechnungen von Schlaufen in Spannfeldmitte berücksichtigt.
 
 ## Unterschlaufungen
 Bei Unterschlaufungen handelt es sich um Verbindungen zwischen zwei Feldern mit abgespannten Leitungsseilen. 
 Versuche haben gezeigt, dass die Schlaufe als eingespannt in den Seilklemmen betrachtet werden kann, und
 der tiefste Punkt der Schlaufe sich auf einer Kreisbahn um einen Punkt unterhalb der Verbindungslinie
-der Seilklemmen bewegt. [1]
+der Seilklemmen bewegt. [1], [7]
 
 Die Einspannung verursacht eine Verformung der Ausschwingebene der Schlaufe, durch die ein Biegemoment 
 im Seil der elektromagnetischen Kraft entgegenwirkt. Aus den Versuchsergebnissen wird in [5] empirisch ermittelt,
 dass dieses Moment bei der Berechnung des Parameters $r$ in Gleichung $r = \frac{F'}{1.2n m'_sg_n}$ durch eine 
-Vergrösserung des Eigengewichtskraftbelags um 20% berücksichtigt werden kann. [1]
+Vergrösserung des Eigengewichtskraftbelags um 20% berücksichtigt werden kann. [1], [7]
 
 ## Federglieder
-Federglieder sind im Programm nicht berücksichtigt, die Steifgkeit der Federn kann jedoch der Steiﬁgkeit der 
+Federglieder sind im Programm nicht berücksichtigt. Die Steifgkeit der Federn kann jedoch der Steiﬁgkeit der 
 Abspannung zugeschlagen werden. Mit den Federn ergibt sich ein resultierender Federkoefﬁzient beider Gerüste und der 
-Abspannfedern zur Berechnung des statischen Durchhangs. [1] $$\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}+\frac{1}{S_{S1}}+\frac{1}{S_{S2}}$$
+Abspannfedern zur Berechnung des statischen Durchhangs. [1], [7]
+$$\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}+\frac{1}{S_{S1}}+\frac{1}{S_{S2}}$$
 
-Während des Kurzschlußstromﬂusses erreichen die Federn ihre Endauslenkung und der resultierende Federkoefﬁzient springt auf einen wesentlich 
-höheren Wert, der nur aus der Steiﬁgkeit der Gerüste folgt. [1] $$\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}$$
+Während des Kurzschlußstromﬂusses erreichen die Federn ihre Endauslenkung und der resultierende Federkoefﬁzient 
+springt auf einen wesentlich höheren Wert, der nur aus der Steiﬁgkeit der Gerüste folgt. [1], [7] 
+$$\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}$$
+
+Ein Beispiel zur Berechnung der Steifigkeit unter Berücksichtigung der Federglieder ist in der Literatur [1] beschrieben.
+
+## Designhinweise
+* Eine zu kurz gewählte Schlaufe führt zwar zu einer Verringerung des Ausswingwinkels, führt jedoch zu höheren Seilzugkräften. [1]
+* Bei Stützisolatoren oder Geräten mit Isolatoren sollte ein Sicherheitsfaktor von 0,7 gewählt werden. 
+Untersuchungen an 110-kV-Isolatoren haben gezeigt, dass aufgrund von Alterungseffekten die Bruchlast mit zunehmenden Alter abnimmt. [7]
+In ähnlicher Weise beschreibt es die Norm IEC 61869-1 für die Belastungen der Anschlüsse von Messwandlern. 
+* Mit Ausnahme von Messwandlern werden gemäss den Normen für Hochspannungsapparate keine dynamischen Kräfte angegeben bzw. 
+vorgeschrieben. Diese müssen beim Hersteller angefragt werden. Allenfalls müssen höhere Werte vereinbart werden.
+* Bei der Bestimmung der statischen Seilzugkräfte $F_{st}$ sind Schlaufen als Einzellasten mit der Hälfte
+des Leitergewichts der Schlaufe im Spannfeld zu berücksichtigen. [1], [2]
+* Die Ergebnisse der Berechnungen der Seilzugkräfte beim Kurzschluss sind mit der Bruchlast des verwendeten Leiterseiles 
+zu vergleichen.
+* Der Einsatz und die Abstände von Abstandshaltern muss wohlüberlegt werden. Zu kleine Abstände zwischen den Abstandshaltern
+führen dazu, dass die Teilleiter erst bei hohen Kurzschlussströmen zusammenschlagen, was die Bündel-Seilzugkraft ansteigen lässt,
+das weitere Ansteigen der Kontraktionskräfte durch das Zusammenschlagen nicht verhindert wird. Das fürht zu weiter 
+ansteigenden Seilzugkräften. In der Literatur [6] S.238 werden für Abstände der Abstandshalter untereinander 5-10 m genannt.
+* Bei der Wahl der Teilleiterabstände ist zu berücksichtigen, dass die Bündel-Seilzugkraft mit zunehmen Teilleiterabständen 
+zunimmt. Für einen Vergleich zwischen den Teilleiterabständen wird auf [7] S.55 ff. und [8] verwiesen.
+* Der minimale Leiterabstand $a_{min}$ darf nach IEC 61936-1 50% spannungsabhängigen Abstände nicht unterschreiten.
+
+Quellenverzeichnis:
 
 [1] Ergänzung des Berechnungsverfahrens nach IEC 60865-1VDE 0103 zur Ermittlung der Kurzschlußbeanspruchung von 
 Leitungsseilen mit Schlaufen im Spannfeld, 2002 - FAU, Meyer
@@ -114,10 +211,8 @@ Leitungsseilen mit Schlaufen im Spannfeld, 2002 - FAU, Meyer
 
 [5] Das Spannfeld als physikalisches Pendel – eine analytische Lösung der Kurzschlußvorgänge, Archiv für Elektrotechnik, Ausgabe 70, 1987, S. 273–281 - Kießling
 
-Formel zur Berechnung von $T_{pi}$, diese nicht in der Norm erwähnt ist.
+[6] Springer Handbook Power Systems, 1. Auflage, 2021 - Papailiou
 
-$$T_{pi} = 1,15 \cdot \sqrt{\frac{m_s \cdot (a_s - d_s)}{F'_{pi}}}$$
+[7] The mechanical effects of short-circuit currents in open air substations (part II), WG23.03, TB214, 2002 - Cigre
 
-Weitere Tipps:
-Richtig: $math.sin(math.pi / n)$<br>
-Falsch: $math.sin(math.radians(math.pi / n)$
+[8] Mechanische Wirkungen von Kurzschlusskräften bei Schaltanlagen mit Bündelleitern, Schlussberich, AiF 12660, 2003 - FGH

@@ -4,6 +4,24 @@
 # bat-File
 *.bat
 
+# Git Metadaten
+.git
+.gitignore
+
+# Docker-spezifisch
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# OS-spezifisch
+.DS_Store
+Thumbs.db
+
+# Lokale Secrets/Konfigurationen
+*.secret
+*.config
+secrets/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

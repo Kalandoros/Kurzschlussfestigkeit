@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 import traceback
-from src.utils import dataloader, helper
+from src.utils import dataloader, traceback_detail
 from src.engines.kurzschlusskraefte_leiterseile_engine import calculate_kurschlusskräfte_leiterseile_sweep_df
 from .root import build_navbar
 from src.engines.kurzschlusskraefte_leiterseile_engine import (
@@ -257,7 +257,7 @@ sweep_chart_layout: dict = _build_sweep_chart_layout([])
 
 def display_results(state) -> None:
     # Darstellung der erweiterten Ergebnisse im Callback:
-    # state.calc_result_formatted = formatter.format_numbers_strings_scientific_and_normal(state.calc_result)
+    # state.calc_result_formatted = formatter.format_numbers_nice_to_str_for_cli(state.calc_result)
     state.calc_result_formatted = dataloader.create_df_from_calc_results(state.calc_result,
                                                                          state.temperatur_niedrig_selected,
                                                                          state.temperatur_hoch_selected)
@@ -571,11 +571,11 @@ def on_click_berechnen(state):
                    message=f"Diagramm konnte nicht erstellt werden: {str(sw)}", duration=10000)
 
     except ValueError as ve:
-        error_msg = helper.get_exception_message(ve, show_chain=True)
+        error_msg = traceback_detail.get_exception_message(ve, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ve)}", duration=15000)
 
     except IndexError as ie:
-        error_msg = helper.get_exception_message(ie, show_chain=True)
+        error_msg = traceback_detail.get_exception_message(ie, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ie)}", duration=15000)
 
     except NotImplementedError as nie:
@@ -586,7 +586,7 @@ def on_click_berechnen(state):
         print(f"Detaillierter Fehler:")
         traceback.print_exc()
         tb = traceback.extract_tb(e.__traceback__)
-        error_msg = helper.get_exception_message(e, show_chain=True)
+        error_msg = traceback_detail.get_exception_message(e, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(e)}", duration=15000)
 
 def on_click_load_vorlage(state):

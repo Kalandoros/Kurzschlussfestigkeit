@@ -10,7 +10,7 @@ from dataclasses import asdict
 
 pd.options.display.float_format = '{:12.3e}'.format
 
-from src.utils import formatter
+from src.utils import formatter_number
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -363,8 +363,8 @@ def create_df_from_calc_results(calc_result: dict, temp_low: str, temp_high: str
                 val_80 = float(val_80)
 
             # Formatiere mit der Formatter-Funktion
-            val_20_formatted = formatter.format_value_smart(val_20)
-            val_80_formatted = formatter.format_value_smart(val_80)
+            val_20_formatted = formatter_number.format_number_nice_to_string_for_repr(val_20)
+            val_80_formatted = formatter_number.format_number_nice_to_string_for_repr(val_80)
 
             data.append({
                 'Parameter': param_name,
