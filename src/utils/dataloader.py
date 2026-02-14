@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Hashable
 from dataclasses import asdict
 from pathlib import Path
+from functools import lru_cache
 import shutil
 from typing import Any, Optional
 import warnings
@@ -27,6 +28,7 @@ EXCEL_EXPORT_FILE_KURZSCHLUSSKRAFT_LEITERSEILE = "Export Vorlage Kurzschlusskraf
 DATA_DIRECTORY = "src/data"
 FILE_NAME_LEITERSEILDATEN = "Leiterseildaten.csv"
 
+@lru_cache(maxsize=1)
 def get_app_version() -> Optional[str]:
     """Liest die App-Version aus der project.toml."""
     toml_path = Path(get_project_root(), TOML_FILE)
@@ -40,17 +42,18 @@ def get_app_version() -> Optional[str]:
 
     except FileNotFoundError as fnfe:
         sys.stderr.write(f"Warning: Configuration file not found at {toml_path}\n")
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return "dev-local"
     except tomllib.TOMLDecodeError as e:
         sys.stderr.write(f"Error: pyproject.toml has invalid TOML syntax: {e}\n")
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return "error-syntax"
     except Exception as e:
         sys.stderr.write(f"Unexpected error loading version: {e}\n")
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return None
 
+@lru_cache(maxsize=1)
 def get_project_root() -> Path:
     """Gibt das Projekt-Root-Verzeichnis zurück."""
     # Aufbau: .../src/utils/dataloader.py -> Root
@@ -89,8 +92,15 @@ def _convert_value_for_excel(value: Any) -> Any:
 
     return value
 
-def load_csv_to_df(file_name) -> pd.DataFrame:
-    """Lädt die CSV-Daten und gibt einen DataFrame zurück."""
+def load_csv_to_df(file_name: str) -> pd.DataFrame:
+    """Lädt die CSV-Daten und gibt einen DataFrame zurück.
+
+    Args:
+        file_name: Name der CSV-Datei
+
+    Returns:
+        DataFrame mit den geladenen Daten (keine Header-Zeile)
+    """
     # print(get_project_root(),DATA_DIRECTORY,file_name)
     # CSV-Pfad aus dem Projekt-Root bauen
     file = Path(get_project_root(), DATA_DIRECTORY, file_name)
@@ -100,13 +110,20 @@ def load_csv_to_df(file_name) -> pd.DataFrame:
     return pd.DataFrame(raw_data)
 
 def convert_df_to_dict(df: pd.DataFrame) -> list[dict[Hashable, Any]]:
-    """Lädt einen DataFrame und gibt ein Dictionary zurück."""
+    """Lädt einen DataFrame und gibt ein Dictionary zurück.
+
+    Args:
+        df: DataFrame mit den Eingabedaten (vertikales Layout)
+
+    Returns:
+        Liste mit geladenen Daten
+    """
     dictionary = df.to_dict(orient='records')
     return dictionary
 
 def load_excel_to_df(file_path: Optional[str | Path] = None) -> pd.DataFrame:
     """
-    Lädt eine Excel-Datei und gibt sie als DataFrame zurück.
+    Lädt eine Excel-Datei und gibt sie als DataFrame für den Import der Excel-Vorlagen zurück.
     Die Excel-Datei hat eine vertikale Struktur:
     - Spalte 0: Parameternamen
     - Spalte 1: Werte
@@ -131,24 +148,24 @@ def load_excel_to_df(file_path: Optional[str | Path] = None) -> pd.DataFrame:
 
     except FileNotFoundError as fnfe:
         traceback_detail.get_exception_message(fnfe)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
     except PermissionError as pe:
         traceback_detail.get_exception_message(pe)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
     except ValueError as ve:
         traceback_detail.get_exception_message(ve)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
     except Exception as e:
         traceback_detail.get_exception_message(e)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
 
-def convert_excel_to_dict_kurzschlusskreafte_leiterseile(df: pd.DataFrame) -> tuple[dict[str, Any], list[str], list[str]]:
+def convert_excel_to_dict_with_mapping(df: pd.DataFrame, mapping: str) -> tuple[dict[str, Any], list[str], list[str]]:
     """
-    Konvertierung in einen DataFrame aus der Excel-Eingabedatei in ein Dictionary,
+    Konvertierung des DataFrame aus der Excel-Vorlage in ein Dictionary,
     das direkt zum Setzen der Taipy GUI Widgets verwendet werden kann.
 
     Die Excel-Datei hat eine vertikale Struktur:
@@ -157,6 +174,7 @@ def convert_excel_to_dict_kurzschlusskreafte_leiterseile(df: pd.DataFrame) -> tu
 
     Args:
         df: DataFrame mit den Eingabedaten (vertikales Layout)
+        mapping: Name des Excel-Mappings, das in mapping.json verwendet werden soll
 
     Returns:
         Tuple mit (input_dict, loaded_fields, skipped_fields)
@@ -182,42 +200,10 @@ def convert_excel_to_dict_kurzschlusskreafte_leiterseile(df: pd.DataFrame) -> tu
     skipped_fields: list[str] = []
 
     # Mapping der Excel-Zeilennamen zu den State-Variablennamen
-    field_mapping: dict[str, str] = {
-        'Art der Leiterseilbefestigung': 'leiterseilbefestigung_selected',
-        'Schlaufe in Spannfeldmitte': 'schlaufe_in_spannfeldmitte_selected',
-        'Höhenunterschied der Befestigungspunkte mehr als 25%': 'hoehenunterschied_befestigungspunkte_selected',
-        'Schlaufebene bei Schlaufen in Spannfeldmitte': 'schlaufenebene_parallel_senkrecht_selected',
-        'ϑ_l Niedrigste Temperatur': 'temperatur_niedrig_selected',
-        'ϑ_h Höchste Temperatur': 'temperatur_hoch_selected',
-        'I\'\'k Anfangs-Kurzschlusswechselstrom beim dreipoligen Kurzschluss (Effektivwert)': 'standardkurzschlussstroeme_selected',
-        'κ Sossfaktor': 'kappa',
-        'Tk Kurzschlussdauer': 't_k',
-        'f Frequenz des Netzes': 'frequenz_des_netzes_selected',
-        'Leiterseiltyp': 'leiterseiltyp_selected',
-        'n Anzahl der Teilleiter eines Hauptleiters': 'teilleiter_selected',
-        'm_c Summe konzentrischer Massen im Spannfeld': 'm_c',
-        'l Mittenabstand der Stützpunkte': 'l',
-        'l_i Länge einer Abspann-Isolatorkette': 'l_i',
-        'l_h_f Länge einer Klemme u. Formfaktor': 'l_h_f',
-        'a Leitermittenabstand': 'a',
-        'a_s wirksamer Abstand zwischen Teilleitern': 'a_s',
-        'Fst-20 statische Seilzugkraft in einem Hauptleiter': 'F_st_20',
-        'Fst80 statische Seilzugkraft in einem Hauptleiter': 'F_st_80',
-        'S resultierender Federkoeffizient beider Stützpunkte im Spannfeld': 'federkoeffizient_selected',
-        'Abstand Phasenabstandshalter 1': 'l_s_1',
-        'Abstand Phasenabstandshalter 2': 'l_s_2',
-        'Abstand Phasenabstandshalter 3': 'l_s_3',
-        'Abstand Phasenabstandshalter 4': 'l_s_4',
-        'Abstand Phasenabstandshalter 5': 'l_s_5',
-        'Abstand Phasenabstandshalter 6': 'l_s_6',
-        'Abstand Phasenabstandshalter 7': 'l_s_7',
-        'Abstand Phasenabstandshalter 8': 'l_s_8',
-        'Abstand Phasenabstandshalter 9': 'l_s_9',
-        'Abstand Phasenabstandshalter 10': 'l_s_10',
-    }
+    field_mapping = mappings.get_mapping(mapping)
 
     # Konvertiere alle vorhandenen Felder
-    for excel_label, state_var in field_mapping.items():
+    for state_var, excel_label in field_mapping.items():
         if excel_label in excel_data:
             value = excel_data[excel_label]
             input_dict[state_var] = value
@@ -227,13 +213,13 @@ def convert_excel_to_dict_kurzschlusskreafte_leiterseile(df: pd.DataFrame) -> tu
 
     return input_dict, loaded_fields, skipped_fields
 
-def export_dict_to_excel_with_mapping(input_dict: dict[str, Any], template_path: str | Path, output_path: str | Path) -> bool:
+def export_dict_to_excel_with_reversemapping(input_dict: dict[str, Any], template_path: str | Path, output_path: str | Path) -> bool:
     """
     Exportiert Dictionary in Excel-Datei basierend auf Vorlage.
 
     Args:
         input_dict: Dictionary mit State-Variablennamen als Keys und Werten
-        template_path: Pfad zur Vorlagen-Excel-Datei
+        template_path: Pfad zur Vorlagen-Excel-Datei, liefert auch den Key fürs reverse_mapping.json an
         output_path: Pfad zur Ausgabe-Excel-Datei
 
     Returns:
@@ -246,6 +232,7 @@ def export_dict_to_excel_with_mapping(input_dict: dict[str, Any], template_path:
         print(f"Vorlage nicht gefunden: {template_path}")
         return False
 
+    # Gibt das dict aus reverse_mapping.json zurück
     reverse_field_mapping = mappings.get_reverse_mapping(template_path)
 
     # Kopiere die Vorlage zur Ausgabedatei (um Formatierung zu erhalten)
@@ -264,13 +251,13 @@ def export_dict_to_excel_with_mapping(input_dict: dict[str, Any], template_path:
                 excel_label = str(row[0].value).strip()
 
                 # Suche nach dem passenden State-Variablennamen
-                for state_var, mapped_label in reverse_field_mapping.items():
+                for mapped_label, state_var in reverse_field_mapping.items():
                     if excel_label == mapped_label:
-                        # Hole den Wert aus dem input_dict
+                        # Hole den Wert aus den Werten von reverse_field_mapping dict auf Basis von mappingreversed.json
                         value = input_dict.get(state_var, '')
 
                         # Konvertiere den Wert in den richtigen Typ
-                        if value is None or value == '0' or value == 0:
+                        if value is None or value == '0' or value == "0" or value == 0:
                             value = ''
                         elif isinstance(value, str):
                             # Versuche String in Zahl zu konvertieren, wenn möglich
@@ -294,10 +281,10 @@ def export_dict_to_excel_with_mapping(input_dict: dict[str, Any], template_path:
         return True
     except Exception as e:
         print(f"Fehler beim Exportieren der Excel-Datei: {e}")
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return False
     finally:
-        # Stelle sicher, dass die Datei geschlossen wird, auch bei Fehler
+        # Stell sicher, dass die Datei geschlossen wird, auch bei einem Fehler
         if wb is not None:
             wb.close()
 

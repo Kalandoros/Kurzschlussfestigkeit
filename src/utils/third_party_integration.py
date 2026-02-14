@@ -1,5 +1,5 @@
-import markdown2
 from typing import Any
+import markdown2
 
 class MaTex:
     def __init__(self, text: str) -> None:

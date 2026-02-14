@@ -58,6 +58,11 @@ class KurschlusskräfteLeiterseileInput:
     l_s_9: Optional[float]
     l_s_10: Optional[float]
 
+    # Erweiterte Eingaben - Schlaufengeometrie
+    h: Optional[float]
+    w: Optional[float]
+    l_v: Optional[float]
+
     def __post_init__(self):
         self.standardkurzschlussstroeme = self.standardkurzschlussstroeme * 10 ** 3
         self.d = self.d * 10 ** -3

@@ -23,4 +23,4 @@ if __name__ == "__main__":
     gui.register_content_provider(third_party.MaTex, third_party.render_matex)
     gui.run(initial_page="Willkommen", #use_reloader=True,
             title="Kurzschlussfestigkeit", favicon="src/assets/Icon.jpg", watermark="© Angelo Rusvai",margin="2em",
-            dark_mode=False, debug=True, port="auto",)
+            dark_mode=False, debug=True, port="auto")

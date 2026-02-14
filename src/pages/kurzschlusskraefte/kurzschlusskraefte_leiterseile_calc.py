@@ -90,6 +90,11 @@ l_s_8: None|float = None
 l_s_9: None|float = None
 l_s_10: None|float = None
 
+h: None|float = None
+w: None|float = None
+l_v: None|float = None
+
+
 content_vorlage: None|dict = None
 vorlage_backup: None|dict = None
 
@@ -357,6 +362,9 @@ def on_click_zurücksetzen(state):
     state.l_s_8 = None
     state.l_s_9 = None
     state.l_s_10 = None
+    state.h = None
+    state.w = None
+    state.l_v = None
     on_click_leiterseiltyp_zurücksetzen(state)
 
     state.F_td_temp_niedrig = None
@@ -460,7 +468,15 @@ def on_click_berechnen(state):
     if state.leiterseilbefestigung_selected == "Aufgelegt" and state.l_h_f in (None, 0.0, 0, '', '0.0', '0'):
         notify(state, notification_type="warning",
                message=f"Bitte folgendes Eingabefeld überprüfen: 'l_h_f', 'Länge einer Klemme u. Formfaktor'", duration=15000)
-
+    if state.schlaufe_in_spannfeldmitte_selected == "Ja" and state.h in (None, 0.0, 0, '', '0.0', '0'):
+        notify(state, notification_type="warning",
+               message=f"Bitte folgendes Eingabefeld überprüfen: 'h', 'Schlaufenhöhe'", duration=15000)
+    if state.schlaufe_in_spannfeldmitte_selected == "Ja" and state.w in (None, 0.0, 0, '', '0.0', '0'):
+        notify(state, notification_type="warning",
+               message=f"Bitte folgendes Eingabefeld überprüfen: 'w', 'Schlaufenbreite'", duration=15000)
+    if state.schlaufe_in_spannfeldmitte_selected == "Ja" and state.l_v in (None, 0.0, 0, '', '0.0', '0'):
+        notify(state, notification_type="warning",
+               message=f"Bitte folgendes Eingabefeld überprüfen: 'l_v', 'Seilbogenlänge der Schlaufe'", duration=15000)
 
     # Bereinigen der alten States, damit keine Variablenleichen entstehen, wenn zum Beispiel bei einer Rechnung
     # oder Fall nicht alle Parameter berechnet werden. In so einem Fall dürfen sich die "alten" Variablen nicht mit den
@@ -533,7 +549,10 @@ def on_click_berechnen(state):
             l_s_7=float(state.l_s_7) if state.l_s_7 not in (None, 0.0, 0, '', '0.0', '0') else None,
             l_s_8=float(state.l_s_8) if state.l_s_8 not in (None, 0.0, 0, '', '0.0', '0') else None,
             l_s_9=float(state.l_s_9) if state.l_s_9 not in (None, 0.0, 0, '', '0.0', '0') else None,
-            l_s_10=float(state.l_s_10) if state.l_s_10 not in (None, 0.0, 0, '', '0.0', '0') else None
+            l_s_10=float(state.l_s_10) if state.l_s_10 not in (None, 0.0, 0, '', '0.0', '0') else None,
+            h=float(state.h) if state.h not in (None, 0.0, 0, '', '0.0', '0') else None,
+            w=float(state.w) if state.w not in (None, 0.0, 0, '', '0.0', '0') else None,
+            l_v=float(state.l_v) if state.l_v not in (None, 0.0, 0, '', '0.0', '0') else None
         )
 
         # Berechnung über den Mediator
@@ -570,17 +589,17 @@ def on_click_berechnen(state):
             state.sweep_vline_shapes = []
             state.sweep_chart_layout = _build_sweep_chart_layout([])
             notify(state, notification_type="warning", message=f"Diagramm konnte nicht erstellt werden: {str(sw)}", duration=10000)
-            traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+            traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
     except ValueError as ve:
         error_msg = traceback_detail.get_exception_message(ve, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ve)}", duration=15000)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
     except IndexError as ie:
         error_msg = traceback_detail.get_exception_message(ie, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ie)}", duration=15000)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
     except NotImplementedError as nie:
         # Behandlung für noch nicht implementierte Fälle
@@ -589,14 +608,14 @@ def on_click_berechnen(state):
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e, show_chain=True)
         notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(e)}", duration=15000)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
 def on_click_load_vorlage(state):
     """
     Lädt Vorlage aus Excel und setzt GUI-Widgets.
     """
 
-    # Setzt alle Felder und Ergebnisse zurück um zu Bereinigen
+    # Setzt alle Felder und Ergebnisse zurück, um zu bereinigen
     on_click_zurücksetzen(state)
 
     # Überprüfe, ob der file_selector einen Inhalt besitzt
@@ -621,7 +640,7 @@ def on_click_load_vorlage(state):
             return
 
         # Konvertiere DataFrame zu Dictionary mit den State-Variablen
-        input_dict, loaded_fields, skipped_fields = dataloader.convert_excel_to_dict_kurzschlusskreafte_leiterseile(df)
+        input_dict, loaded_fields, skipped_fields = dataloader.convert_excel_to_dict_with_mapping(df=df, mapping="Import Kurzschlusskraft Leiterseile")
 
         if not input_dict:
             notify(state, notification_type="error", message="Keine gültigen Eingabedaten in der Datei gefunden")
@@ -643,13 +662,15 @@ def on_click_load_vorlage(state):
         message = f"✓ {len(loaded_fields)} Felder geladen"
         if skipped_fields:
             # Nur optionale Felder anzeigen, wenn sie übersprungen wurden
-            optional_keywords = ['Phasenabstandshalter', 'Summe konzentrischer Massen',
-                                 'Länge einer Abspann-Isolatorkette', 'wirksamer Abstand']
+            optional_keywords = ['Leiterseilverbindung', 'Schlaufenebene', 'Phasenabstandshalter',
+                                 'Summe konzentrischer Massen', 'Länge einer Abspann-Isolatorkette',
+                                 'wirksamer Abstand', 'Länge einer Klemme','Schlaufenhöhe', 'Schlaufenbreite',
+                                 'Seilbogenlänge der Schlaufe']
             optional_skipped = [f for f in skipped_fields if any(kw in f for kw in optional_keywords)]
             required_skipped = [f for f in skipped_fields if f not in optional_skipped]
 
             if required_skipped:
-                message += f"\n⚠ {len(required_skipped)} Pflichtfelder fehlen"
+                message += f"\n⚠ {len(required_skipped)} Pflichtfelde(r) fehlen: {', '.join(required_skipped)}"
 
         notify(state, notification_type="success", message=message, duration=5000)
 
@@ -659,7 +680,7 @@ def on_click_load_vorlage(state):
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e)
         notify(state, notification_type="error", message=f"Fehler beim Laden der Datei {error_msg}: {str(e)}", duration=15000)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         # Setze auch bei Fehler zurück
         state.content_vorlage = None
 
@@ -686,7 +707,7 @@ def on_click_undo_vorlage(state):
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e)
         notify(state, notification_type="error", message=f"Fehler beim Wiederherstellen {error_msg}: {str(e)}", duration=15000)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
 def on_click_export_vorlage(state):
     """
@@ -738,6 +759,9 @@ def on_click_export_vorlage(state):
             'l_s_8': state.l_s_8,
             'l_s_9': state.l_s_9,
             'l_s_10': state.l_s_10,
+            'h': state.h,
+            'w': state.w,
+            'l_v': state.l_v,
         }
 
         # Erstelle Dateinamen mit name_der_verbindung und Timestamp
@@ -755,7 +779,7 @@ def on_click_export_vorlage(state):
         output_path = Path(temp_dir) / filename
 
         # Exportiere zu Excel mit Vorlage
-        success = dataloader.export_dict_to_excel_with_mapping(export_dict, template_path, output_path)
+        success = dataloader.export_dict_to_excel_with_reversemapping(export_dict, template_path, output_path)
 
         if success:
             # Lese die erstellte Datei und trigger Download mit Datum-Zeit-Dateinamen
@@ -771,7 +795,7 @@ def on_click_export_vorlage(state):
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e)
         notify(state, notification_type="error", message=f"Fehler beim Export{error_msg}: {str(e)}", duration=15000)
-        traceback.print_exc(limit=10, file=sys.stdout, chain=True)
+        traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
 with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:
     build_navbar()
@@ -801,16 +825,11 @@ with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:
                              dropdown=True,
                              hover_text="Ja, wenn der Höhenunterschied der Befestigungspunkte "
                                         "mehr als 25 % der Spannfeldlänge beträgt.")
-                tgb.selector(label="Schlaufebene bei Schlaufen in Spannfeldmitte",
+                tgb.selector(label="Schlaufenebene bei Schlaufen in Spannfeldmitte",
                              value="{schlaufenebene_parallel_senkrecht_selected}",
                              lov="{schlaufenebene_parallel_senkrecht_lov}",
                              dropdown=True,
-                             hover_text="Angabe nur notwendig, wenn Schlaufen in Spannfeldmitte verwendet werden.\n"
-                                        "Parallel: Schlaufe verläuft hauptsächlich horizontal "
-                                        "(Winkel zwischen oberem und unterem Anschlusspunkt < 45° ).\n"
-                                        "Senkrecht: Schlaufe verläuft hauptsächlich vertikal "
-                                        "(Winkel zwischen oberem und unterem Anschlusspunkt > 45°).\n"
-                                        "Hinweis: Die Schlaufenebene wird nur bei Schlaufen in Spannfeldmitte berücksichtigt.")
+                             hover_text="Angabe nur notwendig, wenn Schlaufen in Spannfeldmitte verwendet werden.\n")
                 tgb.selector(label="ϑ_l Niedrigste Temperatur",
                              value="{temperatur_niedrig_selected}",
                              lov="{temperatur_niedrig_lov}",
@@ -916,6 +935,17 @@ with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:
                         tgb.number(label="Abstandshalter 10", value="{l_s_10}", min=0.0, step=0.1,
                                    class_name="input-with-unit m-unit Mui-focused")
                         # Todo: Hier müssen unbedingt die zusätzlichen Gewichte noch abgefragt werden (Gegenkontakts, Abstandhalters).
+                with tgb.expandable(title="Schlaufengeometrie bei Schlaufen in Spannfeldmitte", expanded=False, class_name="h6",
+                                    hover_text="Die Eingabefelder gelten für paralell als auch für senkrecht zum Hauptleiter \n"
+                                               "Schlaufenanordnungen.\n"
+                                               "Wird die Seilbogenlänge nicht eingegeben, wird diese automatisch berechnet. \n"):
+                    with tgb.layout(columns="1 1 1", columns__mobile="1"):
+                        tgb.number(label="h Schlaufenhöhe", value="{h}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="w Schlaufenbreite", value="{w}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
+                        tgb.number(label="l_v Seilbogenlänge der Schlaufe", value="{l_v}", min=0.0, step=0.1,
+                                   class_name="input-with-unit m-unit Mui-focused")
             tgb.html("br")
             with tgb.layout(columns="1 1 1", columns__mobile="1", class_name="p0"):
                 tgb.button(label="Berechnen", on_action=on_click_berechnen, class_name="fullwidth")
