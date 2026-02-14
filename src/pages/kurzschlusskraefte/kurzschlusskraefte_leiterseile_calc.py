@@ -588,17 +588,21 @@ def on_click_berechnen(state):
             state.sweep_calc_df = None
             state.sweep_vline_shapes = []
             state.sweep_chart_layout = _build_sweep_chart_layout([])
+            error_msg = traceback_detail.get_exception_message(sw)
+            sys.stderr.write(f"{error_msg}\n")
             notify(state, notification_type="warning", message=f"Diagramm konnte nicht erstellt werden: {str(sw)}", duration=10000)
             traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
     except ValueError as ve:
         error_msg = traceback_detail.get_exception_message(ve, show_chain=True)
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ve)}", duration=15000)
+        sys.stderr.write(f"{error_msg}\n")
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}", duration=15000)
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
     except IndexError as ie:
         error_msg = traceback_detail.get_exception_message(ie, show_chain=True)
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(ie)}", duration=15000)
+        sys.stderr.write(f"{error_msg}\n")
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}", duration=15000)
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
     except NotImplementedError as nie:
@@ -607,7 +611,8 @@ def on_click_berechnen(state):
 
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e, show_chain=True)
-        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}: {str(e)}", duration=15000)
+        sys.stderr.write(f"{error_msg}\n")
+        notify(state, notification_type="error", message=f"Fehler bei der Berechnung {error_msg}", duration=15000)
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
 def on_click_load_vorlage(state):
@@ -679,7 +684,8 @@ def on_click_load_vorlage(state):
 
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e)
-        notify(state, notification_type="error", message=f"Fehler beim Laden der Datei {error_msg}: {str(e)}", duration=15000)
+        sys.stderr.write(f"{error_msg}\n")
+        notify(state, notification_type="error", message=f"Fehler beim Laden der Datei {error_msg}", duration=15000)
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         # Setze auch bei Fehler zurück
         state.content_vorlage = None
@@ -706,7 +712,8 @@ def on_click_undo_vorlage(state):
 
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e)
-        notify(state, notification_type="error", message=f"Fehler beim Wiederherstellen {error_msg}: {str(e)}", duration=15000)
+        sys.stderr.write(f"{error_msg}\n")
+        notify(state, notification_type="error", message=f"Fehler beim Wiederherstellen {error_msg}", duration=15000)
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
 def on_click_export_vorlage(state):
@@ -794,7 +801,8 @@ def on_click_export_vorlage(state):
 
     except Exception as e:
         error_msg = traceback_detail.get_exception_message(e)
-        notify(state, notification_type="error", message=f"Fehler beim Export{error_msg}: {str(e)}", duration=15000)
+        sys.stderr.write(f"{error_msg}\n")
+        notify(state, notification_type="error", message=f"Fehler beim Export{error_msg}", duration=15000)
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
 
 with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:

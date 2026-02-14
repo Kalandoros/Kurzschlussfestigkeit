@@ -147,19 +147,23 @@ def load_excel_to_df(file_path: Optional[str | Path] = None) -> pd.DataFrame:
         return df
 
     except FileNotFoundError as fnfe:
-        traceback_detail.get_exception_message(fnfe)
+        error_msg = traceback_detail.get_exception_message(fnfe)
+        sys.stderr.write(f"{error_msg}\n")
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
     except PermissionError as pe:
-        traceback_detail.get_exception_message(pe)
+        error_msg = traceback_detail.get_exception_message(pe)
+        sys.stderr.write(f"{error_msg}\n")
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
     except ValueError as ve:
-        traceback_detail.get_exception_message(ve)
+        error_msg = traceback_detail.get_exception_message(ve)
+        sys.stderr.write(f"{error_msg}\n")
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
     except Exception as e:
-        traceback_detail.get_exception_message(e)
+        error_msg = traceback_detail.get_exception_message(e)
+        sys.stderr.write(f"{error_msg}\n")
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return pd.DataFrame()
 
@@ -280,6 +284,8 @@ def export_dict_to_excel_with_reversemapping(input_dict: dict[str, Any], templat
         wb.save(output_path)
         return True
     except Exception as e:
+        error_msg = traceback_detail.get_exception_message(e)
+        sys.stderr.write(f"{error_msg}\n")
         print(f"Fehler beim Exportieren der Excel-Datei: {e}")
         traceback.print_exc(limit=10, file=sys.stderr, chain=True)
         return False

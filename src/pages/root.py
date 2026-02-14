@@ -1,6 +1,7 @@
-from src.utils import dataloader
 import taipy.gui.builder as tgb
 from taipy.gui import navigate
+
+from src.utils import dataloader
 
 def on_menu_action(state, id, payload):
     # payload['args'][0] typically contains the selected item ID for tgb.menu
