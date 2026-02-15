@@ -60,7 +60,14 @@
     text-align: left !important; /* Revert to default */
 }
 
-/* --- 4b. SELECTED VALUE ELEMENT (MuiBox-root) STYLING (THE ABSOLUTE FIX) --- */
+/* --- 4b. SELECT DROPDOWN ITEMS (MuiMenuItem-root) ALIGNMENT OF ITEMS IN DROPDOWN LIST --- */
+.MuiMenu-paper .MuiMenuItem-root {
+    display: flex !important;
+    justify-content: space-evenly !important;
+    align-items: center !important;
+}
+
+/* --- 4c. SELECTED VALUE ELEMENT (MuiBox-root) STYLING (THE ABSOLUTE FIX) --- */
 .input-with-unit .MuiBox-root {
     position: absolute !important;
     right: 50px !important;
@@ -80,7 +87,7 @@
 /* -------------------------------------------------------- */
 /* --- 5. Pseudo-Element Unit Injection & Styling --- */
 
-/* Targets inputs with the seconds unit (tk-unit) and injects "s" */
+/* Targets inputs with the seconds unit (tk-unit) and injects e.g. "s" */
 .tk-unit .MuiInputBase-root:after { content: "s"; }
 .m-unit .MuiInputBase-root:after { content: "m"; }
 .N-unit .MuiInputBase-root:after { content: "kN"; }
