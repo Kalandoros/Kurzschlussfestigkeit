@@ -44,7 +44,7 @@ class KurschlusskräfteLeiterseileInput:
     # Mechanische Kraftwerte
     F_st_20: float
     F_st_80: float
-    federkoeffizient: int
+    S: int
 
     # Erweiterte Eingaben - Abstände Phasenabstandshalter
     l_s_1: Optional[float]
@@ -307,7 +307,7 @@ class KurschlusskräfteLeiterseileMediator:
             result.E_eff = bkskls.E_eff(self.inputs.E, F_st, self.inputs.n, self.inputs.A_s, self.σ_fin)
 
             # Schritt 9: Steifigkeitsnorm
-            result.N = bkskls.N(self.inputs.federkoeffizient, self.inputs.l,
+            result.N = bkskls.N(self.inputs.S, self.inputs.l,
                                self.inputs.n, result.E_eff, self.inputs.A_s)
 
             # Schritt 10: Beanspruchungsfaktor
@@ -489,7 +489,7 @@ class KurschlusskräfteLeiterseileMediator:
             result.E_eff = bkskls.E_eff(self.inputs.E, F_st, self.inputs.n, self.inputs.A_s, self.σ_fin)
 
             # Schritt 9: Steifigkeitsnorm
-            result.N = bkskls.N(self.inputs.federkoeffizient, result.l_eff, self.inputs.n, result.E_eff, self.inputs.A_s)
+            result.N = bkskls.N(self.inputs.S, result.l_eff, self.inputs.n, result.E_eff, self.inputs.A_s)
 
             # Schritt 10: Beanspruchungsfaktor
             result.ζ = bkskls.ζ(self.inputs.n, self.g, self.inputs.m_s + result.m_c, result.l_eff, F_st, result.N)

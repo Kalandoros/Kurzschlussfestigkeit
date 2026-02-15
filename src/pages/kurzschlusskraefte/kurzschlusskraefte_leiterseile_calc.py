@@ -54,9 +54,6 @@ temperatur_hoch_selected: None|str = None
 teilleiter_lov: list[str] = ["1", "2", "3", "4", "5", "6"]
 teilleiter_selected: None|str = None
 
-federkoeffizient_lov: list[str] = ["100000", "150000", "1300000", "400000", "500000", "2000000", "600000", "3000000"]
-federkoeffizient_selected: None|str = None
-
 """
 Auswahl der Leiterseiltypen: 
 1. Gesamte Leiterseildaten als Dataframe, 
@@ -79,6 +76,7 @@ a: None|float = None
 a_s: None|float = None
 F_st_20: None|float = None
 F_st_80: None|float = None
+S: None|float = None
 l_s_1: None|float = None
 l_s_2: None|float = None
 l_s_3: None|float = None
@@ -347,7 +345,7 @@ def on_click_zurücksetzen(state):
     state.a_s = None
     state.F_st_20 = None
     state.F_st_80 = None
-    state.federkoeffizient_selected = "0" # muss int sein
+    state.S = None
     state.schlaufenebene_parallel_senkrecht_selected = None
     state.temperatur_niedrig_selected = None
     state.temperatur_hoch_selected = None
@@ -426,7 +424,7 @@ def on_click_berechnen(state):
         # Mechanische Kraftwerte
         ('F_st_20', 'Statische Seilzugkraft bei -20°C'),
         ('F_st_80', 'Statische Seilzugkraft bei 80°C'),
-        ('federkoeffizient_selected', 'Federkoeffizient'),
+        ('S', 'resultierender Federkoeffizient'),
     ]
 
     # Prüfe alle minimum Pflichtfelder
@@ -539,7 +537,7 @@ def on_click_berechnen(state):
             a_s=float(state.a_s) if state.a_s not in (None, 0.0, 0, '', '0.0', '0') else None,
             F_st_20=float(state.F_st_20),
             F_st_80=float(state.F_st_80),
-            federkoeffizient=int(state.federkoeffizient_selected),
+            S=int(state.S),
             l_s_1=float(state.l_s_1) if state.l_s_1 not in (None, 0.0, 0, '', '0.0', '0') else None,
             l_s_2=float(state.l_s_2) if state.l_s_2 not in (None, 0.0, 0, '', '0.0', '0') else None,
             l_s_3=float(state.l_s_3) if state.l_s_3 not in (None, 0.0, 0, '', '0.0', '0') else None,
@@ -755,7 +753,7 @@ def on_click_export_vorlage(state):
             'a_s': state.a_s,
             'F_st_20': state.F_st_20,
             'F_st_80': state.F_st_80,
-            'federkoeffizient_selected': state.federkoeffizient_selected,
+            'S': state.S,
             'l_s_1': state.l_s_1,
             'l_s_2': state.l_s_2,
             'l_s_3': state.l_s_3,
@@ -910,9 +908,15 @@ with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:
                                       "konzentrierter Massen im Spannfeld, z. B. durch Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt \n"
                                       "werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden.",
                            class_name="input-with-unit N-unit Mui-focused")
-                tgb.selector(label="S resultierender Federkoeffizient beider Stützpunkte im Spannfeld",
-                             value="{federkoeffizient_selected}", lov="{federkoeffizient_lov}",
-                             dropdown=True, class_name="input-with-unit inv-N_m-unit")
+                tgb.number(label="S resultierender Federkoeffizient beider Stützpunkte",
+                             value="{S}",
+                             hover_text="Der resultierende Federkoeffizient beschreibt die Steifigkeit beider Gerüste \n"
+                                        "an denen das Leiterseil befestigt ist. \n"
+                                        "100'000 bei aufgelegten Leiterseilen \n"
+                                        "150'000 - 1'300'000 bei Bemessungsspannung 123 kV \n"
+                                        "400'000 - 2'000'000 bei Bemessungsspannung 245 kV \n"
+                                        "600'000 - 3'000'000 bei Bemessungsspannung 420 kV \n",
+                            class_name="input-with-unit Nm-unit Mui-focused long-unit")
             tgb.html("br")
             tgb.text(value="Erweiterte Eingaben", class_name="h6")
             tgb.html("hr")

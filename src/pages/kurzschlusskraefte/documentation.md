@@ -66,11 +66,11 @@ Fixierung der Teilleiter eingebaut, ist das Zusammenschlagen erst bei höheren K
 entsprechend hohen Bündel-Seilzugkraft führt.
 
 Bei regelmässigen Bündelleiteranordnungen bis einschliesslich vier Teilleitern wird die Bündel-Seilzugkraft 
-mit $F_{pi,d}= 1,1 F_{t,d}$ berechnet, wenn einer der beiden folgenden Bedingungen erfüllt ist und damit nachgewiesen ist, 
+mit $F_{pi,d}= 1,1 \,F_{t,d}$ berechnet, wenn einer der beiden folgenden Bedingungen erfüllt ist und damit nachgewiesen ist, 
 das die Teilleiter wirksam zusammenschlagen.
 
-* $a_s /d ≤ 2,0$ und $l_s /d ≥ 50 a_s$
-* $a_s /d ≤ 2,5$ und $l_s /d ≥ 70 a_s$
+* $a_s /d ≤ 2,0$ und $l_s /d ≥ 50 \,a_s$
+* $a_s /d ≤ 2,5$ und $l_s /d ≥ 70 \,a_s$
 
 Schlagen die Teilleiter während des Kurzschlusses nicht wirksam zusammen, gibt es zwei mögliche Berechnungspfade:
 
@@ -146,7 +146,7 @@ Szenarien zu berücksichtigen. Im Hintergrund wird zusätzlich die Berechnung vo
 ![Kurzschlusstrompfade.png](/src/assets/kurzschlusskraefte_leiterseile/Kurzschlusstrompfade.png)
 
 Hinweis: Ist im Eingabefeld Seilbogenlänge $l_v$ im Programm keine Seilbogenlänge $l_v$ angegeben, wird die 
-Seilbogenlänge $l_v$ über die empirische Gleichung $l_v = \sqrt{h^2 + w^2} 1.05$ berechnet.
+Seilbogenlänge $l_v$ über die empirische Gleichung $l_v = \sqrt{h^2 + w^2} \,1.05$ berechnet.
 
 ## Schlaufenebenen
 Die Schlaufenebenen können parallel oder senkrecht zu den Hauptleitern angeordnet sein. Der tatsächliche Ausschwing-
@@ -180,7 +180,7 @@ der Seilklemmen bewegt. [1], [7]
 
 Die Einspannung verursacht eine Verformung der Ausschwingebene der Schlaufe, durch die ein Biegemoment 
 im Seil der elektromagnetischen Kraft entgegenwirkt. Aus den Versuchsergebnissen wird in [5] empirisch ermittelt,
-dass dieses Moment bei der Berechnung des Parameters $r$ in Gleichung $r = \frac{F'}{1.2n m'_sg_n}$ durch eine 
+dass dieses Moment bei der Berechnung des Parameters $r$ in Gleichung $r = \frac{F'}{1.2\,n \,m'_s\,g_n}$ durch eine 
 Vergrösserung des Eigengewichtskraftbelags um 20% berücksichtigt werden kann. [1], [7]
 
 ## Federglieder
@@ -193,7 +193,14 @@ Während des Kurzschlußstromﬂusses erreichen die Federn ihre Endauslenkung un
 springt auf einen wesentlich höheren Wert, der nur aus der Steiﬁgkeit der Gerüste folgt. [1], [7] 
 $$\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}$$
 
-Ein Beispiel zur Berechnung der Steifigkeit unter Berücksichtigung der Federglieder ist in der Literatur [1] beschrieben.
+## Resultierter Federkoeffizient
+
+Die Formel $\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}$ gilt generell bei der Berechnung des resultierten 
+Federkoeffizienten der beiden Stützpunkte eines Spannfeldes. Die in [3] Kapitel 6.2.1 unter Anmerkung 3 gemachten 
+Beispielwerte beziehen sich auf die Federkoeffizienten eines Abspanngerüstes, nicht beider Abspanngerüste. 
+Folgend ist eine Beispielrechnung mit zwei Abspanngerüsten, welche den gleichen Federkoeffizienten aufweisen, aufgeführt:
+
+$$S= \frac{1} {\frac{1}{S_{P1}}+\frac{1}{S_{P2}}}= \frac{1} {\frac{1}{1'000'000 \,N/m}+\frac{1}{1'000'000 \,N/m}}=500'000 \,N/m$$
 
 ## Designhinweise
 * Eine zu kurz gewählte Schlaufe führt zwar zu einer Verringerung des Ausswingwinkels der Hauptleiter, jedoch auch zu höheren Seilzugkräften. [9]
@@ -219,7 +226,7 @@ Für einen Vergleich zwischen den Teilleiterabständen wird auf [7] S.55 ff. und
 Betracht gezogen werden, wenn der minimale Leiterabstand $a_{min}$ nicht erreicht werden kann. [9] S.148 Dabei sind jedoch
 ca. 12% höhere Seilzugkräfte zu erwarten.
 
-Quellenverzeichnis:
+## Quellenverzeichnis
 
 [1] Ergänzung des Berechnungsverfahrens nach IEC 60865-1VDE 0103 zur Ermittlung der Kurzschlußbeanspruchung von 
 Leitungsseilen mit Schlaufen im Spannfeld, 2002 - FAU, Meyer

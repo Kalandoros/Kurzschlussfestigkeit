@@ -20,7 +20,7 @@
         "a_s": "a_s wirksamer Abstand zwischen Teilleitern",
         "F_st_20": "Fst-20 statische Seilzugkraft in einem Hauptleiter",
         "F_st_80": "Fst80 statische Seilzugkraft in einem Hauptleiter",
-        "federkoeffizient_selected": "S resultierender Federkoeffizient beider St\u00fctzpunkte im Spannfeld",
+        "S": "S resultierender Federkoeffizient beider St\u00fctzpunkte im Spannfeld",
         "l_s_1": "Abstand Phasenabstandshalter 1",
         "l_s_2": "Abstand Phasenabstandshalter 2",
         "l_s_3": "Abstand Phasenabstandshalter 3",

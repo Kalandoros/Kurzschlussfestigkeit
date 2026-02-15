@@ -1,18 +1,22 @@
-/* --- 0. Unset max-width (SUCCESSFUL) --- */
+/* -------------------------------------------------------- */
+/* --- 0. Unset max-width --- */
 
 .input-with-unit {
     max-width: none !important;
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
-/* --- 1. Universal Arrow Removal (SUCCESSFUL) --- */
+/* --- 1. Universal Arrow Removal for number field --- */
 .input-with-unit .MuiIconButton-root {
     display: none !important;
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
+/* -------------------------------------------------------- */
 /* --- 2. Input Container Styling (The Wrapper) --- */
 .input-with-unit .MuiInputBase-root {
     position: relative;
@@ -21,8 +25,10 @@
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
-/* --- 3. Input Element Styling (The Number Field) --- */
+/* -------------------------------------------------------- */
+/* --- 3a. Input Element Styling (The Number Field) --- */
 .input-with-unit input[type="number"] {
     /* Allows Taipy/MUI to choose the text color based on the theme */
 
@@ -38,7 +44,16 @@
 
 /* -------------------------------------------------------- */
 
-/* --- 4. SELECTOR VALUE CONTAINER (MuiSelect-select) CLEANUP --- */
+/* --- 3b. Extra padding for long unit labels --- */
+.input-with-unit.long-unit input[type="number"] {
+    padding-right: 35px !important;
+}
+
+/* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
+
+/* -------------------------------------------------------- */
+/* --- 4a. SELECTOR VALUE CONTAINER (MuiSelect-select) CLEANUP --- */
 .input-with-unit .MuiSelect-select {
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -60,7 +75,9 @@
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
+/* -------------------------------------------------------- */
 /* --- 5. Pseudo-Element Unit Injection & Styling --- */
 
 /* Targets inputs with the seconds unit (tk-unit) and injects "s" */
@@ -68,6 +85,7 @@
 .m-unit .MuiInputBase-root:after { content: "m"; }
 .N-unit .MuiInputBase-root:after { content: "kN"; }
 .kg-unit .MuiInputBase-root:after { content: "kg"; }
+.Nm-unit .MuiInputBase-root:after { content: "N/m"; }
 .--unit .MuiInputBase-root:after { content: ""; }
 
 /* Unit Injection for Selector Inputs */
@@ -100,8 +118,9 @@
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
-
+/* -------------------------------------------------------- */
 /* --- 6. Label immer im „fokussierten" Zustand (OBEN positioniert) --- */
 .input-with-unit .MuiInputLabel-root {
     transform: translate(14px, -9px) scale(0.75) !important;  /* STÄRKER nach oben! */
@@ -135,7 +154,9 @@
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
+/* -------------------------------------------------------- */
 /* --- 7. Tooltip/Hover Support --- */
 /* Ensure tooltips are visible and have proper z-index */
 .MuiTooltip-popper {
@@ -158,7 +179,9 @@
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
+/* -------------------------------------------------------- */
 /* --- 8. Margin Bottom Classes --- */
 /* Target the parent div of text elements with mb-* class */
 .taipy-text.mb-4 {
@@ -168,8 +191,10 @@
 }
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
-/* --- 9. Reduced width of Markdown html --- */
+/* -------------------------------------------------------- */
+/* --- 9a. Reduced width of Markdown html --- */
 /* Keep documentation content compact and scale images consistently. */
 .doc-card {
     /* width: 80%; */
@@ -246,7 +271,9 @@ iframe[src*="taipy-user-content"] {
 
 
 /* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
+/* -------------------------------------------------------- */
 /* --- 10. Pins the version to the bottom right --- */
 .version-watermark {
     position: fixed !important;
