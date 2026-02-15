@@ -1026,16 +1026,18 @@ with tgb.Page() as kurzschlusskraefte_leiterseile_calc_page:
                                   size="small", width="100%", page_size=6, page_size_options=[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
             tgb.text(value="Abbildungen", class_name="h6")
             tgb.html("hr")
-            with tgb.layout(columns="1", columns__mobile="1"):
-                with tgb.expandable(title="Diagramm", expanded=False):
-                    tgb.chart(data="{sweep_calc_df}", x="F_st",
-                              y=["F_td", "F_fd", "F_pi_d"], name=["F<sub>td</sub>", "F<sub>fd</sub>", "F<sub>pi d</sub>"],
-                              color=["red", "blue", "green"], mode="lines", rebuild=True, height="800px",
-                              layout="{sweep_chart_layout}")
-                    #tgb.table(examples="{calc_result_formatted}", rebuild=True, show_all=True, number_format="%.3e", size="small", width="35%")
-                #with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
-                    #tgb.text(value="{calc_result_formatted}", mode="pre")
-    with tgb.layout(columns="1", class_name="p1", columns__mobile="1"):
-        with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False):
-            tgb.table("{leiterseiltyp}")
+            with tgb.layout(columns="1", class_name="layout-fit", columns__mobile="1"):
+                with tgb.expandable(title="Diagramm", expanded=False, class_name="h6 expandable-fit"):
+                    with tgb.part(class_name="expandable-scroll"):
+                        tgb.chart(data="{sweep_calc_df}", x="F_st",
+                                  y=["F_td", "F_fd", "F_pi_d"], name=["F<sub>td</sub>", "F<sub>fd</sub>", "F<sub>pi d</sub>"],
+                                  color=["red", "blue", "green"], mode="lines", rebuild=True, height="800px", width="100%",
+                                  layout="{sweep_chart_layout}")
+                        #tgb.table(examples="{calc_result_formatted}", rebuild=True, show_all=True, number_format="%.3e", size="small", width="35%")
+                    #with tgb.expandable(title="Zusätzliche Berechnungsergebnisse", expanded=False, class_name="h6"):
+                        #tgb.text(value="{calc_result_formatted}", mode="pre")
+    with tgb.layout(columns="1", class_name="p1 layout-fit", columns__mobile="1"):
+        with tgb.expandable(title="Tabelle Leiterseiltypen", expanded=False, class_name="expandable-fit"):
+            with tgb.part(class_name="expandable-scroll"):
+                tgb.table("{leiterseiltyp}", width="100%")
 

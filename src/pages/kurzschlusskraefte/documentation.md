@@ -16,8 +16,8 @@
 ## Geltungsbereich der Ergebnisse
 Die Applikation ist nach [3] und [4] aufgebaut und entspricht deren Prinzipien.
 Wie in [3] beschrieben, gelten die Berechnungen bei horizontal angeordneten Hauptleitern für Spannfeldlängen
-bis ca. 120 m und für einen Durchhang von 8% in Bezug auf die Spannfeldlänge.<br>
-Haben die Befestigungspunkte einen Höhenunterschied von > 25% bezogen auf die Spannfeldlänge ist die Berechnung
+bis ca. 120 m und bis zu einem Durchhang von 8% in Bezug auf die Spannfeldlänge.<br>
+Weissen die Befestigungspunkte einen Höhenunterschied von > 25% bezogen auf die Spannfeldlänge auf, ist die Berechnung
 als Schlaufe, im Sinne von vertikal verlaufenden Leiterseilen, durchzuführen.
 
 ## Seilzugkraft $F_{t,d}$ während des Kurzschlusses durch das Ausschwingen (Kurzschluss-Seilzugkraft)
@@ -179,7 +179,7 @@ der tiefste Punkt der Schlaufe sich auf einer Kreisbahn um einen Punkt unterhalb
 der Seilklemmen bewegt. [1], [7]
 
 Die Einspannung verursacht eine Verformung der Ausschwingebene der Schlaufe, durch die ein Biegemoment 
-im Seil der elektromagnetischen Kraft entgegenwirkt. Aus den Versuchsergebnissen wird in [5] empirisch ermittelt,
+im Seil der elektromagnetischen Kraft entgegenwirkt. Aus den Versuchsergebnissen wurde in [5] empirisch ermittelt,
 dass dieses Moment bei der Berechnung des Parameters $r$ in Gleichung $r = \frac{F'}{1.2\,n \,m'_s\,g_n}$ durch eine 
 Vergrösserung des Eigengewichtskraftbelags um 20% berücksichtigt werden kann. [1], [7]
 
@@ -193,9 +193,9 @@ Während des Kurzschlußstromﬂusses erreichen die Federn ihre Endauslenkung un
 springt auf einen wesentlich höheren Wert, der nur aus der Steiﬁgkeit der Gerüste folgt. [1], [7] 
 $$\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}$$
 
-## Resultierter Federkoeffizient
+## Resultierender Federkoeffizient
 
-Die Formel $\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}$ gilt generell bei der Berechnung des resultierten 
+Die Formel $\frac{1}{S}= \frac{1}{S_{P1}}+\frac{1}{S_{P2}}$ gilt generell bei der Berechnung des resultierenden 
 Federkoeffizienten der beiden Stützpunkte eines Spannfeldes. Die in [3] Kapitel 6.2.1 unter Anmerkung 3 gemachten 
 Beispielwerte beziehen sich auf die Federkoeffizienten eines Abspanngerüstes, nicht beider Abspanngerüste. 
 Folgend ist eine Beispielrechnung mit zwei Abspanngerüsten, welche den gleichen Federkoeffizienten aufweisen, aufgeführt:
@@ -213,7 +213,7 @@ vorgeschrieben. Diese müssen beim Hersteller angefragt werden. Allenfalls müss
 des Leitergewichts der Schlaufe im Spannfeld zu berücksichtigen. [1], [2]
 * Die Ergebnisse der Berechnungen der Seilzugkräfte beim Kurzschluss sind mit der Bruchlast des verwendeten Leiterseiles 
 zu vergleichen.
-* Der Einsatz und die Abstände von Abstandshaltern muss wohlüberlegt werden. Zu kleine Abstände zwischen den Abstandshaltern
+* Der Einsatz und die Abstände von Abstandshaltern müssen wohlüberlegt werden. Zu kleine Abstände zwischen den Abstandshaltern
 führen dazu, dass die Teilleiter erst bei hohen Kurzschlussströmen zusammenschlagen, was die Bündel-Seilzugkraft ansteigen lässt,
 da das weitere Ansteigen der Kontraktionskräfte durch das Zusammenschlagen nicht verhindert wird. Das führt zu weiter 
 ansteigenden Seilzugkräften. In der Literatur [6] S.238 werden für Abstände der Abstandshalter untereinander 5-10 m genannt,
@@ -221,6 +221,9 @@ wobei in der Tendenz eher 10 m anzustreben sind.
 * Bei der Wahl der Teilleiterabstände ist zu berücksichtigen, dass die Bündel-Seilzugkraft mit zunehmen Teilleiterabständen 
 zunimmt. Das ist dem Umstand geschuldet, das die Teilleiter bei grösseren Abständen erst später zusammenschlagen.
 Für einen Vergleich zwischen den Teilleiterabständen wird auf [7] S.55 ff. und [8] verwiesen.
+* Um unwirtschaftliche Konfigurationen mit hoher Bündel-Seilzugkraft zu vermeiden, sollten Teilleiterabstände und 
+Abstandshalterabstände aufeinander abgestimmt werden. Je grösser die Teilleiterabstände, desto grösser auch die 
+Abstände der Abstandshalter. 
 * Der minimale Leiterabstand $a_{min}$ darf nach IEC 61936-1 50% spannungsabhängigen Abstände nicht unterschreiten.
 * Die Positionierung eines Abstandhalters in der Spannfeldmitte, als kritische Stelle, kann als Ersatzmassnahme in 
 Betracht gezogen werden, wenn der minimale Leiterabstand $a_{min}$ nicht erreicht werden kann. [9] S.148 Dabei sind jedoch

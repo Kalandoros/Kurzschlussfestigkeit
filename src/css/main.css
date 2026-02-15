@@ -288,7 +288,7 @@ iframe[src*="taipy-user-content"] {
     opacity: 0.4 !important;
     color: gray !important;
     right: 0% !important;
-    transform: translateX(-50%) !important;;
+    transform: translateX(-50%) !important;
     font-size: 0.1em !important;
 }
 
@@ -296,4 +296,42 @@ iframe[src*="taipy-user-content"] {
 /* -------------------------------------------------------- */
 /* -------------------------------------------------------- */
 
+/* -------------------------------------------------------- */
+/* --- 11. Expandable table horizontal scroll --- */
+.expandable-fit {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.expandable-fit .expandable-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.expandable-fit .taipy-table,
+.expandable-fit table {
+    width: 100%;
+    max-width: 100%;
+}
+
+.expandable-fit .taipy-table .MuiTableContainer-root {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Limit layout container width to avoid global horizontal overflow. */
+.layout-fit {
+    max-width: 100%;
+    min-width: 0;
+    /* overflow-x: hidden; */
+}
+
+/* -------------------------------------------------------- */
+/* -------------------------------------------------------- */
 
