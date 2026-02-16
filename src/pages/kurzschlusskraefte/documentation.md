@@ -98,13 +98,22 @@ Bei der Berechnung der Seilzugkräfte bei Kurzschluss durch Ausschwingen $F_{t,d
 sowie bei der Seilauslenkung $b_{h}$ werden die Einzellasten gleichmässig auf die Seillänge verteilt. Sie werden dem 
 Massenbelag des Leiterseiles als zusätzlicher Massenbelag hinzugefügt. Bei der Berechnung der Seilzugkraft durch 
 Bündelkontraktion wird die zusätzliche Masse der Seilschlaufe in der Spannfeldmitte und ihrer 
-Befestigung nicht berücksichtigt. [3] S.26, [1] S.11 Hintergrund ist, das Versuche gezeigt haben, das die 
+Befestigung nicht berücksichtigt. [2] S. 28, [3] S.26 Hintergrund ist, das Versuche gezeigt haben, das die 
 Seilzugkräfte bei Berücksichtigung der Masse der Seilschlaufe in Spannfeldmitte dazu neigten, sich auf der unsicheren Seite
-zu befinden. [1] S.9
+zu befinden. [1] S.9, 11
 
 Bei der Ermittlung der statischen Seilzugkraft $F_{st}$ und des statischen Durchhangs $f_{st}$ sollte der Beitrag 
 konzentrierter Massen im Spannfeld, wie z.B. durch Abstandshalter, Klemmen, Schlaufen oder Gegenkontakte, berücksichtigt 
-werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden. [3] S.26
+werden. Bei Schlaufen sollte dabei die Hälfte der Schlaufenmasse angesetzt werden, um der nicht zu vernachlässigenden 
+Biegesteifigkeit der Schlaufe Rechnung zu tragen. Über den daraus folgenden höheren statischen Seilzug $F_{st}$ wird die 
+Schlaufe in Spannfeldmitte indirekt bei der Berechnung der Seilzugkräfte bei Kurzschluss durch Ausschwingen $F_{t,d}$ 
+und Fallen $F_{f,d}$ sowie den Faktor $\epsilon_{st}$ bei der Berechnung der Bündel-Seilzugkraft $F_{pi,d}$ berücksichtigt. [3] S.8f.
+
+Zusammengefasst bedeutet das, das bei der statischen Seilzugkraft $F_{st}$ und beim statischen Durchhang $f_{st}$ die 
+konzentrierten Massen gesamthaft und die Hälfte des Gewichts der Seilschlaufe in Spannfeldmitte berücksichtigt werden müssen.
+Bei der Berechnung der Seilzugkräfte bei Kurzschluss $F_{t,d}$, $F_{f,d}$, $F_{pi,d}$ sowie der Seilauslenkung $b_{h}$
+werden die konzentrierten Massen über den zusätzlichen Massenbelag berücksichtigt. Das Schlaufengewicht wird 
+bei der Berechnung der Seilzugkräfte bei Kurzschluss und der Seilauslenkung nicht berücksichtigt.
 
 ## Schlaufen in Spannfeldmitte
 Schlaufen in der Nähe der Hauptleiterbefestigungen (Hochgerüsten) haben geringen Einfluss auf die Seilzugkräfte beim Kurzschluss 
@@ -204,27 +213,33 @@ $$S= \frac{1} {\frac{1}{S_{P1}}+\frac{1}{S_{P2}}}= \frac{1} {\frac{1}{1'000'000 
 
 ## Designhinweise
 * Eine zu kurz gewählte Schlaufe führt zwar zu einer Verringerung des Ausswingwinkels der Hauptleiter, jedoch auch zu höheren Seilzugkräften. [9]
-* Bei Stützisolatoren oder Geräten mit Isolatoren sollte ein Sicherheitsfaktor von 0,7 gewählt werden. 
-Untersuchungen an 110-kV-Isolatoren haben gezeigt, dass aufgrund von Alterungseffekten die Bruchlast mit zunehmenden Alter abnimmt. [7]
-In ähnlicher Weise beschreibt es die Norm IEC 61869-1 für die Belastungen der Anschlüsse von Messwandlern. 
-* Mit Ausnahme von Messwandlern werden gemäss den Normen für Hochspannungsapparate keine dynamischen Kräfte angegeben bzw. 
-vorgeschrieben. Diese müssen beim Hersteller angefragt werden. Allenfalls müssen höhere Werte vereinbart werden.
+* Bei Stützisolatoren oder Geräten mit Isolatoren sollte in Bezug auf die dynamischen Lasten ein Sicherheitsfaktor von 0,7 gewählt werden. 
+Untersuchungen an 110-kV-Isolatoren haben gezeigt, dass aufgrund von Alterungseffekten die Bruchlast mit zunehmenden Alter abnimmt. [7], [10]
+Ebenso beschreibt es die Norm IEC 61869-1 für die dynamischen Belastungen der Anschlüsse von Messwandlern, welche einen Sicherheitsfaktor von 0,7
+vorgibt. 
+* Mit Ausnahme von Messwandlern und Überspannungsableitern werden in den Normen für Hochspannungsapparate keine spezifischen 
+Vorgaben zu den dynamischen Kräften gemacht bzw. vorgeschrieben. Diese müssen beim Hersteller angefragt werden. 
+Allenfalls müssen höhere Werte vereinbart werden.
+* Für die Normal-Lastfälle (Eigengewicht, Zuglast, Montagenlast, Eislast und Windlast) und deren übliche Kombinationen sind
+bei der Auslegung der statischen Seilzugkräfte $F_{st}$ unter Beachtung der Normvorgaben für Hochspannungsapparate zu 
+berücksichtigen. Die Kombination von Normal-Lastfällen mit einem Ausnahmelastfall darf zu keinen Schäden führen.
 * Bei der Bestimmung der statischen Seilzugkräfte $F_{st}$ sind Schlaufen als Einzellasten mit der Hälfte
-des Leitergewichts der Schlaufe im Spannfeld zu berücksichtigen. [1], [2]
+des Leitergewichts der Schlaufe im Spannfeld zu berücksichtigen. [1], [3]
 * Die Ergebnisse der Berechnungen der Seilzugkräfte beim Kurzschluss sind mit der Bruchlast des verwendeten Leiterseiles 
 zu vergleichen.
 * Der Einsatz und die Abstände von Abstandshaltern müssen wohlüberlegt werden. Zu kleine Abstände zwischen den Abstandshaltern
 führen dazu, dass die Teilleiter erst bei hohen Kurzschlussströmen zusammenschlagen, was die Bündel-Seilzugkraft ansteigen lässt,
 da das weitere Ansteigen der Kontraktionskräfte durch das Zusammenschlagen nicht verhindert wird. Das führt zu weiter 
 ansteigenden Seilzugkräften. In der Literatur [6] S.238 werden für Abstände der Abstandshalter untereinander 5-10 m genannt,
-wobei in der Tendenz eher 10 m anzustreben sind.
+wobei in der Tendenz eher 10 m anzustreben sind. [11] S.69 wird empfohlen, die Anzahl der Abstandshalter auf ein Minimum zu reduzieren 
+bzw. den Abstand zwischen den Abstandshaltern so gross wie möglich zu wählen.
 * Bei der Wahl der Teilleiterabstände ist zu berücksichtigen, dass die Bündel-Seilzugkraft mit zunehmen Teilleiterabständen 
 zunimmt. Das ist dem Umstand geschuldet, das die Teilleiter bei grösseren Abständen erst später zusammenschlagen.
 Für einen Vergleich zwischen den Teilleiterabständen wird auf [7] S.55 ff. und [8] verwiesen.
 * Um unwirtschaftliche Konfigurationen mit hoher Bündel-Seilzugkraft zu vermeiden, sollten Teilleiterabstände und 
 Abstandshalterabstände aufeinander abgestimmt werden. Je grösser die Teilleiterabstände, desto grösser auch die 
-Abstände der Abstandshalter. 
-* Der minimale Leiterabstand $a_{min}$ darf nach IEC 61936-1 50% spannungsabhängigen Abstände nicht unterschreiten.
+Abstände der Abstandshalter. ![Vergleichsmessungen_Teilleiterabstände_Abstandshalter.png](/src/assets/kurzschlusskraefte_leiterseile/Vergleichsmessungen_Teilleiterabst%C3%A4nde_Abstandshalter.png)
+* Der minimale Leiterabstand $a_{min}$ darf nach IEC 61936-1 50% der spannungsabhängigen Abstände zwischen den Hauptleitern nicht unterschreiten.
 * Die Positionierung eines Abstandhalters in der Spannfeldmitte, als kritische Stelle, kann als Ersatzmassnahme in 
 Betracht gezogen werden, wenn der minimale Leiterabstand $a_{min}$ nicht erreicht werden kann. [9] S.148 Dabei sind jedoch
 ca. 12% höhere Seilzugkräfte zu erwarten.
@@ -249,3 +264,7 @@ Leitungsseilen mit Schlaufen im Spannfeld, 2002 - FAU, Meyer
 [8] Mechanische Wirkungen von Kurzschlusskräften bei Schaltanlagen mit Bündelleitern, Schlussbericht, AiF 12660, 2003 - FGH
 
 [9] Test with Droppers and Interphase Spacers, 1998 - Declercq, 8th International Symposium on Short-Circuit Currents in Power Systems, Brussels
+
+[10] Das Seilspannfeld als physikalisches Pendel – eine analytische Lösung der Kurzschlußvorgänge, Archiv für Elektrotechnik 70, 1987, S.273-281 - Kießling
+
+[11] The mechanical effects of short-circuit currents in open air substations, WG23-11, TB105, 1996 - Cigre
